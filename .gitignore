@@ -1,0 +1,11 @@
+# Ignore config stuff
+.venv
+.idea
+
+# Never push the db
+db.sqlite3
+
+
+# Ignore nixos dep tools (Landon)
+requirements.txt
+shell.nix
