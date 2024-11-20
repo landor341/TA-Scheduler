@@ -1,8 +1,11 @@
+from core.local_data_classes import CourseFormData
 
 
-class CourseService:
+
+
+class CourseController:
     @staticmethod
-    def saveCourse(course_data, id=None):
+    def saveCourse(course_data: CourseFormData, id=None):
         """
         Pre-conditions: courseData contains valid information for creating a course.
             if id is provided, it matches an existing course in the Courses table

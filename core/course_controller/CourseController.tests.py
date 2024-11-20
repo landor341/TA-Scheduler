@@ -1,10 +1,11 @@
 from django.test import TestCase
-
 from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment
 
+
+# TOOD: Write tests. You can use the below generator if it looks useful
 def setupDatabase(course_list):
     """
-        Generate test courses with sections, instructors, ta'ss,
+        Generate test courses with sections, instructors, ta's,
         Course asignments, and lab assignments
     """
     course_count = 0
