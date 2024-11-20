@@ -27,7 +27,7 @@ class CourseController:
         pass
 
     @staticmethod
-    def searchCourses(course_search_str, semester_id=None) -> List[CourseRef]:
+    def searchCourses(course_search: str, semester_id: int | None = None) -> List[CourseRef]:
         """
         Pre-conditions: Semester is a valid value if given
         Post-conditions: Returns a list of courses whose title or code
