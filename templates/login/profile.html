@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'login/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome, {{ user }}!</h2>
+        <p><strong>Email:</strong> {{ email }}</p>
+        <p><strong>Role:</strong> {{ role }}</p>
+        <p><strong>Phone:</strong> {{ phone }}</p>
+        <p><strong>Address:</strong> {{ address }}</p>
+        {% if office_hours %}
+            <p><strong>Office Hours:</strong> {{ office_hours }}</p>
+        {% endif %}
+        <a class="logout-link" href="{% url 'logout' %}">Logout</a>
+    </div>
+</body>
+</html>
