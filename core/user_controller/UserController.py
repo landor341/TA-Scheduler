@@ -39,21 +39,21 @@ class UserController:
     #     """
     #     pass
     #
-    # def deleteUser(self, id):
-    #     """
-    #     Preconditions: id provided must be a valid user id.
-    #
-    #     Postconditions: Deletes the user with the matching id as the specified id. If no matching records are found, nothing happens.
-    #
-    #     Side-effects: Removes a record from the Users table.
-    #
-    #     Parameters:
-    #         Id: Integer value for the user id of the user to be deleted.
-    #
-    #     Returns: none
-    #     """
-    #     pass
-    #
+    def deleteUser(self, id):
+        """
+         Preconditions: id provided must be a valid user id.
+
+         Postconditions: Deletes the user with the matching id as the specified id. If no matching records are found, nothing happens.
+
+         Side-effects: Removes a record from the Users table.
+
+            Parameters:
+             Id: Integer value for the user id of the user to be deleted.
+
+         Returns: none
+         """
+        pass
+
     def searchUser(user_search_string):
         """
 

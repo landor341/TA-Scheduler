@@ -61,6 +61,7 @@ class TestGetUser(unittest.TestCase):
             ('1000000000', '7777777777')
         ]
         setupDatabase(self.courseList)
+
         new_user = User.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
                                             first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
         new_user.save()
@@ -89,6 +90,10 @@ class TestGetUser(unittest.TestCase):
         pass
 
 class TestSearchUser(unittest.TestCase):
+    def test_something(self):
+        self.assertEqual(True, False)  # add assertion here
+
+class TestDeleteUser(unittest.TestCase):
     def test_something(self):
         self.assertEqual(True, False)  # add assertion here
 
