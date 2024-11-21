@@ -1,0 +1,68 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden, HttpResponse
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import User
+from .forms import UserForm 
+from django.contrib import messages
+
+
+class UserFormView:
+    # Handle GET requests to display the form
+    @login_required
+    def get(self, request, user_id=None):
+        """
+        Display the form for creating or editing a user.
+        """
+        if not request.user.is_staff:  # Ensuring only Admins can access
+            return HttpResponseForbidden("You do not have permission to access this page.")
+
+        # Editing a user
+        if user_id:
+            user = get_object_or_404(User, id=user_id)
+            form = UserForm(instance=user)
+        else:
+            # Creating a new user
+            form = UserForm()
+
+        return render(request, "user_form.html", {"form": form})
+
+    # Handle POST requests to create or update user
+    @login_required
+    def post(self, request, user_id=None):
+        """
+        Process form submission for creating or updating a user.
+        """
+        if not request.user.is_staff:  # Ensuring only Admins can perform the action
+            return HttpResponseForbidden("You do not have permission to perform this action.")
+
+        if user_id:
+            user = get_object_or_404(User, id=user_id)
+            form = UserForm(request.POST, instance=user)
+        else:
+            form = UserForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "User saved successfully.")
+            return redirect("profile_view")  # Replace with your profile view name
+        else:
+            messages.error(request, "There was an error with the form. Please check the details.")
+            return render(request, "user_form.html", {"form": form})
+
+    # Handle DELETE requests to remove a user
+    @login_required
+    @user_passes_test(lambda u: u.is_staff)  # Ensure only Admins can delete users
+    def delete(self, request, user_id):
+        """
+        Delete a user from the database.
+        """
+        user = get_object_or_404(User, id=user_id)
+
+        # Prevent deletion of yourself
+        if user == request.user:
+            messages.error(request, "You cannot delete your own account.")
+            return redirect("profile_view")  # Replace with your profile view name
+
+        user.delete()
+        messages.success(request, "User deleted successfully.")
+        return redirect("profile_view")  # Replace with your profile view name
