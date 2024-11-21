@@ -1,0 +1,65 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden
+from django.contrib import messages
+from .models import Course, LabSection  
+from .forms import CourseForm  
+
+class CourseCreator:
+    @staticmethod
+    def get(request, course_id=None):
+        """
+        Display the course creation/edit form.
+        Preconditions: Admin user logged in and navigated to course creation page.
+        Postconditions: HTML form displayed.
+        """
+        if not request.user.is_staff:  # Ensure only admin users can access
+            return HttpResponseForbidden("You do not have permission to access this page.")
+
+        if course_id:
+            # Editing an existing course
+            course = get_object_or_404(Course, id=course_id)
+            form = CourseForm(instance=course)
+        else:
+            # Creating a new course
+            form = CourseForm()
+
+        return render(request, "course_form.html", {"form": form})
+
+    @staticmethod
+    def post(request, course_id=None):
+        """
+        Handle form submission for course creation/editing.
+        Preconditions: Admin user logged in and form submitted with data.
+        Postconditions: Updates the database or displays error messages if invalid.
+        """
+        if not request.user.is_staff:  # Ensure only admin users can access
+            return HttpResponseForbidden("You do not have permission to perform this action.")
+
+        if course_id:
+            # Editing an existing course
+            course = get_object_or_404(Course, id=course_id)
+            form = CourseForm(request.POST, instance=course)
+        else:
+            # Creating a new course
+            form = CourseForm(request.POST)
+
+        if form.is_valid():
+            course = form.save()  # Save the course details
+            messages.success(request, "Course saved successfully.")
+
+            # Handle lab sections (if number of sections is provided and changed)
+            lab_sections = form.cleaned_data.get("lab_sections", 0)
+            current_lab_sections = LabSection.objects.filter(course=course)
+
+            if current_lab_sections.count() > lab_sections:
+                # Delete excess lab sections
+                current_lab_sections[lab_sections:].delete()
+            elif current_lab_sections.count() < lab_sections:
+                # Add additional lab sections
+                for i in range(current_lab_sections.count(), lab_sections):
+                    LabSection.objects.create(course=course, section_number=i + 1)
+
+            return redirect("course_list")  # Replace with the appropriate success redirect URL
+
+        messages.error(request, "There was an error with the form. Please check the details.")
+        return render(request, "course_form.html", {"form": form})
