@@ -53,6 +53,7 @@ def setupdatabase(course_list):
 
 
 class TestGetUser(unittest.TestCase):
+
     def setUp(self):
         self.course_list = [
             ('Test1', 'Software Engineering'),
@@ -62,9 +63,9 @@ class TestGetUser(unittest.TestCase):
         ]
         setupdatabase(self.course_list)
 
-        new_user = self.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
+        self.new_user = self.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
                                             first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
-        new_user.save()
+        self.new_user.save()
     def test_username(self):
         self.assertEqual(self.new_user.username, 'AdminUsername')
     def test_firstname(self):
@@ -108,13 +109,29 @@ class TestDeleteUser(unittest.TestCase):
         pass
     def test_ValidId(self):
         self.assertEqual(True, False)  # add assertion here
-    def test_InValidId(self):
+    def test_InValidId_manyCharacters(self):
         pass
     def test_NoId(self):
         pass
-    def test_InValidId1Character(self):
+    def test_InValidId_1Character(self):
         pass
 
-
+class TestSaveUser(unittest.TestCase):
+    def setUp(self):
+        pass
+    """New User Portion"""
+    def test_ValidUserFieldsNewUser(self):
+        pass
+    def test_InvalidUserFieldsNewUser(self):
+        pass
+    """Edit User Portion"""
+    def test_ValidUserIdPlusGoodEdits(self):
+        pass
+    def test_InvalidUserIdPlusGoodEdits(self):
+        pass
+    def test_ValidUserIdPlusBadEdits(self):
+        pass
+    def test_InvalidUserIdPlusBadEdits(self):
+        pass
 if __name__ == '__main__':
     unittest.main()

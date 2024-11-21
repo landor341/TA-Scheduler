@@ -25,14 +25,16 @@ class UserController:
          """
          Preconditions: userData contains valid information for the user fields. If an id is provided, it is a valid id.
 
-         Postconditions: Adds a new user record if no id is provided to the Users table or updates the user’s information that has a matching id to the one provided as the argument.
+         Postconditions: Adds a new user record if no id is provided to the Users table or updates the user’s information
+         that has a matching id to the one provided as the argument.
          Returns an error message if id is invalid or any part of the userData is invalid.
 
          Side-effects: Inserts or updates a record in the Users table.
 
          Parameters:
 
-         UserData: A dictionary object with the appropriately ordered sequence and data type to match the required fields defined in the Users model.
+         UserData: A dictionary object with the appropriately ordered sequence and data type to match the required fields
+         defined in the Users model.
 
          Returns: none
          """
