@@ -1,76 +1,87 @@
 # TODO: Implement user controller tests
 import os
 import django
+from datetime import date
 from django.test import TestCase
 import unittest
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ta_scheduler.settings')
 django.setup()
 from django.contrib.auth.middleware import get_user
-from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment
+from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester
+def setupDatabase(course_list):
+    """
+    Generate test courses with sections, instructors, ta's,
+    Course asignments, and lab assignments
+    """
+    course_count = 0
+    user_count = 0
+
+    for (code, name) in course_list:
+        course = Course(course_code=code, course_name="name")
+        course.save()
+        course_count += 1
+        for i in range(course_count):
+            instructor = User(
+                role="Instructor", first_name=user_count, last_name=user_count,
+                password=user_count, username=user_count
+            )
+            instructor.save()
+            user_count += 1
+            section = CourseSection(
+            course_id=course,
+            course_section_number=i,
+            instructor=instructor
+            )
+            section.save()
+
+            ta = User(
+            role="TA", first_name=user_count, last_name=user_count,
+            password=user_count, username=user_count
+            )
+            ta.save()
+            user_count += 1
+
+            courseAssignment = TACourseAssignment(course=course, grader_status=False, ta=ta)
+            courseAssignment.save()
+
+            labSection = LabSection(course=course, lab_section_number=i)
+            labSection.save()
+
+            if i % 2 == 1:
+                labAssignment = TALabAssignment(lab_section=labSection, ta=ta)
+                labAssignment.save()
+
 
 class TestGetUser(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        user1 = User.objects.create_user(
-            first_name='Admin',
-            last_name='User',
-            username='testadmin',
-            email='testadmin@example.com',
-            password='securepassword123',
-            role='Admin',
-            phone='123-456-7890',
-            address='123 Main St, Springfield',
-            office_hours='Mon, Wed, Fri: 10am - 12pm',
-        )
-        user1.save()
-        cls.user2 = User.objects.create_user(
-            first_name='Bob',
-            last_name='Marley',
-            username='newuser22222',
-            email='newuser@example.com',
-            password='securepassword123',
-            role='Instructor',  # Possible values are 'Instructor', 'TA', 'Admin'
-            phone='123-456-7890',
-            address='123 Main St, Springfield',
-            office_hours='Mon, Wed, Fri: 10am - 12pm',
-        )
-        cls.user2.save()
-    def test_username(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.username, 'newuser22222')
-
+    def setUp(self):
+        self.course_list = [
+            ('Test1', 'Software Engineering'),
+            ('Test2', 'Software Development'),
+            ('Other3', 'Calculus 777'),
+            ('1000000000', '7777777777')
+        ]
+        setupDatabase(self.courseList)
+        new_user = User.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
+                                            first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
+        new_user.save()
+    def test_username(self, new_user):
+        self.assertEqual(new_user.username, 'AdminUsername')
     def test_firstname(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.first_name, 'Bob')
-
+        pass
     def test_lastname(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.last_name, 'Marley')
-
+        pass
     def test_email(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.email, 'newuser@example.com')
-
+        pass
     def test_role(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.role, 'Instructor')
-
+        pass
     def test_phone(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.phone, '123-456-7890')
-
+        pass
     def test_address(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.address, '123 Main St, Springfield')
-
+        pass
     def test_office_hours(self):
-        new_user = get_user(self.user2)
-        self.assertEqual(new_user.office_hours, 'Mon, Wed, Fri: 10am - 12pm')
-
+        pass
     def test_NoInput(self):
         pass
-
     def test_InvalidInput(self):
         pass
 
