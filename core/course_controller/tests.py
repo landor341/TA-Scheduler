@@ -2,7 +2,7 @@ from django.test import TestCase
 from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester
 from datetime import date
 from core.local_data_classes import CourseFormData, CourseOverview, CourseRef
-from CourseController import CourseController
+from core.course_controller.CourseController import CourseController
 
 
 # Helper function to generate test data
