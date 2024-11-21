@@ -1,0 +1,100 @@
+from django.test import TestCase, Client
+from django.urls import reverse
+from .models import Semester, Course
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class CourseCreatorTest(TestCase):
+    def setUp(self):
+        """
+        Set up test environment with users, semester, and initial courses.
+        """
+        # Create an admin user
+        self.admin_user = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="password123",
+            role="Admin",
+        )
+
+        # Log in as admin
+        self.client = Client()
+        self.client.login(username="admin", password="password123")
+
+        # Create a semester
+        self.semester = Semester.objects.create(
+            semester_name="Fall 2024",
+            start_date="2024-08-20",
+            end_date="2024-12-15",
+        )
+
+        # Existing course
+        self.course = Course.objects.create(
+            course_code="CS101",
+            course_name="Introduction to Computer Science",
+            semester=self.semester,
+        )
+
+        # URLs for creating and editing courses
+        self.create_url = reverse("course_create")  # Replace with your actual URL name
+        self.edit_url = reverse("course_edit", kwargs={"course_id": self.course.id})
+
+    def test_get_create_form(self):
+        """
+        Test the GET method for displaying the course creation form.
+        """
+        response = self.client.get(self.create_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "course_form.html")
+        self.assertContains(response, "Course Form")  # Check form renders
+
+    def test_get_edit_form(self):
+        """
+        Test the GET method for displaying the course editing form.
+        """
+        response = self.client.get(self.edit_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "course_form.html")
+        self.assertContains(response, "Introduction to Computer Science")  # Prefilled value
+
+    def test_post_create_valid_course(self):
+        """
+        Test the POST method for creating a valid course.
+        """
+        form_data = {
+            "course_code": "CS102",
+            "course_name": "Data Structures",
+            "semester": self.semester.id,
+        }
+        response = self.client.post(self.create_url, data=form_data)
+        self.assertEqual(response.status_code, 302)  # Redirect after success
+        self.assertTrue(Course.objects.filter(course_code="CS102").exists())
+
+    def test_post_create_invalid_course(self):
+        """
+        Test the POST method with invalid data for course creation.
+        """
+        form_data = {
+            "course_code": "",  # Missing course_code
+            "course_name": "Data Structures",
+            "semester": self.semester.id,
+        }
+        response = self.client.post(self.create_url, data=form_data)
+        self.assertEqual(response.status_code, 200)  # Renders the form with errors
+        self.assertFormError(response, "form", "course_code", "This field is required.")
+        self.assertFalse(Course.objects.filter(course_name="Data Structures").exists())
+
+    def test_post_edit_course(self):
+        """
+        Test the POST method for editing an existing course.
+        """
+        form_data = {
+            "course_code": "CS101",
+            "course_name": "Intro to Computer Science",  # Changed name
+            "semester": self.semester.id,
+        }
+        response = self.client.post(self.edit_url, data=form_data)
+        self.assertEqual(response.status_code, 302)  # Redirect after success
+        updated_course = Course.objects.get(id=self.course.id)
+        self.assertEqual(updated_course.course_name, "Intro to Computer Science")
