@@ -1,3 +1,4 @@
+
 from django.test import TestCase
 from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester
 from datetime import date
@@ -185,6 +186,37 @@ class TestSearchCourses(TestCase):
     def test_emptySearch(self):
         result = CourseController.search_courses("NonExistent")
         self.assertEqual(len(result), 0)
+
+
+# Test cases for course deletion
+class TestDeleteCourse(TestCase):
+    def setUp(self):
+        self.course_list = [
+            ("Test1", "Soft Eng"),
+            ("Test2", "Soft Dev"),
+            ("Other3", "Comp Arch")
+        ]
+        setup_database(self.course_list)
+
+    def test_deleteCourse_validId(self):
+        course = Course.objects.first()
+        CourseController.delete_course(course.id)
+
+        self.assertFalse(Course.objects.filter(course_code="Test1").exists())
+
+
+    def test_deleteCourse_invalidID(self):
+        with self.assertRaises(ValueError):
+            CourseController.delete_course(2024)
+
+    def test_deleteCourse_properCascade(self):
+        course = Course.objects.first()
+        CourseController.delete_course(course.id)
+
+        self.assertFalse(CourseSection.objects.filter(course_section_number="0").exists())
+    def test_deleteCourse_invalidInput(self):
+        with self.assertRaises(ValueError):
+            CourseController.delete_course("abcde")
 
 
 

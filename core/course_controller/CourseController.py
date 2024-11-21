@@ -37,3 +37,12 @@ class CourseController:
         Side-effects: N/A
         """
         pass
+    
+    @staticmethod
+    def delete_course(course_id: int) -> None:
+        """
+        Pre-conditions: Course id is a valid value matching a record in courses.
+        Post-conditions: Removes a record from Course with matching course_id.
+        Side-effects: Adds new record to Course table.
+        """
+        pass
