@@ -6,7 +6,7 @@ from CourseController import CourseController
 
 
 # Helper function to generate test data
-def set_up_database(course_list, semester_name="Fall 2024"):
+def setup_database(course_list, semester_name="Fall 2024"):
     """
         Generate test courses with sections, instructors, ta's,
         course assignments, and lab assignments
@@ -67,7 +67,7 @@ class TestSaveCourses(TestCase):
             ("Test2", "Soft Dev"),
             ("Other3", "Comp Arch")
         ]
-        set_up_database(self.course_list)
+        setup_database(self.course_list)
         self.semester = Semester.objects.get(semester_name="Fall 2024")
 
     def test_saveNewCourse_succeeds(self):
@@ -117,7 +117,7 @@ class TestGetCourses(TestCase):
             ("Test2", "Soft Dev"),
             ("Other3", "Comp Arch")
         ]
-        set_up_database(self.course_list)
+        setup_database(self.course_list)
 
     def test_getValidCourseDetails(self):
         course = Course.objects.first()
@@ -172,7 +172,7 @@ class TestSearchCourses(TestCase):
             ("Test2", "Soft Dev"),
             ("Other3", "Comp Arch")
         ]
-        set_up_database(self.course_list)
+        setup_database(self.course_list)
 
     def test_searchEmptyParameter(self):
         result = CourseController.search_courses("")
