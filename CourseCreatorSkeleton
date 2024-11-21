@@ -1,0 +1,39 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden
+from django.contrib import messages
+from .models import Course, LabSection  
+from .forms import CourseForm  
+
+
+
+class CourseCreator:
+
+    #Preconditions to this: Admin user logged in. Navigated and navigated to user creation page. Or are
+        admin and selected edit profile on user profile. Or are on your own profile and selected edit
+        user.
+    @staticmethod
+    def get(request, course_id=None):
+     #Postconditions: HTML form displayed with the appropriate fields to fill out the new user
+    information. Fields are prefilled with selected user information if you are editing from a profile.
+    #self: Instance of UserForm class
+    #request: Render request for form, and contains selected user if it exists.
+        return render(request, "course_form.html", {"form": form})
+
+
+    @staticmethod
+    def post(request, course_id=None):
+        """
+        Handle form submission for course creation/editing.
+        Preconditions: Admin user logged in and form submitted with data.
+        Postconditions: Updates the database or displays error messages if invalid.
+        """
+    
+
+
+            # Handle lab sections (if number of sections is provided and changed)
+       
+
+           
+
+           
+        return render(request, "course_form.html", {"form": form})
