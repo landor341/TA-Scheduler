@@ -16,6 +16,8 @@ class CourseController:
         """
         pass
 
+
+
     @staticmethod
     def get_course(course_id: str) -> CourseOverview:
         """
