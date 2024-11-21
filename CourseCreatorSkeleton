@@ -31,8 +31,7 @@ class CourseCreator:
 
 
             # Handle lab sections (if number of sections is provided and changed)
-            lab_sections = form.cleaned_data.get("lab_sections", 0)
-            current_lab_sections = LabSection.objects.filter(course=course)
+       
 
            
 
