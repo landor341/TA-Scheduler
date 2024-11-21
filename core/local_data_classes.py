@@ -22,6 +22,15 @@ class LabSectionRef:
     section_number: str
     instructor: UserRef | None
 
+@dataclass
+class CourseSectionRef:
+    """
+    A dataclass that exposes only enough information to display a course section's number and
+    instructor (if an instructor exists).
+    """
+    section_number: str
+    instructor: UserRef
+
 
 @dataclass
 class CourseFormData:
@@ -33,6 +42,7 @@ class CourseFormData:
     instructor: UserRef | None
     semester: Semester | None
     lab_sections_codes: List[int] | None
+    course_sections_codes: List[int] | None
 
 
 @dataclass
@@ -79,5 +89,6 @@ class CourseOverview:
     code: str
     name: str
     instructor: UserRef
+    course_sections: List[CourseSectionRef]
     lab_sections: List[LabSectionRef]
 

@@ -16,6 +16,8 @@ class CourseController:
         """
         pass
 
+
+
     @staticmethod
     def get_course(course_id: str) -> CourseOverview:
         """
@@ -33,5 +35,14 @@ class CourseController:
         Post-conditions: Returns a list of courses whose title or code
             matches the course_search_str.
         Side-effects: N/A
+        """
+        pass
+    
+    @staticmethod
+    def delete_course(course_id: int) -> None:
+        """
+        Pre-conditions: Course id is a valid value matching a record in courses.
+        Post-conditions: Removes a record from Course with matching course_id.
+        Side-effects: Adds new record to Course table.
         """
         pass
