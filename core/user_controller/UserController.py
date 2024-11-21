@@ -1,9 +1,8 @@
-
-
+from core.local_data_classes import UserProfile
 
 
 class UserController:
-    def getUser(self):
+    def getUser(self, username) -> UserProfile:
         """
 
         Preconditions: user_id is a valid id matching a record of a user in the Users table.
@@ -39,7 +38,7 @@ class UserController:
     #     """
     #     pass
     #
-    def deleteUser(self, id):
+    def deleteUser(self, username):
         """
          Preconditions: id provided must be a valid user id.
 

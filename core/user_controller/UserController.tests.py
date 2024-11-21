@@ -4,6 +4,10 @@ import django
 from datetime import date
 from django.test import TestCase
 import unittest
+
+from core.local_data_classes import TACourseRef, UserRef, CourseRef
+from core.user_controller.UserController import UserController
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ta_scheduler.settings')
 django.setup()
 from django.contrib.auth.middleware import get_user
@@ -62,32 +66,60 @@ class TestGetUser(unittest.TestCase):
         ]
         setupDatabase(self.courseList)
 
-        new_user = User.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
-                                            first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
-        new_user.save()
-    def test_username(self, new_user):
-        self.assertEqual(new_user.username, 'AdminUsername')
-    def test_firstname(self):
-        pass
-    def test_lastname(self):
-        pass
-    def test_email(self):
-        pass
-    def test_role(self):
-        pass
-    def test_phone(self):
-        pass
-    def test_address(self):
-        pass
-    def test_office_hours(self):
-        pass
+        self.unassigned_user = User.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
+                                                        first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
+        self.unassigned_user.save()
     def test_NoInput(self):
-        pass
-    def test_InvalidInput(self):
-        pass
+        with self.assertRaises(ValueError):
+            UserController.getUser()
 
-    def test_validInput(self):
-        pass
+    def test_InvalidInput(self):
+        with self.assertRaises(ValueError):
+            UserController.getUser("Really fake username")
+
+    def test_validInputs(self):
+        for user in User.objects.all():
+            res = UserController.getUser(user.username)
+            self.assertEqual(res.name, user.first_name + user.last_name)
+            self.assertEqual(res.role, user.role)
+            self.assertEqual(res.email, user.email)
+            self.assertEqual(res.office_hours, user.office_hours)
+            expected_assignments = []
+            for assignment in TALabAssignment.objects.filter(ta=user):
+                if (user.role == "TA"):
+                    instructor = CourseSection.instructor
+                    if instructor is not None:
+                        instructor = UserRef(username=instructor.username, name=instructor.first_name + instructor.last_name)
+                    else:
+                        instructor = None
+
+                    isGrader = TACourseAssignment.objects.filter(ta=user, course=assignment.lab_section.course).first()
+                    if isGrader.grader_status:
+                        isGrader = True
+                    else:
+                        isGrader = False
+
+                    labs = []
+                    for lab in TALabAssignment.objects.filter(ta=user):
+                        labs.append(lab.lab_section_number)
+
+                    self.assertIn(
+                        TACourseRef(
+                            course_code=assignment.lab_section.course.course_code,
+                            course_name=assignment.lab_section.course.course_name,
+                            instructor=instructor,
+                            is_grader=isGrader,
+                            assigned_lab_sections=labs
+                        )
+                    )
+                else: #Admin or instructor
+                    self.assertIn(
+                        CourseRef(
+                            course_code=assignment.lab_section.course.course_code,
+                            course_name=assignment.lab_section.course.course_name,
+                        )
+                    )
+
 
 class TestSearchUser(unittest.TestCase):
     def test_something(self):
