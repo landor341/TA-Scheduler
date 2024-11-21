@@ -1,0 +1,54 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden, HttpResponse
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import User
+from .forms import UserForm 
+from django.contrib import messages
+
+
+class UserFormView:
+    # Handle GET requests to display the form
+    @login_required
+    def get(self, request, user_id=None):
+      
+      """
+    Preconditions: Admin user logged in. Navigated and navigated to user creation page. Or are
+admin and selected edit profile on user profile. Or are on your own profile and selected edit
+user.
+
+Postconditions: HTML form displayed with the appropriate fields to fill out the new user
+information. Fields are prefilled with selected user information if you are editing from a profile.
+
+No side effects
+
+self: Instance of UserForm class
+request: Render request for form, and contains selected user if it exists.
+       
+    """
+      pass
+
+    # Handle POST requests to create or update user
+    @login_required
+    def post(self, request, user_id=None):
+       """
+            Preconditions: UserForm.get triggered. Inputs required user details in the appropriate fields or
+            updates at least one field if editing.
+            Postconditions: User information is sent to DB to create new user or field values updates in
+            existing user. Else, display error message.
+            Side-effects: New record added to the Users table or existing record fields are updated.
+            self: Instance of UserForm .class
+            request: Render request for success or error message + details.
+        """
+        pass
+    
+
+    def delete(self, request, user_id):
+       """
+            Preconditions: Logged in user is administrator
+            Postconditions: User is navigated back to their profile-view page
+            Side-effects: The selected users user is deleted from the database
+            self: Instance of CourseCreator class
+            request: Render request that contains the user id
+
+        """
+        pass
