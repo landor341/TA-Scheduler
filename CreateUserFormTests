@@ -1,0 +1,65 @@
+# tests.py
+from django.test import TestCase
+from django import forms
+from .models import User  
+
+class UserFormTest(TestCase):
+
+    def test_form_valid_data(self):
+        """
+        Test that the form is valid when provided with valid data.
+        """
+        form_data = {
+            'username': 'testuser',
+            'email': 'testuser@example.com',
+            'password': 'securepassword',
+            'role': 'TA',
+            'phone': '1234567890',
+            'address': '123 Test St, Test City',
+            'office_hours': 'Mon/Wed 10:00 AM - 12:00 PM',
+        }
+        form = UserForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_form_missing_required_fields(self):
+        """
+        Test that the form is invalid when required fields are missing.
+        """
+        form_data = {
+            'email': 'testuser@example.com',  # Missing username, password, and role
+        }
+        form = UserForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('username', form.errors)
+        self.assertIn('password', form.errors)
+        self.assertIn('role', form.errors)
+
+    def test_form_invalid_email(self):
+        """
+        Test that the form is invalid when an invalid email is provided.
+        """
+        form_data = {
+            'username': 'testuser',
+            'email': 'invalidemail',  # Invalid email
+            'password': 'securepassword',
+            'role': 'TA',
+        }
+        form = UserForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('email', form.errors)
+
+    def test_form_optional_fields(self):
+        """
+        Test that the form is valid when optional fields are left blank.
+        """
+        form_data = {
+            'username': 'testuser',
+            'email': 'testuser@example.com',
+            'password': 'securepassword',
+            'role': 'TA',
+            'phone': '',  # Optional field
+            'address': '',  # Optional field
+            'office_hours': '',  # Optional field
+        }
+        form = UserForm(data=form_data)
+        self.assertTrue(form.is_valid())
