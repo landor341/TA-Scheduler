@@ -12,7 +12,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ta_scheduler.settings')
 django.setup()
 from django.contrib.auth.middleware import get_user
 from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester
-def setupDatabase(course_list):
+def setupdatabase(course_list):
     """
     Generate test courses with sections, instructors, ta's,
     Course asignments, and lab assignments
@@ -21,7 +21,7 @@ def setupDatabase(course_list):
     user_count = 0
 
     for (code, name) in course_list:
-        course = Course(course_code=code, course_name="name")
+        course = Course.objects.create(course_code=code, course_name=name)
         course.save()
         course_count += 1
         for i in range(course_count):
@@ -57,6 +57,7 @@ def setupDatabase(course_list):
 
 
 class TestGetUser(unittest.TestCase):
+
     def setUp(self):
         self.course_list = [
             ('Test1', 'Software Engineering'),
@@ -64,8 +65,7 @@ class TestGetUser(unittest.TestCase):
             ('Other3', 'Calculus 777'),
             ('1000000000', '7777777777')
         ]
-        setupDatabase(self.courseList)
-
+        setupdatabase(self.course_list)
         self.unassigned_user = User.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
                                                         first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
         self.unassigned_user.save()
@@ -120,15 +120,48 @@ class TestGetUser(unittest.TestCase):
                         )
                     )
 
-
 class TestSearchUser(unittest.TestCase):
-    def test_something(self):
+    def test_EmptyString(self):
         self.assertEqual(True, False)  # add assertion here
+
+    def test_InvalidString(self):
+        pass
+
+    def test_ValidString1Character(self):
+        pass
+
+    def test_ValidStringManyCharacters(self):
+        pass
+
 
 class TestDeleteUser(unittest.TestCase):
-    def test_something(self):
+    def setUp(self):
+        pass
+    def test_ValidId(self):
         self.assertEqual(True, False)  # add assertion here
+    def test_InValidId_manyCharacters(self):
+        pass
+    def test_NoId(self):
+        pass
+    def test_InValidId_1Character(self):
+        pass
 
-
+class TestSaveUser(unittest.TestCase):
+    def setUp(self):
+        pass
+    """New User Portion"""
+    def test_ValidUserFieldsNewUser(self):
+        pass
+    def test_InvalidUserFieldsNewUser(self):
+        pass
+    """Edit User Portion"""
+    def test_ValidUserIdPlusGoodEdits(self):
+        pass
+    def test_InvalidUserIdPlusGoodEdits(self):
+        pass
+    def test_ValidUserIdPlusBadEdits(self):
+        pass
+    def test_InvalidUserIdPlusBadEdits(self):
+        pass
 if __name__ == '__main__':
     unittest.main()
