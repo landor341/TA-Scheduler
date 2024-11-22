@@ -128,19 +128,88 @@ class TestGetUser(TestCase):
                         )
                     )
 
-class TestSearchUser(TestCase):
-    def test_EmptyString(self):
-        self.assertEqual(True, False)  # add assertion here
 
-    def test_InvalidString(self):
-        pass
+class TestSearchUserCaseInsensitive(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_user(role='Admin', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                        first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
+        self.admin_user.save()
+        self.unassigned_user = User.objects.create_user(role='TA', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                        first_name='TAF_name', last_name='TAL_name',
+                                                        username='TAUsername')
+        self.unassigned_user.save()
+
+        self.assigned_user = User.objects.create_user(role='In', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                      first_name='InF_name', last_name='InL_name',
+                                                      username='InUsername')
+        self.assigned_user.save()
+
+        self.one_char_user_ta = User.objects.create_user(role='TA', email='EMAIL_TEST_ONE_CHAR',
+                                                      password='PASSWORD_TEST_ONE_CHAR',
+                                                      first_name='7O', last_name='70', username='7O')
+        self.one_char_user_ta.save()
+        self.one_char_user_in = User.objects.create_user(role='In', email='EMAIL_TEST_ONE_CHAR',
+                                                      password='PASSWORD_TEST_ONE_CHAR',
+                                                      first_name='O', last_name='0', username='O')
+        self.one_char_user_in.save()
+
+    def test_searchEmptyString(self):
+        with self.assertRaises(ValueError):
+            UserController.searchUser("")
+
+    def test_searchPartialUsers(self):
+        result = UserController.searchUser("In")
+        self.assertTrue(all("in" in (user.username + user.first_name + user.last_name).lower() for user in result),
+                        f"Usernames, first names, or last names in the result do not all contain 'in': "
+                        f"{[(user.username, user.first_name, user.last_name) for user in result]}")
+
+    def test_emptySearch(self):
+        result = UserController.searchUser("NonExistentUser")
+        self.assertEqual(len(result), 0)
 
     def test_ValidString1Character(self):
-        pass
+        result = UserController.searchUser("A")
+        # Assert that the search string is found in the username, firstname, or lastname
+        self.assertTrue(all("a" in (user.username + user.first_name + user.last_name).lower() for user in result),
+                        f"Usernames, first names, or last names in the result do not all contain 'a': "
+                        f"{[(user.username, user.first_name, user.last_name) for user in result]}")
+    def test_ValidString1Character0User(self):
+        result = UserController.searchUser("0")
+        # Assert that the search string is found in the username, firstname, or lastname
+        self.assertTrue(all("0" in (user.username + user.first_name + user.last_name).lower() for user in result),
+                        f"Usernames, first names, or last names in the result do not all contain '0': "
+                        f"{[(user.username, user.first_name, user.last_name) for user in result]}")
 
-    def test_ValidStringManyCharacters(self):
-        pass
+    def test_ValidStringFullUserName(self):
+        result = UserController.searchUser("AdminUsername")
+        # Assert that the search string is found in the username, firstname, or lastname
+        self.assertTrue(all("adminusername" in (user.username + user.first_name + user.last_name).lower() for user in result),
+                        f"Usernames, first names, or last names in the result do not all contain 'adminusername': "
+                        f"{[(user.username, user.first_name, user.last_name) for user in result]}")
 
+    def test_ValidStringFullFirstName(self):
+        result = UserController.searchUser("AdminF_name")
+        # Assert that the search string is found in the username, firstname, or lastname
+        self.assertTrue(
+            all("adminf_name" in (user.username + user.first_name + user.last_name).lower() for user in result),
+            f"Usernames, first names, or last names in the result do not all contain 'adminf_name': "
+            f"{[(user.username, user.first_name, user.last_name) for user in result]}")
+
+    def test_ValidStringFullLasttName(self):
+        result = UserController.searchUser("AdminL_name")
+        # Assert that the search string is found in the username, firstname, or lastname
+        self.assertTrue(
+            all("adminl_name" in (user.username + user.first_name + user.last_name).lower() for user in result),
+            f"Usernames, first names, or last names in the result do not all contain 'adminl_name': "
+            f"{[(user.username, user.first_name, user.last_name) for user in result]}")
+
+    def test_ValidStringWierd(self):
+        result = UserController.searchUser("tAuSeRnAmE")
+        # Assert that the search string is found in the username, firstname, or lastname
+        self.assertTrue(
+            all("tausername" in (user.username + user.first_name + user.last_name).lower() for user in result),
+            f"Usernames, first names, or last names in the result do not all contain 'tausername': "
+            f"{[(user.username, user.first_name, user.last_name) for user in result]}")
 
 class TestDeleteUser(TestCase):
     def setUp(self):

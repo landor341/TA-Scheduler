@@ -1,5 +1,6 @@
 from ta_scheduler.models import User
 from django.core.exceptions import ValidationError
+from django.db import models
 
 class UserController:
     def getUser(self, username):
@@ -96,8 +97,8 @@ class UserController:
          """
 
     def searchUser(user_search_string):
-        """
 
+        """
         Preconditions: N/A
 
         Postconditions: Returns a list of users matching the search criteria or an error if the string is empty or
@@ -110,7 +111,21 @@ class UserController:
             User_search_string: String containing valid search parameters in the proper format.
 
         Returns: a list of matching user objects, containing only the info needed to populate the explore page.
-
-
         """
-        pass
+        if not user_search_string:  # Check for empty strings
+            raise ValueError("Invalid search: string cannot be empty")
+
+        #This is a case-insensitive search
+        matching_users = User.objects.filter(
+            models.Q(username__icontains=user_search_string) |
+            models.Q(first_name__icontains=user_search_string) |
+            models.Q(last_name__icontains=user_search_string)
+        )
+
+        # Debugging: Print results to understand what's being matched
+        print(f"Search string: '{user_search_string}'")
+        print("Search results:")
+        for user in matching_users:
+            print(f"Username: {user.username}, First Name: {user.first_name}, Last Name: {user.last_name}")
+
+        return matching_users
