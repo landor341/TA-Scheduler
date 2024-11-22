@@ -1,17 +1,14 @@
 # TODO: Implement user controller tests
-import os
-import django
-from datetime import date
 from django.test import TestCase
-import unittest
-
+from django.apps import apps
+from django.core.exceptions import AppRegistryNotReady
+import django
+django.setup()
+from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester
+from datetime import date
 from core.local_data_classes import TACourseRef, UserRef, CourseRef
 from core.user_controller.UserController import UserController
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ta_scheduler.settings')
-django.setup()
-from django.contrib.auth.middleware import get_user
-from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester
 def setupdatabase(course_list):
     """
     Generate test courses with sections, instructors, ta's,
@@ -19,28 +16,39 @@ def setupdatabase(course_list):
     """
     course_count = 0
     user_count = 0
-
+    semester = Semester.objects.create(
+        semester_name="semester_name", start_date=date(2024, 9, 1), end_date=date(2024, 12, 15)
+    )
     for (code, name) in course_list:
-        course = Course.objects.create(course_code=code, course_name=name)
+        course = Course.objects.create(course_code=code, course_name=name, semester=semester)
         course.save()
         course_count += 1
         for i in range(course_count):
             instructor = User(
-                role="Instructor", first_name=user_count, last_name=user_count,
-                password=user_count, username=user_count
+                role="Instructor",
+                first_name=str(user_count),
+                last_name=str(user_count),
+                password=str(user_count),
+                username=str(user_count)
             )
             instructor.save()
             user_count += 1
             section = CourseSection(
-            course_id=course,
-            course_section_number=i,
-            instructor=instructor
+                course_id=course.id,
+                course_section_number=i,
+                instructor = instructor,
+                start_time = "09:00",
+                end_time = "10:30",
+                days = "Mon, Wed"
             )
             section.save()
 
             ta = User(
-            role="TA", first_name=user_count, last_name=user_count,
-            password=user_count, username=user_count
+                role="TA",
+                first_name=str(user_count),
+                last_name=str(user_count),
+                password=str(user_count),
+                username=str(user_count)
             )
             ta.save()
             user_count += 1
@@ -48,7 +56,7 @@ def setupdatabase(course_list):
             courseAssignment = TACourseAssignment(course=course, grader_status=False, ta=ta)
             courseAssignment.save()
 
-            labSection = LabSection(course=course, lab_section_number=i)
+            labSection = LabSection(course=course, lab_section_number=i, start_time="13:00", end_time="15:00")
             labSection.save()
 
             if i % 2 == 1:
@@ -56,7 +64,7 @@ def setupdatabase(course_list):
                 labAssignment.save()
 
 
-class TestGetUser(unittest.TestCase):
+class TestGetUser(TestCase):
 
     def setUp(self):
         self.course_list = [
@@ -66,7 +74,7 @@ class TestGetUser(unittest.TestCase):
             ('1000000000', '7777777777')
         ]
         setupdatabase(self.course_list)
-        self.unassigned_user = User.objects.create_user(role='Admin', email='<EMAIL_TEST>', password='<PASSWORD_TEST>',
+        self.unassigned_user = User.objects.create_user(role='Admin', email='EMAIL_TEST', password='PASSWORD_TEST',
                                                         first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
         self.unassigned_user.save()
     def test_NoInput(self):
@@ -120,7 +128,7 @@ class TestGetUser(unittest.TestCase):
                         )
                     )
 
-class TestSearchUser(unittest.TestCase):
+class TestSearchUser(TestCase):
     def test_EmptyString(self):
         self.assertEqual(True, False)  # add assertion here
 
@@ -134,34 +142,125 @@ class TestSearchUser(unittest.TestCase):
         pass
 
 
-class TestDeleteUser(unittest.TestCase):
+class TestDeleteUser(TestCase):
     def setUp(self):
-        pass
+        self.course_list = [
+            ('Test1', 'Software Engineering'),
+            ('Test2', 'Software Development'),
+            ('Other3', 'Calculus 777'),
+            ('1000000000', '7777777777')
+        ]
+        setupdatabase(self.course_list)
+        self.unassigned_user = User.objects.create_user(role='TA', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                        first_name='TAF_name', last_name='TAL_name', username='TAUsername')
+        self.unassigned_user.save()
+        self.assigned_user = User.objects.create_user(role='In', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                        first_name='InF_name', last_name='InL_name', username='InUsername')
+        self.assigned_user.save()
+        self.one_char_user = User.objects.create_user(role='TA', email='EMAIL_TEST_ONE_CHAR', password='PASSWORD_TEST_ONE_CHAR',
+                                                      first_name='O', last_name='Char', username='O')
+        self.one_char_user.save()
     def test_ValidId(self):
-        self.assertEqual(True, False)  # add assertion here
-    def test_InValidId_manyCharacters(self):
-        pass
-    def test_NoId(self):
-        pass
-    def test_InValidId_1Character(self):
-        pass
+        UserController.deleteUser(self.unassigned_user.username)
+        self.assertNotIn(self.unassigned_user, User.objects.all())
 
-class TestSaveUser(unittest.TestCase):
+    def test_InValidId_manyCharacters(self):
+        with self.assertRaises(ValueError):
+            UserController.deleteUser("aTotallyRealUserName")
+
+    def test_NoId(self):
+        with self.assertRaises(ValueError):
+            UserController.deleteUser("")
+
+    def test_InValidId_1Character(self):
+        with self.assertRaises(ValueError):
+            UserController.deleteUser("^")
+
+    def test_ValidId_1Character(self):
+        UserController.deleteUser(self.one_char_user.username)
+        self.assertNotIn(self.one_char_user, User.objects.all())
+
+    def test_checkIfRemovedFromCourses(self):
+        UserController.deleteUser(self.assigned_user.username)
+        for course_code, course_name in self.course_list:
+            course = Course.objects.get(course_code=course_code)
+            for section in CourseSection.objects.filter(course=course):
+                self.assertNotEqual(section.instructor, self.assigned_user)
+
+class TestSaveUser(TestCase):
     def setUp(self):
-        pass
+        self.valid_user_data_new = {
+            'username': 'johndoe',
+            'email': 'johndoe@example.com',
+            'password': 'securepassword123',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'role': 'TA',
+            'office_hours': '10 AM - 12 PM'
+        }
+        self.admin_user = User.objects.create_user(role='Admin', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                        first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
+        self.admin_user.save()
+        self.unassigned_user = User.objects.create_user(role='TA', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                        first_name='TAF_name', last_name='TAL_name',
+                                                        username='TAUsername')
+        self.unassigned_user.save()
+
+        self.assigned_user = User.objects.create_user(role='In', email='EMAIL_TEST', password='PASSWORD_TEST',
+                                                      first_name='InF_name', last_name='InL_name',
+                                                      username='InUsername')
+        self.assigned_user.save()
+
+        self.one_char_user = User.objects.create_user(role='TA', email='EMAIL_TEST_ONE_CHAR',
+                                                      password='PASSWORD_TEST_ONE_CHAR',
+                                                      first_name='O', last_name='Char', username='O')
+        self.one_char_user.save()
     """New User Portion"""
-    def test_ValidUserFieldsNewUser(self):
-        pass
-    def test_InvalidUserFieldsNewUser(self):
+    def test_ValidUserFieldsNewUserPlusAdmin(self):
+        newUser= UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self.assertEqual(newUser.role, self.valid_user_data_new['role'])
+    def test_InvalidUserFieldsNewUserPlusAdmin(self):
         pass
     """Edit User Portion"""
-    def test_ValidUserIdPlusGoodEdits(self):
+
+    def test_ValidUserIdPlusGoodEditsPlusAdminRequestor(self):
         pass
-    def test_InvalidUserIdPlusGoodEdits(self):
+
+    def test_InvalidUserIdPlusGoodEditsPlusAdminRequestor(self):
         pass
-    def test_ValidUserIdPlusBadEdits(self):
+
+    def test_ValidUserIdPlusBadEditsPlusAdminRequestor(self):
         pass
-    def test_InvalidUserIdPlusBadEdits(self):
+
+    def test_InvalidUserIdPlusBadEditsPlusAdminRequestor(self):
         pass
+
+    def test_ValidUserIdPlusGoodEditsPlusTaRequestor(self):
+        pass
+
+    def test_InvalidUserIdPlusGoodEditsPlusTaRequestor(self):
+        pass
+
+    def test_ValidUserIdPlusBadEditsPlusTaRequestor(self):
+        pass
+
+    def test_InvalidUserIdPlusBadEditsPlusTaRequestor(self):
+        pass
+
+    def test_ValidUserIdPlusGoodEditsPlusInstructorRequestor(self):
+        pass
+
+    def test_InvalidUserIdPlusGoodEditsPlusInstructorRequestor(self):
+        pass
+
+    def test_ValidUserIdPlusBadEditsPlusInstructorRequestor(self):
+        pass
+
+    def test_InvalidUserIdPlusBadEditsPlusInstructorRequestor(self):
+        pass
+
+
 if __name__ == '__main__':
+    import unittest
+
     unittest.main()

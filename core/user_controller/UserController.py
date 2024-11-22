@@ -1,6 +1,5 @@
-
-
-
+from ta_scheduler.models import User
+from django.core.exceptions import ValidationError
 
 class UserController:
     def getUser(self, username):
@@ -21,7 +20,8 @@ class UserController:
         Returns: List of Courses, CourseSections, and LabSections linked to the specified user.
         """
         pass
-    def saveUser(self, user):
+    @staticmethod
+    def saveUser(user, requesting_user):
          """
          Preconditions: userData contains valid information for the user fields. If an id is provided, it is a valid id.
 
@@ -38,9 +38,49 @@ class UserController:
 
          Returns: none
          """
-         pass
+         if 'username' not in user:
+             return "Error: 'username' field is required"
 
-    def deleteUser(self, username):
+         if not hasattr(requesting_user, 'username'):
+             return "Error: 'requesting_user' field is required"
+
+         if 'id' in user:  # Update existing user
+             try:
+                current_user = User.objects.get(id=user['id'])
+                if requesting_user.role != 'Admin' and current_user.id != requesting_user.id:
+                    return "Error: Only administrators can modify other users"
+
+             except User.DoesNotExist:
+                 return "Error: User with the provided ID does not exist"
+         else:  # Create new user
+             current_user = User()
+
+         # Update user fields
+         current_user.role = user.get('role', current_user.role)
+         current_user.email = user.get('email', current_user.email)
+         current_user.password = user.get('password', current_user.password)
+         current_user.first_name = user.get('first_name', current_user.first_name)
+         current_user.last_name = user.get('last_name', current_user.last_name)
+         current_user.username = user.get('username', current_user.username)
+         current_user.office_hours = user.get('office_hours', current_user.office_hours)
+
+         try:
+             current_user.full_clean()
+             current_user.save()
+             return current_user
+         except ValidationError:
+             raise ValidationError("Invalid user data")
+
+    @staticmethod
+    def deleteUser(username):
+        if not username:  # Check just for empty strings
+            raise ValueError("Invalid username: cannot be empty")
+
+        try:
+            user_to_delete = User.objects.get(username=username)
+            user_to_delete.delete()
+        except User.DoesNotExist:
+            raise ValueError("User not found")
         """
          Preconditions: id provided must be a valid user id.
 
@@ -54,7 +94,6 @@ class UserController:
 
          Returns: none
          """
-        pass
 
     def searchUser(user_search_string):
         """
