@@ -122,9 +122,6 @@ class UserController:
             models.Q(last_name__icontains=user_search_string)
         )
 
-        # Debugging: Print results to understand what's being matched
-        print(f"Search string: '{user_search_string}'")
-        print("Search results:")
         for user in matching_users:
             print(f"Username: {user.username}, First Name: {user.first_name}, Last Name: {user.last_name}")
 
