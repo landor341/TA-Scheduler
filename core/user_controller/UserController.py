@@ -1,5 +1,5 @@
 from ta_scheduler.models import User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.db import models
 
 class UserController:
@@ -21,56 +21,77 @@ class UserController:
         Returns: List of Courses, CourseSections, and LabSections linked to the specified user.
         """
         pass
+
     @staticmethod
-    def saveUser(user, requesting_user):
-         """
-         Preconditions: userData contains valid information for the user fields. If an id is provided, it is a valid id.
+    def saveUser(user_data, requesting_user):
+        """
+        Preconditions: user_data contains valid information for the user fields.
+        Postconditions: Adds a new user record if no id is provided to the Users table or updates the user’s information
+        that has a matching id to the one provided as the argument.
+        Raises an error if id is invalid or any part of the user_data is invalid.
+        Side-effects: Inserts or updates a record in the Users table.
+        Parameters:
+        user_data: A dictionary object with the appropriately ordered sequence and data type to match the required fields
+        defined in the Users model.
+        requesting_user: The user making the request.
+        Returns: User instance if successful, otherwise raises an exception.
+        """
+        required_fields = ['username', 'role']
+        for field in required_fields:
+            if field not in user_data:
+                raise ValidationError(f"Error: '{field}' field is required")
 
-         Postconditions: Adds a new user record if no id is provided to the Users table or updates the user’s information
-         that has a matching id to the one provided as the argument.
-         Returns an error message if id is invalid or any part of the userData is invalid.
+        if not hasattr(requesting_user, 'username'):
+            raise ValidationError("Error: 'requesting_user' field is required")
 
-         Side-effects: Inserts or updates a record in the Users table.
+        user_to_edit = None
+        if 'id' in user_data:
+            try:
+                user_to_edit = User.objects.get(id=user_data['id'])
+            except User.DoesNotExist:
+                raise ObjectDoesNotExist("Error: User with the provided ID does not exist")
+        else:
+            user_to_edit = User()
 
-         Parameters:
+        if requesting_user.role == 'Admin':
+            if user_to_edit.id == requesting_user.id:
+                # Admin editing their own details
+                if 'role' in user_data and user_data['role'] != user_to_edit.role:
+                    raise PermissionDenied("Admins cannot change their own role.")
+            else:
+                # Prevent Admin from changing the role of other Admins
+                if user_to_edit.role == 'Admin':
+                    raise PermissionDenied("Admins cannot change roles for other admins.")
+                user_to_edit.role = user_data.get('role', user_to_edit.role)
+        else:
+            # Only Admins are allowed to change user roles
+            if 'role' in user_data and user_data['role'] != user_to_edit.role:
+                raise PermissionDenied("Only Admins are allowed to change user roles.")
 
-         UserData: A dictionary object with the appropriately ordered sequence and data type to match the required fields
-         defined in the Users model.
+        user_to_edit.password = user_data.get('password', user_to_edit.password)
+        user_to_edit.first_name = user_data.get('first_name', user_to_edit.first_name)
+        user_to_edit.last_name = user_data.get('last_name', user_to_edit.last_name)
+        new_username = user_data.get('username', user_to_edit.username)
+        user_to_edit.office_hours = user_data.get('office_hours', user_to_edit.office_hours)
 
-         Returns: none
-         """
-         if 'username' not in user:
-             return "Error: 'username' field is required"
+        existing_user_with_username = User.objects.filter(username=new_username).exclude(id=user_to_edit.id).first()
+        if existing_user_with_username:
+            raise ValidationError("Error: A user with that username already exists.")
 
-         if not hasattr(requesting_user, 'username'):
-             return "Error: 'requesting_user' field is required"
+        new_email = user_data.get('email', user_to_edit.email)
+        existing_user_with_email = User.objects.filter(email=new_email).exclude(id=user_to_edit.id).first()
+        if existing_user_with_email:
+            raise ValidationError("Error: A user with that email already exists.")
 
-         if 'id' in user:  # Update existing user
-             try:
-                current_user = User.objects.get(id=user['id'])
-                if requesting_user.role != 'Admin' and current_user.id != requesting_user.id:
-                    return "Error: Only administrators can modify other users"
+        user_to_edit.username = new_username
+        user_to_edit.email = new_email
 
-             except User.DoesNotExist:
-                 return "Error: User with the provided ID does not exist"
-         else:  # Create new user
-             current_user = User()
-
-         # Update user fields
-         current_user.role = user.get('role', current_user.role)
-         current_user.email = user.get('email', current_user.email)
-         current_user.password = user.get('password', current_user.password)
-         current_user.first_name = user.get('first_name', current_user.first_name)
-         current_user.last_name = user.get('last_name', current_user.last_name)
-         current_user.username = user.get('username', current_user.username)
-         current_user.office_hours = user.get('office_hours', current_user.office_hours)
-
-         try:
-             current_user.full_clean()
-             current_user.save()
-             return current_user
-         except ValidationError:
-             raise ValidationError("Invalid user data")
+        try:
+            user_to_edit.full_clean()
+            user_to_edit.save()
+            return user_to_edit
+        except ValidationError as e:
+            raise ValidationError(f"Invalid user data: {e}")
 
     @staticmethod
     def deleteUser(username):
