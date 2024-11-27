@@ -4,11 +4,13 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.views import View
 
+
 class Home(View):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('profile')
         return redirect('login')
+
 
 class Login(View):
     def get(self, request):
@@ -17,7 +19,7 @@ class Login(View):
         username = request.POST.get('username')  # Get the username from form
         password = request.POST.get('password')  # Get the password from form
 
-        # Anthenticate username and password
+        # Authenticate username and password
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)  # Setting the user to login state
@@ -25,6 +27,7 @@ class Login(View):
         else:
             messages.error(request, 'Invalid username or password.')
             return render(request, 'login/login.html')
+
 
 class Logout(View):
     def get(self, request):

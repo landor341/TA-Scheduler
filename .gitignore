@@ -1,7 +1,7 @@
 # Ignore config stuff
 .venv
 .idea
-*/__pycache__
+__pycache__/
 
 
 # Never push the db

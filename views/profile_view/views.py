@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.views import View
 
-class Profile(View):
+
+class ProfileView(View):
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect('login')
