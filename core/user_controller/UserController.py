@@ -46,7 +46,6 @@ class UserController:
             'lab_assignments': list(lab_assignments),
             'course_assignments': list(course_assignments)
         }
-
         return result
 
     @staticmethod

@@ -72,7 +72,6 @@ def setup_database(course_list):
             if i % 2 == 1:
                 create_lab_assignment(lab_section, ta)
 
-
 class TestGetUser(TestCase):
     def setUp(self):
         self.course_list = [
