@@ -1,4 +1,3 @@
-# TODO: Implement user controller tests
 from django.test import TestCase
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 import django
@@ -8,125 +7,193 @@ from datetime import date
 from core.local_data_classes import TACourseRef, UserRef, CourseRef
 from core.user_controller.UserController import UserController
 
-def setupdatabase(course_list):
+def create_user(role, user_count):
+    user = User(
+        role=role,
+        first_name=str(user_count),
+        last_name=str(user_count),
+        password=str(user_count),
+        username=str(user_count)
+    )
+    user.save()
+    return user
+
+def create_course_section(course_id, section_number, instructor):
+    section = CourseSection(
+        course_id=course_id,
+        course_section_number=section_number,
+        instructor=instructor,
+        start_time="09:00",
+        end_time="10:30",
+        days="Mon, Wed"
+    )
+    section.save()
+    return section
+
+def create_lab_section(course, section_number):
+    lab_section = LabSection(course=course, lab_section_number=section_number, start_time="13:00", end_time="15:00")
+    lab_section.save()
+    return lab_section
+
+def create_ta_course_assignment(course, ta):
+    ta_course_assignment = TACourseAssignment(course=course, grader_status=False, ta=ta)
+    ta_course_assignment.save()
+    return ta_course_assignment
+
+def create_lab_assignment(lab_section, ta):
+    lab_assignment = TALabAssignment(lab_section=lab_section, ta=ta)
+    lab_assignment.save()
+    return lab_assignment
+
+def setup_database(course_list):
     """
-    Generate test courses with sections, instructors, ta's,
-    Course asignments, and lab assignments
+    Generate test courses with sections, instructors, tas,
+    Course assignments, and lab assignments
     """
     course_count = 0
     user_count = 0
     semester = Semester.objects.create(
         semester_name="semester_name", start_date=date(2024, 9, 1), end_date=date(2024, 12, 15)
     )
-    for (code, name) in course_list:
+    for code, name in course_list:
         course = Course.objects.create(course_code=code, course_name=name, semester=semester)
         course.save()
         course_count += 1
         for i in range(course_count):
-            instructor = User(
-                role="Instructor",
-                first_name=str(user_count),
-                last_name=str(user_count),
-                password=str(user_count),
-                username=str(user_count)
-            )
-            instructor.save()
+            instructor = create_user("Instructor", user_count)
             user_count += 1
-            section = CourseSection(
-                course_id=course.id,
-                course_section_number=i,
-                instructor = instructor,
-                start_time = "09:00",
-                end_time = "10:30",
-                days = "Mon, Wed"
-            )
-            section.save()
-
-            ta = User(
-                role="TA",
-                first_name=str(user_count),
-                last_name=str(user_count),
-                password=str(user_count),
-                username=str(user_count)
-            )
-            ta.save()
+            section = create_course_section(course.id, i, instructor)
+            ta = create_user("TA", user_count)
             user_count += 1
 
-            courseAssignment = TACourseAssignment(course=course, grader_status=False, ta=ta)
-            courseAssignment.save()
+            create_ta_course_assignment(course, ta)
 
-            labSection = LabSection(course=course, lab_section_number=i, start_time="13:00", end_time="15:00")
-            labSection.save()
-
+            lab_section = create_lab_section(course, i)
             if i % 2 == 1:
-                labAssignment = TALabAssignment(lab_section=labSection, ta=ta)
-                labAssignment.save()
+                create_lab_assignment(lab_section, ta)
 
 
 class TestGetUser(TestCase):
-
     def setUp(self):
         self.course_list = [
             ('Test1', 'Software Engineering'),
             ('Test2', 'Software Development'),
             ('Other3', 'Calculus 777'),
-            ('1000000000', '7777777777')
+            ('1000000000', '7777777777'),
+            ('CS101', 'Intro to CS')
         ]
-        setupdatabase(self.course_list)
+        setup_database(self.course_list)
         self.unassigned_user = User.objects.create_user(role='Admin', email='EMAIL_TEST', password='PASSWORD_TEST',
-                                                        first_name='AdminF_name', last_name='AdminL_name', username='AdminUsername')
+                                                        first_name='AdminF_name', last_name='AdminL_name',
+                                                        username='AdminUsername')
         self.unassigned_user.save()
+        self.course = Course.objects.get(course_code='CS101')
+
+    def setup_lab_assignments(self):
+        # Creating a Lab Section and assigning it to TA
+        self.semester = Semester.objects.create(semester_name='Fall 2023', start_date='2023-09-01',
+                                                end_date='2023-12-31')
+        self.instructor_user = User.objects.create_user(role='Instructor', email='INST_TEST', password='PASSWORD_TEST',
+                                                        first_name='InstructorF_name', last_name='InstructorL_name',
+                                                        username='InstructorUsername')
+        self.ta_user = User.objects.create_user(role='TA', email='TA_TEST', password='PASSWORD_TEST',
+                                                first_name='TAF_name', last_name='TAL_name', username='TAUsername')
+
+        self.course_section = CourseSection.objects.create(
+            course=self.course, instructor=self.instructor_user, course_section_number=1,
+            start_time='09:00', end_time='10:00'
+        )
+
+        lab_section = LabSection.objects.create(
+            course=self.course, lab_section_number=1, start_time='10:00', end_time='12:00'
+        )
+        TALabAssignment.objects.create(ta=self.ta_user, lab_section=lab_section)
+
     def test_NoInput(self):
         with self.assertRaises(ValueError):
-            UserController.getUser()
+            UserController.getUser(None)
 
     def test_InvalidInput(self):
         with self.assertRaises(ValueError):
-            UserController.getUser("Really fake username")
+            UserController.getUser("invalid_id")
 
     def test_validInputs(self):
+        self.setup_lab_assignments()
+
         for user in User.objects.all():
-            res = UserController.getUser(user.username)
-            self.assertEqual(res.name, user.first_name + user.last_name)
-            self.assertEqual(res.role, user.role)
-            self.assertEqual(res.email, user.email)
-            self.assertEqual(res.office_hours, user.office_hours)
+            res = UserController.getUser(user.id)
+            if isinstance(res, dict):
+                self.assertIsInstance(res['courses'], list)
+                for course in res['courses']:
+                    course_tuple = (course.course_code, course.course_name)
+                    self.assertIn(course_tuple, self.course_list)
+
+                self.assertIsInstance(res['course_sections'], list)
+                for course_section in res['course_sections']:
+                    self.assertTrue(
+                        hasattr(course_section, 'course') and hasattr(course_section, 'course_section_number'))
+                    self.assertTrue(hasattr(course_section, 'start_time') and hasattr(course_section, 'end_time'))
+
+                self.assertIsInstance(res['lab_sections'], list)
+                for lab_section in res['lab_sections']:
+                    self.assertTrue(hasattr(lab_section, 'lab_section_number'))
+                    self.assertTrue(hasattr(lab_section, 'start_time') and hasattr(lab_section, 'end_time'))
+
+                if user.role == 'TA':
+                    self.assertIsInstance(res['lab_assignments'], list)
+                    for lab_assignment in res['lab_assignments']:
+                        self.assertIsNotNone(lab_assignment)
+                        self.assertTrue(hasattr(lab_assignment.lab_section, 'lab_section_number'))
+                        self.assertTrue(hasattr(lab_assignment.lab_section, 'start_time'))
+                        self.assertTrue(hasattr(lab_assignment.lab_section, 'end_time'))
+
+                    self.assertIsInstance(res['course_assignments'], list)
+                    for course_assignment in res['course_assignments']:
+                        self.assertTrue(hasattr(course_assignment.course, 'course_code'))
+
+            else:
+                self.fail('Expected result to be a dictionary.')
+
             expected_assignments = []
             for assignment in TALabAssignment.objects.filter(ta=user):
-                if (user.role == "TA"):
-                    instructor = CourseSection.instructor
-                    if instructor is not None:
-                        instructor = UserRef(username=instructor.username, name=instructor.first_name + instructor.last_name)
-                    else:
-                        instructor = None
+                if user.role == "TA":
+                    instructor = None
+                    course_section = CourseSection.objects.filter(course=assignment.lab_section.course).first()
+                    if course_section and course_section.instructor:
+                        instructor = UserRef(username=course_section.instructor.username,
+                                             name=course_section.instructor.first_name + " " + course_section.instructor.last_name)
 
-                    isGrader = TACourseAssignment.objects.filter(ta=user, course=assignment.lab_section.course).first()
-                    if isGrader.grader_status:
-                        isGrader = True
-                    else:
-                        isGrader = False
+                    is_grader = TACourseAssignment.objects.filter(ta=user, course=assignment.lab_section.course).first()
+                    is_grader = is_grader.grader_status if is_grader and is_grader.grader_status else False
 
-                    labs = []
-                    for lab in TALabAssignment.objects.filter(ta=user):
-                        labs.append(lab.lab_section_number)
+                    labs = [lab.lab_section.lab_section_number for lab in TALabAssignment.objects.filter(ta=user)]
+
+                    expected_assignments.append(
+                        TACourseRef(
+                            course_code=assignment.lab_section.course.course_code,
+                            course_name=assignment.lab_section.course.course_name,
+                            instructor=instructor,
+                            is_grader=is_grader,
+                            assigned_lab_sections=labs
+                        )
+                    )
 
                     self.assertIn(
                         TACourseRef(
                             course_code=assignment.lab_section.course.course_code,
                             course_name=assignment.lab_section.course.course_name,
                             instructor=instructor,
-                            is_grader=isGrader,
+                            is_grader=is_grader,
                             assigned_lab_sections=labs
-                        )
+                        ), expected_assignments
                     )
-                else: #Admin or instructor
+                else:
                     self.assertIn(
                         CourseRef(
                             course_code=assignment.lab_section.course.course_code,
                             course_name=assignment.lab_section.course.course_name,
-                        )
+                        ), expected_assignments
                     )
-
 
 class TestSearchUserCaseInsensitive(TestCase):
     def setUp(self):
@@ -168,27 +235,24 @@ class TestSearchUserCaseInsensitive(TestCase):
 
     def test_ValidString1Character(self):
         result = UserController.searchUser("A")
-        # Assert that the search string is found in the username, firstname, or lastname
         self.assertTrue(all("a" in (user.username + user.first_name + user.last_name).lower() for user in result),
                         f"Usernames, first names, or last names in the result do not all contain 'a': "
                         f"{[(user.username, user.first_name, user.last_name) for user in result]}")
+
     def test_ValidString1Character0User(self):
         result = UserController.searchUser("0")
-        # Assert that the search string is found in the username, firstname, or lastname
         self.assertTrue(all("0" in (user.username + user.first_name + user.last_name).lower() for user in result),
                         f"Usernames, first names, or last names in the result do not all contain '0': "
                         f"{[(user.username, user.first_name, user.last_name) for user in result]}")
 
     def test_ValidStringFullUserName(self):
         result = UserController.searchUser("AdminUsername")
-        # Assert that the search string is found in the username, firstname, or lastname
         self.assertTrue(all("adminusername" in (user.username + user.first_name + user.last_name).lower() for user in result),
                         f"Usernames, first names, or last names in the result do not all contain 'adminusername': "
                         f"{[(user.username, user.first_name, user.last_name) for user in result]}")
 
     def test_ValidStringFullFirstName(self):
         result = UserController.searchUser("AdminF_name")
-        # Assert that the search string is found in the username, firstname, or lastname
         self.assertTrue(
             all("adminf_name" in (user.username + user.first_name + user.last_name).lower() for user in result),
             f"Usernames, first names, or last names in the result do not all contain 'adminf_name': "
@@ -196,7 +260,6 @@ class TestSearchUserCaseInsensitive(TestCase):
 
     def test_ValidStringFullLasttName(self):
         result = UserController.searchUser("AdminL_name")
-        # Assert that the search string is found in the username, firstname, or lastname
         self.assertTrue(
             all("adminl_name" in (user.username + user.first_name + user.last_name).lower() for user in result),
             f"Usernames, first names, or last names in the result do not all contain 'adminl_name': "
@@ -204,7 +267,6 @@ class TestSearchUserCaseInsensitive(TestCase):
 
     def test_ValidStringWierd(self):
         result = UserController.searchUser("tAuSeRnAmE")
-        # Assert that the search string is found in the username, firstname, or lastname
         self.assertTrue(
             all("tausername" in (user.username + user.first_name + user.last_name).lower() for user in result),
             f"Usernames, first names, or last names in the result do not all contain 'tausername': "
@@ -218,7 +280,7 @@ class TestDeleteUser(TestCase):
             ('Other3', 'Calculus 777'),
             ('1000000000', '7777777777')
         ]
-        setupdatabase(self.course_list)
+        setup_database(self.course_list)
         self.unassigned_user = User.objects.create_user(role='TA', email='EMAIL_TEST', password='PASSWORD_TEST',
                                                         first_name='TAF_name', last_name='TAL_name', username='TAUsername')
         self.unassigned_user.save()
@@ -228,13 +290,14 @@ class TestDeleteUser(TestCase):
         self.one_char_user = User.objects.create_user(role='TA', email='EMAIL_TEST_ONE_CHAR', password='PASSWORD_TEST_ONE_CHAR',
                                                       first_name='O', last_name='Char', username='O')
         self.one_char_user.save()
+
     def test_ValidId(self):
-        UserController.deleteUser(self.unassigned_user.username)
+        UserController.deleteUser(self.unassigned_user.id)
         self.assertNotIn(self.unassigned_user, User.objects.all())
 
     def test_InValidId_manyCharacters(self):
         with self.assertRaises(ValueError):
-            UserController.deleteUser("aTotallyRealUserName")
+            UserController.deleteUser("9999999999999999999999999")
 
     def test_NoId(self):
         with self.assertRaises(ValueError):
@@ -245,11 +308,11 @@ class TestDeleteUser(TestCase):
             UserController.deleteUser("^")
 
     def test_ValidId_1Character(self):
-        UserController.deleteUser(self.one_char_user.username)
+        UserController.deleteUser(self.one_char_user.id)
         self.assertNotIn(self.one_char_user, User.objects.all())
 
     def test_checkIfRemovedFromCourses(self):
-        UserController.deleteUser(self.assigned_user.username)
+        UserController.deleteUser(self.assigned_user.id)
         for course_code, course_name in self.course_list:
             course = Course.objects.get(course_code=course_code)
             for section in CourseSection.objects.filter(course=course):
@@ -259,59 +322,48 @@ class TestDeleteUser(TestCase):
 class TestSaveUser(TestCase):
 
     def setUp(self):
-        self.TA = 'TA'
-        self.INSTRUCTOR = 'Instructor'
-        self.ADMIN = 'Admin'
+        self.admin_user = self._create_and_save_user('Admin', 'admin@test.com', 'password123', 'Admin', 'User',
+                                                     'adminuser')
+        self.unassigned_user = self._create_and_save_user('TA', 'ta@test.com', 'password123', 'Unassigned', 'TA',
+                                                          'unassignedta')
+        self.assigned_user = self._create_and_save_user('Instructor', 'instructor@test.com', 'password123', 'Assigned',
+                                                        'User', 'assigneduser')
+        self.one_char_user = self._create_and_save_user('TA', 'one@test.com', 'password123', 'X', 'Y', 'oneuser')
 
         self.valid_user_data_new = {
-            'username': 'johndoe',
-            'email': 'johndoe@example.com',
-            'password': 'securepassword123',
-            'first_name': 'John',
-            'last_name': 'Doe',
-            'role': self.TA,
-            'office_hours': '10 AM - 12 PM'
+            'username': 'newuser',
+            'role': 'TA',
+            'first_name': 'New',
+            'last_name': 'User',
+            'email': 'newuser@test.com',
+            'password': 'password123'
         }
-        self.user_data = {
-            'email': 'new.email@test.com',
-            'first_name': 'NewFirstName',
-            'last_name': 'NewLastName',
-            'role': self.INSTRUCTOR,
-            'password': 'newPassword123',
-            'username': 'newUsername'
-        }
-        self.admin_user = self._create_and_save_user(self.ADMIN, 'EMAIL_TEST', 'PASSWORD_TEST', 'AdminF_name',
-                                                     'AdminL_name',
-                                                     'AdminUsername')
-        self.unassigned_user = self._create_and_save_user(self.TA, 'EMAIL_TEST', 'PASSWORD_TEST', 'TAF_name',
-                                                          'TAL_name',
-                                                          'TAUsername')
-        self.assigned_user = self._create_and_save_user(self.INSTRUCTOR, 'EMAIL_TEST', 'PASSWORD_TEST', 'InF_name',
-                                                        'InL_name', 'InUsername')
-        self.one_char_user = self._create_and_save_user(self.TA, 'EMAIL_TEST_ONE_CHAR', 'PASSWORD_TEST_ONE_CHAR', 'O',
-                                                        'Char', 'O')
 
+        self.user_data = {
+            'username': 'updateduser',
+            'role': 'Instructor',
+            'first_name': 'Updated',
+            'last_name': 'User',
+            'email': 'updateduser@test.com',
+            'password': 'password123'
+        }
+
+    # Helper methods
     def _create_and_save_user(self, role, email, password, first_name, last_name, username):
-        user = User.objects.create_user(
-            role=role,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            username=username
+        user = User.objects.create(
+            role=role, email=email, password=password,
+            first_name=first_name, last_name=last_name, username=username
         )
-        user.save()
         return user
 
-    def _verify_user_fields(self, user, expected_data):
-        for key, expected_value in expected_data.items():
-            actual_value = getattr(user, key)
-            print(f"Checking field '{key}': expected '{expected_value}', got '{actual_value}'")
-            self.assertEqual(actual_value, expected_value,
-                             f"Field '{key}' does not match: expected '{expected_value}', got '{actual_value}'")
+    def _verify_user_fields(self, user, user_data):
+        self.assertEqual(user.username, user_data['username'])
+        self.assertEqual(user.first_name, user_data['first_name'])
+        self.assertEqual(user.last_name, user_data['last_name'])
+        self.assertEqual(user.role, user_data['role'])
+        self.assertEqual(user.email, user_data['email'])
 
-
-    #New User Section
+    # Test methods
     def test_valid_user_fields_new_user_plus_admin(self):
         new_user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
         self._verify_user_fields(new_user, self.valid_user_data_new)
@@ -321,8 +373,6 @@ class TestSaveUser(TestCase):
         with self.assertRaises(ValidationError):
             UserController.saveUser(self.valid_user_data_new, self.admin_user)
 
-
-    #Edit User Section
     def test_valid_user_id_plus_good_edits_plus_admin_requestor_other_user(self):
         self.user_data['id'] = self.unassigned_user.id
         self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
@@ -331,16 +381,16 @@ class TestSaveUser(TestCase):
     def test_valid_user_id_plus_bad_edits_plus_admin_requestor_other_user(self):
         new_user = UserController.saveUser(self.user_data, self.admin_user)
         with self.assertRaises(ValidationError):
-            self.unassigned_user= UserController.saveUser(self.user_data, self.admin_user)
+            self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
 
     def test_invalid_user_id_plus_good_edits_plus_admin_requestor_other_user(self):
-        self.user_data['id']=99999
+        self.user_data['id'] = 99999
         with self.assertRaises(ObjectDoesNotExist):
             self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
 
     def test_invalid_user_id_plus_bad_edits_plus_admin_requestor_other_user(self):
         new_user = UserController.saveUser(self.user_data, self.admin_user)
-        self.user_data['id']=99999
+        self.user_data['id'] = 99999
         with self.assertRaises((ObjectDoesNotExist, ValidationError)):
             self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
 
@@ -386,7 +436,6 @@ class TestSaveUser(TestCase):
         with self.assertRaises((ObjectDoesNotExist, ValidationError, PermissionDenied)):
             self.unassigned_user = UserController.saveUser(self.user_data, self.assigned_user)
 
-    #Users editing their own information section
     def test_ta_user_can_edit_own_info(self):
         self.user_data['id'] = self.unassigned_user.id
         self.user_data['role'] = self.unassigned_user.role
@@ -406,49 +455,42 @@ class TestSaveUser(TestCase):
 
     def test_admin_cannot_change_own_role(self):
         self.user_data['id'] = self.admin_user.id
-        self.user_data['role'] = self.INSTRUCTOR
-
+        self.user_data['role'] = 'Instructor'
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.admin_user)
 
     def test_admin_cannot_change_other_admin_role(self):
-        # Create a second admin
-        admin_user_2 = self._create_and_save_user(self.ADMIN, 'EMAIL_TEST_2', 'PASSWORD_TEST_2', 'AdminF_name_2',
-                                                  'AdminL_name_2', 'AdminUsername_2')
-
+        admin_user_2 = self._create_and_save_user(
+            'Admin', 'admin2@test.com', 'password123', 'Admin2', 'User', 'adminuser2'
+        )
         self.user_data['id'] = admin_user_2.id
-        self.user_data['role'] = self.INSTRUCTOR
-
+        self.user_data['role'] = 'Instructor'
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.admin_user)
 
     def test_admin_can_change_role_to_instructor(self):
         self.user_data['id'] = self.unassigned_user.id
-        self.user_data['role'] = self.INSTRUCTOR
-
+        self.user_data['role'] = 'Instructor'
         changed_user = UserController.saveUser(self.user_data, self.admin_user)
         self._verify_user_fields(changed_user, self.user_data)
 
     def test_admin_can_change_role_to_ta(self):
         self.user_data['id'] = self.unassigned_user.id
-        self.user_data['role'] = self.TA
-
+        self.user_data['role'] = 'TA'
         changed_user = UserController.saveUser(self.user_data, self.admin_user)
         self._verify_user_fields(changed_user, self.user_data)
 
     def test_users_cannot_change_any_role(self):
         self.user_data['id'] = self.unassigned_user.id
-        self.user_data['role'] = self.ADMIN
-
+        self.user_data['role'] = 'Admin'
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.unassigned_user)
-
         self.user_data['id'] = self.assigned_user.id
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.assigned_user)
 
     def test_username_conflict_when_user_edits_own_info(self):
-        conflicting_user = self._create_and_save_user(self.TA, 'conflict@test.com', 'PASSWORD', 'ConflictFirst',
+        conflicting_user = self._create_and_save_user('TA', 'conflict@test.com', 'password123', 'ConflictFirst',
                                                       'ConflictLast', 'conflictusername')
         self.user_data['id'] = self.unassigned_user.id
         self.user_data['username'] = conflicting_user.username
@@ -457,16 +499,10 @@ class TestSaveUser(TestCase):
             UserController.saveUser(self.user_data, self.unassigned_user)
 
     def test_email_conflict_when_user_edits_own_info(self):
-        conflicting_user = self._create_and_save_user(self.TA, 'conflict@test.com', 'PASSWORD', 'ConflictFirst',
+        conflicting_user = self._create_and_save_user('TA', 'conflict@test.com', 'password123', 'ConflictFirst',
                                                       'ConflictLast', 'conflictusername')
         self.user_data['id'] = self.unassigned_user.id
         self.user_data['email'] = conflicting_user.email
         self.user_data['role'] = self.unassigned_user.role
         with self.assertRaises(ValidationError):
             UserController.saveUser(self.user_data, self.unassigned_user)
-
-
-if __name__ == '__main__':
-    import unittest
-
-    unittest.main()
