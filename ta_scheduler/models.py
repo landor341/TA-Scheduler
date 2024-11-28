@@ -58,7 +58,7 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
     # returns assigned courses based on role (none for admin)
-    def assigned_courses(self):
+    def get_assigned_courses(self):
         if self.role == "Instructor":
             return self.coursesection_set.values("course")
         elif self.role == "TA":
