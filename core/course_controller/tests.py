@@ -1,15 +1,14 @@
-
 from django.test import TestCase
 from ta_scheduler.models import Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester
 from datetime import date
-from core.local_data_classes import CourseFormData, CourseOverview, CourseRef
+from core.local_data_classes import CourseFormData, CourseOverview
 from core.course_controller.CourseController import CourseController
 
 
 # Helper function to generate test data
 def setup_database(course_list, semester_name="Fall 2024"):
     """
-        Generate test courses with sections, instructors, ta's,
+        Generate test courses with ta's,
         course assignments, and lab assignments
     """
     semester = Semester.objects.create(
@@ -23,23 +22,7 @@ def setup_database(course_list, semester_name="Fall 2024"):
         course_count += 1
 
         for i in range(course_count):
-            instructor = User.objects.create_user(
-                username=f"user_{user_count}",
-                password="password",
-                role="Instructor",
-                first_name=f"First_{user_count}",
-                last_name=f"Last_{user_count}"
-            )
             user_count += 1
-
-            section = CourseSection.objects.create(
-                course=course,
-                course_section_number=i,
-                instructor=instructor,
-                start_time="09:00",
-                end_time="10:30",
-                days="Mon, Wed"
-            )
 
             ta = User.objects.create_user(
                 username=f"user_{user_count}",
@@ -95,7 +78,7 @@ class TestSaveCourses(TestCase):
     def test_modifyCourse(self):
         course = Course.objects.first()
         course_data = CourseFormData(course_code=course.course_code, course_name="Updated Course", semester=self.semester,  instructor=None, lab_sections_codes=None, course_sections_codes=None)
-        result = CourseController.save_course(course_data, id=course.id)
+        result = CourseController.save_course(course_data, course_code=course.course_code)
         self.assertEqual(result, str(course.id))
         self.assertEqual(Course.objects.get(id=course.id).course_name, "Updated Course")
 
@@ -107,7 +90,7 @@ class TestSaveCourses(TestCase):
     def test_badModifyCourse(self):
         course_data = CourseFormData(course_code="InvalidCode", course_name="Invalid", semester=self.semester, instructor=None, lab_sections_codes=None,  course_sections_codes=None)
         with self.assertRaises(ValueError):
-            CourseController.save_course(course_data, id=9999)
+            CourseController.save_course(course_data, course_code="")
 
 
 # Test cases for get_course
@@ -122,14 +105,14 @@ class TestGetCourses(TestCase):
 
     def test_getValidCourseDetails(self):
         course = Course.objects.first()
-        result = CourseController.get_course(course.id)
+        result = CourseController.get_course(course.course_code)
         self.assertIsInstance(result, CourseOverview)
         self.assertEqual(result.code, course.course_code)
         self.assertEqual(result.name, course.course_name)
 
     def test_getValidCourseLabSections(self):
         course = Course.objects.first()
-        result = CourseController.get_course(course.id)
+        result = CourseController.get_course(course.course_code)
         lab_sections = LabSection.objects.filter(course=course)
 
         self.assertEqual(len(result.lab_sections), lab_sections.count())
@@ -143,7 +126,7 @@ class TestGetCourses(TestCase):
 
     def test_getValidCourseSections(self):
         course = Course.objects.first()
-        result = CourseController.get_course(course.id)
+        result = CourseController.get_course(course.course_code)
         course_sections = CourseSection.objects.filter(course=course)
 
         self.assertEqual(len(result.course_sections), course_sections.count())
@@ -153,12 +136,12 @@ class TestGetCourses(TestCase):
 
     def test_getInvalidCourse(self):
         with self.assertRaises(ValueError):
-            CourseController.get_course(9999)
+            CourseController.get_course("")
 
     def test_getCourseWithNoLabSections(self):
         # Create a course without lab sections
         course = Course.objects.create(course_code="EmptyLabCourse", course_name="No Labs", semester=Semester.objects.first())
-        result = CourseController.get_course(course.id)
+        result = CourseController.get_course(course.course_code)
 
         self.assertIsInstance(result, CourseOverview)
         self.assertEqual(len(result.lab_sections), 0)
@@ -200,23 +183,233 @@ class TestDeleteCourse(TestCase):
 
     def test_deleteCourse_validId(self):
         course = Course.objects.first()
-        CourseController.delete_course(course.id)
+        CourseController.delete_course(course.course_code)
 
         self.assertFalse(Course.objects.filter(course_code="Test1").exists())
 
 
-    def test_deleteCourse_invalidID(self):
+    def test_deleteCourse_invalidCode(self):
         with self.assertRaises(ValueError):
-            CourseController.delete_course(2024)
+            CourseController.delete_course("Fail4")
 
     def test_deleteCourse_properCascade(self):
         course = Course.objects.first()
-        CourseController.delete_course(course.id)
+        CourseController.delete_course(course.course_code)
 
         self.assertFalse(CourseSection.objects.filter(course_section_number="0").exists())
     def test_deleteCourse_invalidInput(self):
         with self.assertRaises(ValueError):
-            CourseController.delete_course("abcde")
+            CourseController.delete_course("")
+
+
+# Test cases for saving lab sections
+class TestSaveLabSections(TestCase):
+    def setUp(self):
+        self.semester = Semester.objects.create(
+            semester_name="Fall 2024", start_date=date(2024, 9, 1), end_date=date(2024, 12, 15)
+        )
+        self.course = Course.objects.create(course_code="CS101", course_name="Intro to CS", semester=self.semester)
+
+    def test_save_new_lab_sections(self):
+        # Prepare valid course data with new lab section numbers
+        course_data = CourseFormData(
+            course_code=self.course.course_code,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=[1, 2, 3],
+            course_sections_codes=None,
+        )
+        result = CourseController.save_lab_sections(course_data)
+        self.assertIsNotNone(result)
+
+        # Verify the new lab sections are created
+        lab_sections = LabSection.objects.filter(course=self.course)
+        self.assertEqual(lab_sections.count(), 3)
+        self.assertListEqual(
+            sorted([lab.lab_section_number for lab in lab_sections]),
+            [1, 2, 3],
+        )
+
+    def test_save_lab_sections_no_lab_codes(self):
+        # Prepare course data with no lab section numbers
+        course_data = CourseFormData(
+            course_code=self.course.course_code,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=None,
+            course_sections_codes=None,
+        )
+        result = CourseController.save_lab_sections(course_data)
+        self.assertIsNotNone(result)
+
+        # Verify no lab sections are created
+        lab_sections = LabSection.objects.filter(course=self.course)
+        self.assertEqual(lab_sections.count(), 0)
+
+    def test_save_lab_sections_invalid_course(self):
+        # Prepare course data with an invalid course code
+        course_data = CourseFormData(
+            course_code="",
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=[1, 2],
+            course_sections_codes=None,
+        )
+        with self.assertRaises(ValueError):
+            CourseController.save_lab_sections(course_data)
+
+    def test_save_lab_sections_duplicate_section_numbers(self):
+        # Create an existing lab section to introduce a duplicate
+        LabSection.objects.create(course=self.course, lab_section_number=1, start_time="14:00", end_time="16:00")
+
+        # Prepare course data with duplicate lab section numbers
+        course_data = CourseFormData(
+            course_code=self.course.course_code,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=[1, 2],
+            course_sections_codes=None,
+        )
+        with self.assertRaises(ValueError):
+            CourseController.save_lab_sections(course_data)
+
+    def test_save_lab_sections_missing_course_code(self):
+        # Prepare course data with no course code
+        course_data = CourseFormData(
+            course_code=None,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=[1, 2],
+            course_sections_codes=None,
+        )
+        with self.assertRaises(ValueError):
+            CourseController.save_lab_sections(course_data)
+
+
+# Test cases for saving course sections
+class TestSaveCourseSections(TestCase):
+    def setUp(self):
+        self.semester = Semester.objects.create(
+            semester_name="Fall 2024", start_date=date(2024, 9, 1), end_date=date(2024, 12, 15)
+        )
+        self.course = Course.objects.create(course_code="CS101", course_name="Intro to CS", semester=self.semester)
+        self.instructor = User.objects.create_user(
+            username="instructor",
+            password="password",
+            role="Instructor",
+            first_name="John",
+            last_name="Doe",
+        )
+
+    def test_save_new_course_sections(self):
+        # Prepare valid course data with new course section numbers
+        course_data = CourseFormData(
+            course_code=self.course.course_code,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=None,
+            course_sections_codes=[1, 2, 3],
+        )
+        result = CourseController.save_course_sections(course_data)
+        self.assertIsNotNone(result)
+
+        # Verify the new course sections are created
+        course_sections = CourseSection.objects.filter(course=self.course)
+        self.assertEqual(course_sections.count(), 3)
+        self.assertListEqual(
+            sorted([section.course_section_number for section in course_sections]),
+            [1, 2, 3],
+        )
+
+    def test_save_course_sections_no_section_codes(self):
+        # Prepare course data with no course section numbers
+        course_data = CourseFormData(
+            course_code=self.course.course_code,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=None,
+            course_sections_codes=None,
+        )
+        result = CourseController.save_course_sections(course_data)
+        self.assertIsNotNone(result)
+
+        # Verify no course sections are created
+        course_sections = CourseSection.objects.filter(course=self.course)
+        self.assertEqual(course_sections.count(), 0)
+
+    def test_save_course_sections_invalid_course(self):
+        # Prepare course data with an invalid course code
+        course_data = CourseFormData(
+            course_code="",
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=None,
+            course_sections_codes=[1, 2],
+        )
+        with self.assertRaises(ValueError):
+            CourseController.save_course_sections(course_data)
+
+    def test_save_course_sections_duplicate_section_numbers(self):
+        # Create an existing course section to introduce a duplicate
+        CourseSection.objects.create(
+            course=self.course,
+            course_section_number=1,
+            instructor=self.instructor,
+            start_time="09:00",
+            end_time="10:30",
+        )
+
+        # Prepare course data with duplicate course section numbers
+        course_data = CourseFormData(
+            course_code=self.course.course_code,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=None,
+            course_sections_codes=[1, 2],
+        )
+        with self.assertRaises(ValueError):
+            CourseController.save_course_sections(course_data)
+
+    def test_save_course_sections_missing_course_code(self):
+        # Prepare course data with no course code
+        course_data = CourseFormData(
+            course_code=None,
+            course_name=None,
+            semester=None,
+            instructor=None,
+            lab_sections_codes=None,
+            course_sections_codes=[1, 2],
+        )
+        with self.assertRaises(ValueError):
+            CourseController.save_course_sections(course_data)
+
+    def test_save_course_sections_with_instructor(self):
+        # Assign an instructor and validate it works as expected
+        course_data = CourseFormData(
+            course_code=self.course.course_code,
+            course_name=None,
+            semester=None,
+            instructor=self.instructor,
+            lab_sections_codes=None,
+            course_sections_codes=[1],
+        )
+        result = CourseController.save_course_sections(course_data)
+        self.assertIsNotNone(result)
+
+        # Verify the course section is created with the instructor
+        course_section = CourseSection.objects.get(course=self.course, course_section_number=1)
+        self.assertEqual(course_section.instructor, self.instructor)
+
+
 
 
 
