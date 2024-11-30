@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from datetime import time
 from typing import List
 
-from ta_scheduler.models import Semester
+from ta_scheduler.models import Semester, Course, User
 
 
 @dataclass
@@ -39,10 +40,8 @@ class CourseFormData:
     """
     course_code: str | None
     course_name: str | None
-    instructor: UserRef | None
     semester: Semester | None
-    lab_sections_codes: List[int] | None
-    course_sections_codes: List[int] | None
+
 
 
 @dataclass
@@ -88,7 +87,31 @@ class PrivateUserProfile(UserProfile):
 class CourseOverview:
     code: str
     name: str
-    instructor: UserRef
+    semester: Semester | None
     course_sections: List[CourseSectionRef]
     lab_sections: List[LabSectionRef]
+
+@dataclass
+class LabFormData:
+    """
+    A dataclass that exposes the data necessary to fill/submit the LabCreationForm
+    """
+    course: Course
+    lab_section_number: int
+    days: str | None
+    start_time: time | None
+    end_time: time | None
+
+@dataclass
+class CourseSectionFormData:
+    """
+    A dataclass that exposes the data necessary to fill/submit the CourseSectionCreationForm
+    """
+    course: Course
+    instructor: User
+    course_section_number: int
+    days: str | None
+    start_time: time | None
+    end_time: time | None
+
 
