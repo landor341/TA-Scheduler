@@ -24,6 +24,6 @@ urlpatterns = [
     path('', Home.as_view(), name='home'),  # Root
     path('login/', Login.as_view(), name='login'),  # Login Page
     path('profile/', ProfileView.as_view(), name='profile'),  # Profile-view
-    path('course/<course_id>/', CourseView.as_view(), name='course_view'), #selected_course view
+    path('course/<int:course_id>/', CourseView.as_view(), name='course_view'), #selected_course view
     path('logout/', Logout.as_view(), name='logout'),  # LogOut
 ]

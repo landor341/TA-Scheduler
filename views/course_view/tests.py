@@ -53,7 +53,7 @@ class CourseViewTests(TestCase):
     def test_course_view_renders_correct_template(self):
         response = self.client.get(reverse('course_view', args=[self.course.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'selected_course.html')
+        self.assertTemplateUsed(response, 'selected_course/selected_course.html')
 
     def test_course_view_displays_course_information(self):
         response = self.client.get(reverse('course_view', args=[self.course.id]))
