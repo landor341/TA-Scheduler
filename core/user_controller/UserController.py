@@ -1,9 +1,8 @@
-from ta_scheduler.models import User, Course, CourseSection, LabSection, TALabAssignment, TACourseAssignment
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.db import models
 from django.shortcuts import get_object_or_404
-from core.local_data_classes import UserRef, CourseRef, LabSectionRef, TACourseRef, UserProfile, PrivateUserProfile, \
-    CourseOverview, CourseSectionRef
+from ta_scheduler.models import User, Course, CourseSection, LabSection, TALabAssignment, TACourseAssignment
+from core.local_data_classes import UserRef, CourseRef, LabSectionRef, TACourseRef, UserProfile, PrivateUserProfile, CourseOverview, CourseSectionRef
 
 
 class UserController:
@@ -19,12 +18,10 @@ class UserController:
         Parameters: user_id: an id matching a user_id stored in the Users table.
         Returns: Dictionary containing user, courses, course_sections, lab_sections, lab_assignments, and course_assignments linked to the specified user.
         """
-
         if not isinstance(user_id, int) or not user_id:
             raise ValueError("Invalid user_id: must be a non-empty integer")
 
         user = get_object_or_404(User, id=user_id)
-
         courses = Course.objects.filter(
             models.Q(coursesection__instructor=user) |
             models.Q(tacourseassignment__ta=user) |
@@ -48,19 +45,19 @@ class UserController:
             courses_assigned=[CourseRef(course_code=c.course_code, course_name=c.course_name) for c in courses]
         )
 
-        results = {
+        return {
             'user': user_profile,
             'courses': [CourseRef(course_code=c.course_code, course_name=c.course_name) for c in courses],
             'course_sections': [CourseSectionRef(
-                    section_number=str(s.course_section_number),
-                    instructor=UserRef(name=s.instructor.get_full_name(),
-                    username=s.instructor.username)) for s in course_sections],
-            'lab_sections': [LabSectionRef(section_number=str(ls.lab_section_number),
-                        instructor=(UserRef(name=f"{ls.course_section.instructor.first_name} {ls.course_section.instructor.last_name}".strip(),
-                            username=ls.course_section.instructor.username)
-                            if hasattr(ls,'course_section') and ls.course_section and ls.course_section.instructor else None)
-                        )
-                        for ls in lab_sections],
+                section_number=str(s.course_section_number),
+                instructor=UserRef(name=s.instructor.get_full_name(), username=s.instructor.username)
+            ) for s in course_sections],
+            'lab_sections': [LabSectionRef(
+                section_number=str(ls.lab_section_number),
+                instructor=(UserRef(name=f"{ls.course_section.instructor.first_name} {ls.course_section.instructor.last_name}".strip(),
+                             username=ls.course_section.instructor.username)
+                if hasattr(ls, 'course_section') and ls.course_section and ls.course_section.instructor else None)
+            ) for ls in lab_sections],
             'lab_assignments': [lab_a.id for lab_a in lab_assignments],
             'course_assignments': [
                 TACourseRef(
@@ -68,7 +65,7 @@ class UserController:
                     course_name=ca.course.course_name,
                     instructor=(UserRef(name=ca.course.coursesection_set.first().instructor.get_full_name(),
                                 username=ca.course.coursesection_set.first().instructor.username)
-                                if ca.course.coursesection_set.first().instructor else None),
+                    if ca.course.coursesection_set.first().instructor else None),
                     is_grader=(
                         TACourseAssignment.objects.filter(ta=user, course=ca.course).first().grader_status
                         if TACourseAssignment.objects.filter(ta=user, course=ca.course).exists()
@@ -78,7 +75,6 @@ class UserController:
                 )
                 for ca in course_assignments],
         }
-        return results
 
     @staticmethod
     def saveUser(user_data, requesting_user):
@@ -100,13 +96,7 @@ class UserController:
         if not hasattr(requesting_user, 'username'):
             raise ValidationError("Error: 'requesting_user' field is required")
 
-        user_to_edit = None
-
-        if 'id' in user_data:
-            user_to_edit = UserController._get_user_by_id(user_data['id'])
-
-        user_to_edit = user_to_edit or User()
-
+        user_to_edit = UserController._get_user_by_id(user_data.get('id')) if 'id' in user_data else User()
         UserController._request_permission_check(requesting_user, user_data, user_to_edit)
         UserController._update_user_fields(user_to_edit, user_data)
 
@@ -123,15 +113,14 @@ class UserController:
         Preconditions: id provided must be a valid user id.
         Postconditions: Deletes the user with the matching id as the specified id. If no matching records are found, nothing happens.
         Side-effects: Removes a record from the Users table.
-        Parameters: username: String value for the username of the user to be deleted.
+        Parameters: user_id: String value for the user_id of the user to be deleted.
         Returns: None
         """
         if not isinstance(user_id, int) or not user_id:
             raise ValueError("Invalid user_id: must be a non-empty integer")
 
         try:
-            user_to_delete = User.objects.get(id=user_id)
-            user_to_delete.delete()
+            User.objects.get(id=user_id).delete()
         except User.DoesNotExist:
             raise ValueError("User not found")
 
@@ -153,11 +142,8 @@ class UserController:
             models.Q(last_name__icontains=user_search_string)
         )
 
-        result_users = [
-            UserRef(name=f"{user.first_name} {user.last_name}", username=user.username)
-            for user in matching_users
-        ]
-        return result_users
+        return [UserRef(name=f"{user.first_name} {user.last_name}", username=user.username)
+                for user in matching_users]
 
     @staticmethod
     def _get_user_by_id(user_id):
@@ -165,13 +151,6 @@ class UserController:
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             raise ObjectDoesNotExist("Error: User with the provided ID does not exist")
-
-    @staticmethod
-    def _get_user_by_username(username):
-        try:
-            return User.objects.get(username=username)
-        except User.DoesNotExist:
-            return None
 
     @staticmethod
     def _request_permission_check(requesting_user, user_data, user_to_edit):

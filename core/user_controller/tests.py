@@ -71,7 +71,6 @@ def setup_database(course_list):
             lab_section = create_lab_section(course, i)
             if i % 2 == 1:
                 create_lab_assignment(lab_section, ta)
-
 class TestGetUser(TestCase):
     def setUp(self):
         self.course_list = [
@@ -117,69 +116,46 @@ class TestGetUser(TestCase):
             UserController.getUser("invalid_id")
 
     def test_validInputs(self):
-        # Set up lab assignments to ensure users and related data are in place
         self.setup_lab_assignments()
 
-        # Iterate over all users in the database
         for user in User.objects.all():
-            print(f"Testing user: {user.username} with id {user.id}")
-
-            # Fetch user data from UserController
             res = UserController.getUser(user.id)
-            print(f"Result from UserController.getUser: {res}")
 
-            # Check if the returned result is a dictionary
             if isinstance(res, dict):
-                # Check 'courses' list
                 self.assertIsInstance(res['courses'], list)
                 for course in res['courses']:
                     course_tuple = (course.course_code, course.course_name)
-                    print(f"Checking course: {course_tuple}")
                     self.assertIn(course_tuple, self.course_list)
 
-                # Check 'course_sections' list
                 self.assertIsInstance(res['course_sections'], list)
                 for course_section in res['course_sections']:
-                    print(f"Checking course section: {course_section}")
-                    # Changes made here!
-                    self.assertTrue(hasattr(course_section, 'section_number'))  # Verify section_number attribute
+                    self.assertTrue(hasattr(course_section, 'section_number'))
                     self.assertTrue(
-                        isinstance(course_section.instructor, UserRef))  # Ensure instructor is a UserRef or None
+                        isinstance(course_section.instructor, UserRef))
 
-                # Check 'lab_sections' list
                 self.assertIsInstance(res['lab_sections'], list)
                 for lab_section in res['lab_sections']:
-                    print(f"Checking lab section: {lab_section}")
-                    # Changes made here!
-                    self.assertTrue(hasattr(lab_section, 'section_number'))  # Verify section_number attribute
+                    self.assertTrue(hasattr(lab_section, 'section_number'))
                     self.assertTrue(
-                        isinstance(lab_section.instructor, (UserRef, type(None))))  # Allow for None instructor
+                        isinstance(lab_section.instructor, (UserRef, type(None))))
 
-                # Additional checks for TA roles
                 if user.role == 'TA':
-                    print(f"User is a TA, checking lab assignments and course assignments for {user.username}.")
                     self.assertIsInstance(res['lab_assignments'], list)
 
                     for lab_assignment in res['lab_assignments']:
-                        # Changes made here!
-                        self.assertIsNotNone(lab_assignment)  # Ensure the assignment is not None
+                        self.assertIsNotNone(lab_assignment)
 
                     self.assertIsInstance(res['course_assignments'], list)
                     for course_assignment in res['course_assignments']:
-                        print(f"Checking course assignment: {course_assignment}")
-                        # These checks should align with the TACourseRef attributes
                         self.assertTrue(hasattr(course_assignment, 'course_code'))
                         self.assertTrue(hasattr(course_assignment, 'course_name'))
 
             else:
                 self.fail('Expected result to be a dictionary.')
 
-            # Prepare expected assignments for comparison
             expected_assignments = []
-            # Fetch all TA assignments for a given user
             for assignment in TALabAssignment.objects.filter(ta=user):
                 if user.role == "TA":
-                    print(f"Processing TA assignment for {assignment.lab_section.course.course_code}")
                     instructor = None
                     course_section = CourseSection.objects.filter(course=assignment.lab_section.course).first()
                     if course_section and course_section.instructor:
@@ -191,8 +167,6 @@ class TestGetUser(TestCase):
 
                     labs = [lab.lab_section.lab_section_number for lab in TALabAssignment.objects.filter(ta=user)]
 
-                    print(f"Expected lab sections for TA: {labs}")
-
                     expected_assignments.append(
                         TACourseRef(
                             course_code=assignment.lab_section.course.course_code,
@@ -203,8 +177,6 @@ class TestGetUser(TestCase):
                         )
                     )
 
-                    # Check if the current course is correctly included in expected assignments
-                    print(f"Expected assignments: {expected_assignments}")
                     self.assertIn(
                         TACourseRef(
                             course_code=assignment.lab_section.course.course_code,
@@ -215,7 +187,6 @@ class TestGetUser(TestCase):
                         ), expected_assignments
                     )
                 else:
-                    print(f"Non-TA user, checking course reference.")
                     self.assertIn(
                         CourseRef(
                             course_code=assignment.lab_section.course.course_code,
