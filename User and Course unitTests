@@ -14,8 +14,8 @@ class UserTests(TestCase):
         form = CreateUserForm(data=form_data)
         self.assertTrue(form.is_valid())
         user = form.save()
-        self.assertEqual(user.username, 'jdoe')
-        self.assertEqual(user.email, 'jdoe@example.com')
+        self.assertEqual(user.username, 'jboyland')
+        self.assertEqual(user.email, 'jboyland@uwm.edu')
         self.assertEqual(user.role, 'TA')
 
     def test_create_user_form_invalid(self):
