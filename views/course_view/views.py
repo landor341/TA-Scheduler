@@ -22,5 +22,4 @@ class CourseView(View):
             'instructors': instructors,
         }
 
-        # Ensure this path corresponds to your project's template directory structure
         return render(request, 'selected_course.html', context)
