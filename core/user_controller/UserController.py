@@ -2,6 +2,8 @@ from ta_scheduler.models import User, Course, CourseSection, LabSection, TALabAs
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.db import models
 from django.shortcuts import get_object_or_404
+from core.local_data_classes import UserRef, CourseRef, LabSectionRef, TACourseRef, UserProfile, PrivateUserProfile, \
+    CourseOverview, CourseSectionRef
 
 
 class UserController:
@@ -38,15 +40,45 @@ class UserController:
             models.Q(id__in=lab_assignments.values_list('lab_section__id', flat=True))
         ).distinct()
 
-        result = {
-            'user': user,
-            'courses': list(courses),
-            'course_sections': list(course_sections),
-            'lab_sections': list(lab_sections),
-            'lab_assignments': list(lab_assignments),
-            'course_assignments': list(course_assignments)
+        user_profile = UserProfile(
+            name=f"{user.first_name} {user.last_name}".strip(),
+            email=user.email,
+            role=user.role,
+            office_hours=user.office_hours,
+            courses_assigned=[CourseRef(course_code=c.course_code, course_name=c.course_name) for c in courses]
+        )
+
+        results = {
+            'user': user_profile,
+            'courses': [CourseRef(course_code=c.course_code, course_name=c.course_name) for c in courses],
+            'course_sections': [CourseSectionRef(
+                    section_number=str(s.course_section_number),
+                    instructor=UserRef(name=s.instructor.get_full_name(),
+                    username=s.instructor.username)) for s in course_sections],
+            'lab_sections': [LabSectionRef(section_number=str(ls.lab_section_number),
+                        instructor=(UserRef(name=f"{ls.course_section.instructor.first_name} {ls.course_section.instructor.last_name}".strip(),
+                            username=ls.course_section.instructor.username)
+                            if hasattr(ls,'course_section') and ls.course_section and ls.course_section.instructor else None)
+                        )
+                        for ls in lab_sections],
+            'lab_assignments': [lab_a.id for lab_a in lab_assignments],
+            'course_assignments': [
+                TACourseRef(
+                    course_code=ca.course.course_code,
+                    course_name=ca.course.course_name,
+                    instructor=(UserRef(name=ca.course.coursesection_set.first().instructor.get_full_name(),
+                                username=ca.course.coursesection_set.first().instructor.username)
+                                if ca.course.coursesection_set.first().instructor else None),
+                    is_grader=(
+                        TACourseAssignment.objects.filter(ta=user, course=ca.course).first().grader_status
+                        if TACourseAssignment.objects.filter(ta=user, course=ca.course).exists()
+                        else False),
+                    assigned_lab_sections=[lab.lab_section.lab_section_number
+                                           for lab in TALabAssignment.objects.filter(ta=user, lab_section__course=ca.course)]
+                )
+                for ca in course_assignments],
         }
-        return result
+        return results
 
     @staticmethod
     def saveUser(user_data, requesting_user):
@@ -121,10 +153,11 @@ class UserController:
             models.Q(last_name__icontains=user_search_string)
         )
 
-        for user in matching_users:
-            print(f"Username: {user.username}, First Name: {user.first_name}, Last Name: {user.last_name}")
-
-        return matching_users
+        result_users = [
+            UserRef(name=f"{user.first_name} {user.last_name}", username=user.username)
+            for user in matching_users
+        ]
+        return result_users
 
     @staticmethod
     def _get_user_by_id(user_id):
