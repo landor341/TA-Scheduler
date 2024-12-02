@@ -74,6 +74,26 @@ class UserProfile:
     office_hours: str | None
     courses_assigned: List[CourseRef]
 
+@dataclass
+class ComprehensiveUserProfile:
+    user: UserProfile
+    courses: List[CourseRef]
+    course_sections: List[CourseSectionRef]
+    lab_sections: List[LabSectionRef]
+    lab_assignments: List[int]
+    course_assignments: List[TACourseRef]
+
+@dataclass
+class UserProfile:
+    """
+    A dataclass that exposes all public information related to a user
+    """
+    name: str
+    email: str
+    role: str
+    office_hours: str | None
+    courses_assigned: List[CourseRef]
+
 
 @dataclass
 class PrivateUserProfile(UserProfile):
