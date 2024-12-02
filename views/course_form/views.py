@@ -2,7 +2,7 @@ from django.views import View
 
 
 class CourseForm(View):
-    def get(self, request):
+    def get(self, request, code: str | None = None, semester: str | None = None):
         '''
         Preconditions: Admin user logged in.
         Postconditions: Renders a form for creating a course with sections.
@@ -13,7 +13,7 @@ class CourseForm(View):
         '''
         pass
 
-    def post(self, request):
+    def post(self, request, code: str | None = None, semester: str | None = None):
         '''
         Preconditions: Admin user logged in.
         Postconditions: If the form contains valid data, then the course data is saved
