@@ -64,6 +64,14 @@ class TACourseRef(CourseRef):
 
 
 @dataclass
+class CourseOverview:
+    code: str
+    name: str
+    semester: Semester | None
+    course_sections: List[CourseSectionRef]
+    lab_sections: List[LabSectionRef]
+
+@dataclass
 class UserProfile:
     """
     A dataclass that exposes all public information related to a user
@@ -72,7 +80,7 @@ class UserProfile:
     email: str
     role: str
     office_hours: str | None
-    courses_assigned: List[CourseRef]
+    courses_assigned: List[CourseOverview]
 
 
 @dataclass
@@ -83,13 +91,6 @@ class PrivateUserProfile(UserProfile):
     address: str
     phone: str
 
-@dataclass
-class CourseOverview:
-    code: str
-    name: str
-    semester: Semester | None
-    course_sections: List[CourseSectionRef]
-    lab_sections: List[LabSectionRef]
 
 @dataclass
 class LabFormData:
