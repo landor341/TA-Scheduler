@@ -24,4 +24,6 @@ urlpatterns = [
     path('login/', Login.as_view(), name='login'),  # Login Page
     path('profile/', ProfileView.as_view(), name='profile'),  # Profile-view
     path('logout/', Logout.as_view(), name='logout'),  # LogOut
+    path('edit-course/<str:code>/<str:semester>/', ProfileView.as_view(), name='course-form'),  # Course-form
+    path('create-course/', ProfileView.as_view(), name='course-creator')  # Course-form
 ]
