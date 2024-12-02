@@ -5,13 +5,6 @@ from django.contrib.auth import logout
 from django.views import View
 
 
-class Home(View):
-    def get(self, request):
-        if request.user.is_authenticated:
-            return redirect('profile')
-        return redirect('login')
-
-
 class Login(View):
     def get(self, request):
         return render(request, 'login/login.html')
