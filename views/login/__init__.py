@@ -1,1 +1,1 @@
-from .views import Login, Home, Logout
+from .views import Login, Logout
