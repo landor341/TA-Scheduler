@@ -1,8 +1,9 @@
+from django.shortcuts import render
 from django.views import View
 
 
 class CourseForm(View):
-    def get(self, request):
+    def get(self, request, code: str | None = None, semester: str | None = None):
         '''
         Preconditions: Admin user logged in.
         Postconditions: Renders a form for creating a course with sections.
@@ -11,9 +12,9 @@ class CourseForm(View):
         Side-effects: N/A
         TODO: Describe request structure when testing
         '''
-        pass
+        return render(request, 'login/login.html', {"data": {}})
 
-    def post(self, request):
+    def post(self, request, code: str | None = None, semester: str | None = None):
         '''
         Preconditions: Admin user logged in.
         Postconditions: If the form contains valid data, then the course data is saved
@@ -22,7 +23,7 @@ class CourseForm(View):
         Side-effects: New Course, CourseSection, and LabSection models are added to the DB
         TODO: Describe request structure when testing
         '''
-        pass
+        return render(request, 'login/login.html')
 
 
 

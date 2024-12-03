@@ -38,9 +38,10 @@ class CourseFormData:
     """
     A dataclass that exposes the data necessary to fill/submit the CourseForm
     """
-    course_code: str | None
-    course_name: str | None
-    semester: Semester | None
+    course_code: str
+    course_name: str
+    semester: str
+    ta_username_list: str
 
 
 

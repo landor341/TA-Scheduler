@@ -16,7 +16,7 @@ class Login(View):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)  # Setting the user to login state
-            return redirect('profile')  # Redirect to profile view
+            return redirect('home')  # Redirect to profile view
         else:
             messages.error(request, 'Invalid username or password.')
             return render(request, 'login/login.html')
