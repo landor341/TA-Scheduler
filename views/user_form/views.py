@@ -1,8 +1,9 @@
+from django.shortcuts import render
 from django.views import View
 
 
 class UserForm(View):
-    def get(self, request):
+    def get(self, request, username: str | None = None):
         '''
         Preconditions: Admin user logged in.
         Postconditions: Renders a form for creating a user.
@@ -11,9 +12,9 @@ class UserForm(View):
         Side-effects: N/A
         TODO: Describe request structure when testing
         '''
-        pass
+        return render(request, 'login/login.html', {"data": {}})
 
-    def post(self, request):
+    def post(self, request, username: str | None = None):
         '''
         Preconditions: Admin user logged in.
         Postconditions: If the request contains valid course data, then the course data is saved
@@ -23,7 +24,6 @@ class UserForm(View):
         TODO: Describe request structure when testing
         '''
         pass
-
 
 
 
