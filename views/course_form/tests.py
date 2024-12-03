@@ -213,6 +213,7 @@ class TestPostNewCourseForm(TestCase):
 class TestPostExistingCourseForm(TestCase):
     def setUp(self):
         self.client = Client()
+        self.user = loginAsRole(self.client, "Admin", "test")
         self.semester = Semester.objects.create(semester_name="test semester", start_date="2024-09-21", end_date="2024-10-01")
         self.course = Course.objects.create(course_name="test", course_code="1", semester=self.semester)
         self.ta1 = User.objects.create_user(
