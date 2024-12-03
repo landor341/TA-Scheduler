@@ -85,16 +85,12 @@ class TestGetUser(TestCase):
             ('CS101', 'Intro to CS')
         ]
         _setup_database(self.course_list)
-        self.admin_user = User.objects.create_user(
-            role='Admin', email='admin_email@test.com', password='admin_password',
-            first_name='AdminFirst', last_name='AdminLast',
-            username='AdminUsername'
-        )
-        # Create instructor and TA and assign them to courses and labs
+        self.admin_user = _create_user("Admin", 11111)
         self.instructor = _create_user("Instructor", 88888)
         self.ta = _create_user("TA", 99999)
         self.course = Course.objects.get(course_code='CS101')
         _create_course_section(self.course, 0, self.instructor)
+        _create_course_section(self.course, 1, self.admin_user)
         _create_ta_course_assignment(self.course, self.ta)
         self.lab_section = _create_lab_section(self.course, 0)
         _create_lab_assignment(self.lab_section, self.ta)
@@ -102,11 +98,18 @@ class TestGetUser(TestCase):
     def test_validAssignments_for_instructor(self):
         profile = UserController.getUser(self.instructor.id, self.admin_user)
         self._assert_instructor_profile_fields(profile, self.instructor)
-        self._assert_course_overviews(profile.courses_assigned, expected_course_codes=['CS101'])
+        self._assert_course_overviews(profile.courses_assigned, expected_course_codes=['CS101'],
+                                      expected_lab_sections=True)
 
     def test_validAssignments_for_ta(self):
         profile = UserController.getUser(self.ta.id, self.admin_user)
         self._assert_ta_profile_fields(profile, self.ta)
+        self._assert_course_overviews(profile.courses_assigned, expected_course_codes=['CS101'],
+                                      expected_lab_sections=True)
+
+    def test_validAssignments_for_admin(self):
+        profile = UserController.getUser(self.admin_user.id, self.admin_user)
+        self._assert_admin_profile_fields(profile, self.admin_user)
         self._assert_course_overviews(profile.courses_assigned, expected_course_codes=['CS101'],
                                       expected_lab_sections=True)
 
@@ -118,15 +121,20 @@ class TestGetUser(TestCase):
         self.assertEqual(profile.role, 'TA')
         self._assert_private_profile_fields(profile, user)
 
+    def _assert_admin_profile_fields(self, profile, user):
+        self.assertEqual(profile.role, 'Admin')
+        self._assert_private_profile_fields(profile, user)
+
     def _assert_course_overviews(self, course_overviews, expected_course_codes, expected_lab_sections=False):
         self.assertIsInstance(course_overviews, list)
         actual_course_codes = [overview.code for overview in course_overviews]
         self.assertEqual(set(actual_course_codes), set(expected_course_codes), "Course overviews do not match")
 
-        # Verify lab sections within course overviews
-        if expected_lab_sections:
-            lab_sections = [ls for overview in course_overviews for ls in overview.lab_sections]
-            self.assertGreater(len(lab_sections), 0, "No lab sections found, but expected some")
+        for overview in course_overviews:
+            if expected_lab_sections:
+                self.assertGreater(len(overview.lab_sections), 0, "Expected lab sections, but none found")
+            else:
+                self.assertEqual(len(overview.lab_sections), 0, "Found lab sections, but none were expected")
 
     def _assert_private_profile_fields(self, profile, user):
         self.assertEqual(profile.address, user.address)

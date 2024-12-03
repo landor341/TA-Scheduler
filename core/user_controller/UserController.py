@@ -30,13 +30,13 @@ class UserController:
         user = get_object_or_404(User, id=user_id)
         course_ids = UserController._get_course_ids_based_on_role(user)
         courses = Course.objects.filter(id__in=course_ids)
-        course_overviews = UserController._construct_course_overviews(courses, user)
+        course_overviews = UserController._construct_course_overviews(user, courses)
 
         return UserController._create_user_profile(user, requesting_user, course_overviews)
 
     @staticmethod
     def _get_course_ids_based_on_role(user):
-        if user.role == "Instructor":
+        if user.role in["Instructor", "Admin"]:
             return user.coursesection_set.values_list("course", flat=True)
         elif user.role == "TA":
             return user.tacourseassignment_set.values_list("course", flat=True)
@@ -63,11 +63,15 @@ class UserController:
         )
 
     @staticmethod
-    def _construct_course_overviews(courses, user):
+    def _construct_course_overviews(user, courses):
         course_overviews = []
         for course in courses:
-            course_sections = CourseSection.objects.filter(course=course, instructor=user)
-            lab_sections = LabSection.objects.filter(course=course)
+            if user.role in ["Instructor", "Admin"]:
+                course_sections = CourseSection.objects.filter(course=course, instructor=user)
+                lab_sections = LabSection.objects.filter(course=course)
+            elif user.role == "TA":
+                course_sections = CourseSection.objects.filter(course=course)
+                lab_sections = LabSection.objects.filter(course=course, talabassignment_set__ta=user)
 
             course_overviews.append(CourseOverview(
                 code=course.course_code,
@@ -96,9 +100,9 @@ class UserController:
                 section_number=str(ls.lab_section_number),
                 instructor=(
                     UserRef(
-                        name=f"{ls.course_section.instructor.first_name} {ls.course_section.instructor.last_name}".strip(),
-                        username=ls.course_section.instructor.username
-                    ) if hasattr(ls, 'course_section') and ls.course_section and ls.course_section.instructor else None)
+                        name=f"{ls.get_ta().first_name} {ls.get_ta().last_name}".strip(),
+                        username=ls.get_ta().username
+                    ) if ls.get_ta() else None)
             )
             for ls in lab_sections
         ]
