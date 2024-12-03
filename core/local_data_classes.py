@@ -13,7 +13,6 @@ class UserRef:
     name: str
     username: str
 
-
 @dataclass
 class LabSectionRef:
     """
@@ -32,7 +31,6 @@ class CourseSectionRef:
     section_number: str
     instructor: UserRef
 
-
 @dataclass
 class CourseFormData:
     """
@@ -41,8 +39,6 @@ class CourseFormData:
     course_code: str | None
     course_name: str | None
     semester: Semester | None
-
-
 
 @dataclass
 class CourseRef:
@@ -62,26 +58,13 @@ class TACourseRef(CourseRef):
     is_grader: bool
     assigned_lab_sections: List[int]
 
-
 @dataclass
-class UserProfile:
-    """
-    A dataclass that exposes all public information related to a user
-    """
+class CourseOverview:
+    code: str
     name: str
-    email: str
-    role: str
-    office_hours: str | None
-    courses_assigned: List[CourseRef]
-
-@dataclass
-class ComprehensiveUserProfile:
-    user: UserProfile
-    courses: List[CourseRef]
+    semester: Semester | None
     course_sections: List[CourseSectionRef]
     lab_sections: List[LabSectionRef]
-    lab_assignments: List[int]
-    course_assignments: List[TACourseRef]
 
 @dataclass
 class UserProfile:
@@ -92,8 +75,7 @@ class UserProfile:
     email: str
     role: str
     office_hours: str | None
-    courses_assigned: List[CourseRef]
-
+    courses_assigned: List[CourseOverview]
 
 @dataclass
 class PrivateUserProfile(UserProfile):
@@ -102,14 +84,6 @@ class PrivateUserProfile(UserProfile):
     """
     address: str
     phone: str
-
-@dataclass
-class CourseOverview:
-    code: str
-    name: str
-    semester: Semester | None
-    course_sections: List[CourseSectionRef]
-    lab_sections: List[LabSectionRef]
 
 @dataclass
 class LabFormData:
@@ -133,5 +107,3 @@ class CourseSectionFormData:
     days: str | None
     start_time: time | None
     end_time: time | None
-
-

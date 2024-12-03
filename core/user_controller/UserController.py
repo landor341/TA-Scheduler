@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.db import models
 from django.shortcuts import get_object_or_404
 from core.local_data_classes import UserRef, CourseRef, LabSectionRef, TACourseRef, UserProfile, PrivateUserProfile, \
-    CourseSectionRef, ComprehensiveUserProfile
+    CourseSectionRef, CourseOverview
 from ta_scheduler.models import User, Course, CourseSection, LabSection, TALabAssignment, TACourseAssignment
 
 """
@@ -28,16 +28,11 @@ class UserController:
             raise ValueError("Invalid requesting_user: must be a valid User instance")
 
         user = get_object_or_404(User, id=user_id)
-
-        # Fetch course IDs based on user role
         course_ids = UserController._get_course_ids_based_on_role(user)
         courses = Course.objects.filter(id__in=course_ids)
+        course_overviews = UserController._construct_course_overviews(courses, user)
 
-        # Create user profile based on requesting user's role
-        user_profile = UserController._create_user_profile(user, requesting_user, courses)
-
-        # Construct and return ComprehensiveUserProfile
-        return UserController._construct_comprehensive_user_profile(user, user_profile, courses)
+        return UserController._create_user_profile(user, requesting_user, course_overviews)
 
     @staticmethod
     def _get_course_ids_based_on_role(user):
@@ -48,16 +43,14 @@ class UserController:
         return []
 
     @staticmethod
-    def _create_user_profile(user, requesting_user, courses):
-        course_refs = [CourseRef(course_code=c.course_code, course_name=c.course_name) for c in courses]
-
-        if requesting_user.role == 'Admin':
+    def _create_user_profile(user, requesting_user, course_overviews):
+        if requesting_user.role == 'Admin' or user == requesting_user:
             return PrivateUserProfile(
                 name=f"{user.first_name} {user.last_name}".strip(),
                 email=user.email,
                 role=user.role,
                 office_hours=user.office_hours,
-                courses_assigned=course_refs,
+                courses_assigned=course_overviews,
                 address=user.address,
                 phone=user.phone
             )
@@ -66,64 +59,48 @@ class UserController:
             email=user.email,
             role=user.role,
             office_hours=user.office_hours,
-            courses_assigned=course_refs
+            courses_assigned=course_overviews
         )
 
     @staticmethod
-    def _construct_comprehensive_user_profile(user, user_profile, courses):
-        course_sections = CourseSection.objects.filter(instructor=user)
-        lab_assignments = TALabAssignment.objects.filter(ta=user).select_related('lab_section')
-        course_assignments = TACourseAssignment.objects.filter(ta=user)
+    def _construct_course_overviews(courses, user):
+        course_overviews = []
+        for course in courses:
+            course_sections = CourseSection.objects.filter(course=course, instructor=user)
+            lab_sections = LabSection.objects.filter(course=course)
 
-        lab_sections = LabSection.objects.filter(
-            models.Q(course__in=courses) |
-            models.Q(id__in=lab_assignments.values_list('lab_section__id', flat=True))
-        ).distinct()
+            course_overviews.append(CourseOverview(
+                code=course.course_code,
+                name=course.course_name,
+                semester=course.semester,
+                course_sections=UserController._get_course_section_refs(course_sections),
+                lab_sections=UserController._get_lab_section_refs(lab_sections)
+            ))
 
-        return ComprehensiveUserProfile(
-            user=user_profile,
-            courses=[CourseRef(course_code=c.course_code, course_name=c.course_name) for c in courses],
-            course_sections=UserController._get_course_section_refs(course_sections),
-            lab_sections=UserController._get_lab_section_refs(lab_sections),
-            lab_assignments=[lab_a.id for lab_a in lab_assignments],
-            course_assignments=UserController._get_course_assignments(user, course_assignments)
-        )
+        return course_overviews
 
     @staticmethod
     def _get_course_section_refs(course_sections):
-        return [CourseSectionRef(
-            section_number=str(s.course_section_number),
-            instructor=UserRef(name=s.instructor.get_full_name(), username=s.instructor.username)
-        ) for s in course_sections]
+        return [
+            CourseSectionRef(
+                section_number=str(s.course_section_number),
+                instructor=UserRef(name=s.instructor.get_full_name(), username=s.instructor.username)
+            )
+            for s in course_sections
+        ]
 
     @staticmethod
     def _get_lab_section_refs(lab_sections):
-        return [LabSectionRef(
-            section_number=str(ls.lab_section_number),
-            instructor=(UserRef(
-                name=f"{ls.course_section.instructor.first_name} {ls.course_section.instructor.last_name}".strip(),
-                username=ls.course_section.instructor.username)
-                        if hasattr(ls,
-                                   'course_section') and ls.course_section and ls.course_section.instructor else None)
-        ) for ls in lab_sections]
-
-    @staticmethod
-    def _get_course_assignments(user, course_assignments):
         return [
-            TACourseRef(
-                course_code=ca.course.course_code,
-                course_name=ca.course.course_name,
-                instructor=(UserRef(name=inst.get_full_name(),
-                                    username=inst.username)
-                            if (inst := ca.course.coursesection_set.first().instructor) else None),
-                is_grader=(TACourseAssignment.objects.filter(ta=user, course=ca.course).first().grader_status
-                           if TACourseAssignment.objects.filter(ta=user, course=ca.course).exists()
-                           else False),
-                assigned_lab_sections=[lab.lab_section.lab_section_number
-                                       for lab in
-                                       TALabAssignment.objects.filter(ta=user, lab_section__course=ca.course)]
+            LabSectionRef(
+                section_number=str(ls.lab_section_number),
+                instructor=(
+                    UserRef(
+                        name=f"{ls.course_section.instructor.first_name} {ls.course_section.instructor.last_name}".strip(),
+                        username=ls.course_section.instructor.username
+                    ) if hasattr(ls, 'course_section') and ls.course_section and ls.course_section.instructor else None)
             )
-            for ca in course_assignments
+            for ls in lab_sections
         ]
 
     @staticmethod
