@@ -2,38 +2,43 @@ from django.test import TestCase, Client
 from django.urls import reverse
 
 from core.local_data_classes import UserProfile, PrivateUserProfile
-from ta_scheduler.models import Course, Semester, CourseSection, LabSection, User, TALabAssignment, TACourseAssignment
+from ta_scheduler.models import User, Semester, Course, TACourseAssignment, CourseSection, LabSection, TALabAssignment
 
 
 class ProfileAssertions(TestCase):
     def setUp(self):
+        print("Setting up test client.")
         self.client = Client()
 
-    def loginAsAdmin(self):
+    def _loginAsAdmin(self):
+        print("Creating and logging in as Admin user.")
         self.password = 'password123'
         self.user = User.objects.create_user(
-            username='testuser', password=self.password, email='testuser@example.com', first_name='Test',
-            last_name='User', role='Admin', phone='1234567890', address='123 Test Street'
+            username='testuser', password=self.password, email='testuser@example.com',
+            first_name='Test', last_name='User', role='Admin', phone='1234567890', address='123 Test Street'
         )
         self.client.login(username=self.user.username, password=self.password)
 
-    def loginAsInstructor(self):
+    def _loginAsInstructor(self):
+        print("Creating and logging in as Instructor user.")
         self.password = 'password123'
         self.user = User.objects.create_user(
-            username='testuser', password=self.password, email='testuser@example.com', first_name='Test',
-            last_name='User', role='Instructor', phone='1234567890', address='123 Test Street'
+            username='testuser', password=self.password, email='testuser@example.com',
+            first_name='Test', last_name='User', role='Instructor', phone='1234567890', address='123 Test Street'
         )
         self.client.login(username=self.user.username, password=self.password)
 
-    def loginAsTA(self):
+    def _loginAsTA(self):
+        print("Creating and logging in as TA user.")
         self.password = 'password123'
         self.user = User.objects.create_user(
-            username='testuser', password=self.password, email='testuser@example.com', first_name='Test',
-            last_name='User', role='TA', phone='1234567890', address='123 Test Street'
+            username='testuser', password=self.password, email='testuser@example.com',
+            first_name='Test', last_name='User', role='TA', phone='1234567890', address='123 Test Street'
         )
         self.client.login(username=self.user.username, password=self.password)
 
-    def assertSameUser(self, user, profile: UserProfile | PrivateUserProfile):
+    def _assertSameUser(self, user, profile: UserProfile | PrivateUserProfile):
+        print(f"Asserting user details for {user.username}.")
         if isinstance(profile, PrivateUserProfile):
             self.assertEqual(user.address, profile.address, "Incorrect address")
             self.assertEqual(user.phone, profile.phone, "Incorrect phone")
@@ -48,8 +53,11 @@ class TestGetOwnProfile(ProfileAssertions):
     Tests that a user getting their own profile will retrieve the private version of their profile.
     '''
 
-    def __assignUser(self):
-        self.current_semester = Semester.objects.create(semester_name="Current", start_date="2024-07-05", end_date="2024-09-23")
+    def _assignUser(self):
+        print("Assigning user to roles and courses.")
+        self.current_semester = Semester.objects.create(
+            semester_name="Current", start_date="2024-07-05", end_date="2024-09-23"
+        )
 
         self.users_courses = [
             Course.objects.create(course_code="0000", course_name="my test course", semester=self.current_semester),
@@ -67,12 +75,12 @@ class TestGetOwnProfile(ProfileAssertions):
                                           start_time="2:00", end_time="3:15", course=self.users_courses[1]),
              CourseSection.objects.create(course_section_number="051", instructor=self.user, days="We",
                                           start_time="2:30", end_time="3:15", course=self.users_courses[1])
-            ],
+             ],
         ]
         self.user_assigned_lab_sections = [
             [
                 LabSection.objects.create(lab_section_number="001", days="MWF",
-                                          start_time="3:00", end_time="3:45",  course=self.users_courses[0]),
+                                          start_time="3:00", end_time="3:45", course=self.users_courses[0]),
                 LabSection.objects.create(lab_section_number="003", days="MWF",
                                           start_time="4:00", end_time="5:30", course=self.users_courses[0])
             ],
@@ -81,116 +89,146 @@ class TestGetOwnProfile(ProfileAssertions):
 
         self.lab_assignments = [
             [
-              TALabAssignment.objects.create(lab_section=self.user_assigned_lab_sections[0][0], ta=self.user),
-              TALabAssignment.objects.create(lab_section=self.user_assigned_lab_sections[0][1], ta=self.user)
+                TALabAssignment.objects.create(lab_section=self.user_assigned_lab_sections[0][0], ta=self.user),
+                TALabAssignment.objects.create(lab_section=self.user_assigned_lab_sections[0][1], ta=self.user)
             ],
             []
         ]
 
-    def __assert_is_own_profile(self, url, ):
+    def _assert_is_own_profile(self, url):
+        print(f"Checking own profile access via URL: {url}")
         response = self.client.get(url)
         profile: PrivateUserProfile = response.context["data"]
+        print("Asserting profile type is PrivateUserProfile.")
         self.assertIsInstance(profile, PrivateUserProfile, "Incorrect profile type")
-        self.assertSameUser(self.user, profile)
+        self._assertSameUser(self.user, profile)
 
-    def testAdminGetDefault(self):
-        self.loginAsAdmin()
-        self.__assignUser()
-        self.__assert_is_own_profile(reverse("home"))
+    def test_AdminGetDefault(self):
+        print("Testing Admin default profile retrieval.")
+        self._loginAsAdmin()
+        self._assignUser()
+        self._assert_is_own_profile(reverse("home"))
+        print("Admin default profile retrieval test completed.")
 
-    def testAdminGetSelf(self):
-        self.loginAsAdmin()
-        self.__assignUser()
-        self.__assert_is_own_profile(reverse("profile", kwargs={"username": self.user.username}))
+    def test_AdminGetSelf(self):
+        print("Testing Admin self profile retrieval.")
+        self._loginAsAdmin()
+        self._assignUser()
+        self._assert_is_own_profile(reverse("profile", kwargs={"username": self.user.username}))
+        print("Admin self profile retrieval test completed.")
 
+    def test_InstructorGetDefault(self):
+        print("Testing Instructor default profile retrieval.")
+        self._loginAsInstructor()
+        self._assignUser()
+        self._assert_is_own_profile(reverse("home"))
+        print("Instructor default profile retrieval test completed.")
 
-    def testInstructorGetDefault(self):
-        self.loginAsInstructor()
-        self.__assignUser()
-        self.__assert_is_own_profile(reverse("home"))
+    def test_InstructorGetSelf(self):
+        print("Testing Instructor self profile retrieval.")
+        self._loginAsInstructor()
+        self._assignUser()
+        self._assert_is_own_profile(reverse("profile", kwargs={"username": self.user.username}))
+        print("Instructor self profile retrieval test completed.")
 
-    def testInstructorGetSelf(self):
-        self.loginAsInstructor()
-        self.__assignUser()
-        self.__assert_is_own_profile(reverse("profile", kwargs={"username": self.user.username}))
+    def test_TAGetDefault(self):
+        print("Testing TA default profile retrieval.")
+        self._loginAsTA()
+        self._assignUser()
+        self._assert_is_own_profile(reverse("home"))
+        print("TA default profile retrieval test completed.")
 
+    def test_TAGetSelf(self):
+        print("Testing TA self profile retrieval.")
+        self._loginAsTA()
+        self._assignUser()
+        self._assert_is_own_profile(reverse("profile", kwargs={"username": self.user.username}))
+        print("TA self profile retrieval test completed.")
 
-    def testTAGetDefault(self):
-        self.loginAsTA()
-        self.__assignUser()
-        self.__assert_is_own_profile(reverse("home"))
-
-    def testTAGetSelf(self):
-        self.loginAsTA()
-        self.__assignUser()
-        self.__assert_is_own_profile(reverse("profile", kwargs={"username": self.user.username}))
 
 class TestGetFakeUser(ProfileAssertions):
-    def testTAGetFakeUser(self):
-        self.loginAsTA()
-
+    def test_TAGetFakeUser(self):
+        print("Testing TA access to fake user profile.")
+        self._loginAsTA()
         response = self.client.get(reverse("profile", kwargs={"username": "theFakestUsernameEver"}))
         self.assertRedirects(response, "home")
+        print("TA fake user profile access test completed.")
 
-    def testInstructorGetFakeUser(self):
-        self.loginAsInstructor()
-
+    def test_InstructorGetFakeUser(self):
+        print("Testing Instructor access to fake user profile.")
+        self._loginAsInstructor()
         response = self.client.get(reverse("profile", kwargs={"username": "theFakestUsernameEver"}))
         self.assertRedirects(response, "home")
+        print("Instructor fake user profile access test completed.")
 
-    def testAdminGetFakeUser(self):
-        self.loginAsAdmin()
-
+    def test_AdminGetFakeUser(self):
+        print("Testing Admin access to fake user profile.")
+        self._loginAsAdmin()
         response = self.client.get(reverse("profile", kwargs={"username": "theFakestUsernameEver"}))
         self.assertRedirects(response, "home")
+        print("Admin fake user profile access test completed.")
 
 
 class TestGetUnassignedProfile(ProfileAssertions):
     def setUp(self):
+        super().setUp()  # Ensures calling parent setup
+        print("Setting up unassigned user profile.")
         self.unassignedUser: User = User.objects.create_user(
-            username="Unassigned", password="Unimportant", email="others@uwm.edu", first_name="unass",
-            last_name="igned", role="TA", phone="1222333444", address="888 poodle drive", office_hours="Tuesday"
+            username="Unassigned", password="Unimportant", email="others@uwm.edu",
+            first_name="unass", last_name="igned", role="TA", phone="1222333444", address="888 poodle drive",
+            office_hours="Tuesday"
         )
 
-    def testTAGetUnassignedUser(self):
-        self.loginAsTA()
-
+    def test_TAGetUnassignedUser(self):
+        print("Testing TA access to unassigned user profile.")
+        self._loginAsTA()
         response = self.client.get(reverse("profile", kwargs={"username": self.unassignedUser.username}))
         user_profile: UserProfile = response.context["data"]
-        self.assertNotIsInstance(user_profile, PrivateUserProfile, "Returned private user data when user does not have access")
-        self.assertIsInstance(user_profile, UserProfile, "Incorrect profile data type")
-        self.assertEqual([], user_profile.courses_assigned, "Returned courses assigned for user with no assignments")
-        self.assertSameUser(self.unassignedUser, user_profile)
-
-    def testInstructorGetUnassignedUser(self):
-        self.loginAsInstructor()
-
-        response = self.client.get(reverse("profile", kwargs={"username": self.unassignedUser.username}))
-        user_profile: UserProfile = response.context["data"]
+        print("Asserting user profile type is UserProfile, not PrivateUserProfile.")
         self.assertNotIsInstance(user_profile, PrivateUserProfile,
                                  "Returned private user data when user does not have access")
         self.assertIsInstance(user_profile, UserProfile, "Incorrect profile data type")
         self.assertEqual([], user_profile.courses_assigned, "Returned courses assigned for user with no assignments")
-        self.assertSameUser(self.unassignedUser, user_profile)
+        self._assertSameUser(self.unassignedUser, user_profile)
+        print("TA unassigned user profile access test completed.")
 
-    def testAdminGetUnassignedUser(self):
-        self.loginAsAdmin()
+    def test_InstructorGetUnassignedUser(self):
+        print("Testing Instructor access to unassigned user profile.")
+        self._loginAsInstructor()
+        response = self.client.get(reverse("profile", kwargs={"username": self.unassignedUser.username}))
+        user_profile: UserProfile = response.context["data"]
+        print("Asserting user profile type is UserProfile, not PrivateUserProfile.")
+        self.assertNotIsInstance(user_profile, PrivateUserProfile,
+                                 "Returned private user data when user does not have access")
+        self.assertIsInstance(user_profile, UserProfile, "Incorrect profile data type")
+        self.assertEqual([], user_profile.courses_assigned, "Returned courses assigned for user with no assignments")
+        self._assertSameUser(self.unassignedUser, user_profile)
+        print("Instructor unassigned user profile access test completed.")
 
+    def test_AdminGetUnassignedUser(self):
+        print("Testing Admin access to unassigned user profile.")
+        self._loginAsAdmin()
         response = self.client.get(reverse("profile", kwargs={"username": self.unassignedUser.username}))
         user_profile: PrivateUserProfile = response.context["data"]
-        self.assertIsInstance(user_profile, PrivateUserProfile,"Failed to return private user profile data for admin")
+        print("Asserting user profile type is PrivateUserProfile.")
+        self.assertIsInstance(user_profile, PrivateUserProfile, "Failed to return private user profile data for admin")
         self.assertEqual([], user_profile.courses_assigned, "Returned courses assigned for user with no assignments")
-        self.assertSameUser(self.unassignedUser, user_profile)
+        self._assertSameUser(self.unassignedUser, user_profile)
+        print("Admin unassigned user profile access test completed.")
 
 
 class TestGetProfileWithAssignments(ProfileAssertions):
-
     def setUp(self):
-        self.current_semester = Semester.objects.create(semester_name="Current", start_date="2024-07-05", end_date="2024-09-23")
+        super().setUp()  # Ensures calling parent setup
+        print("Setting up profile with assignments.")
+        self.current_semester = Semester.objects.create(
+            semester_name="Current", start_date="2024-07-05", end_date="2024-09-23"
+        )
 
         self.other_user = User.objects.create(
-            username='assigneduser', password="notImportnat", email='assignuser@example.com', first_name='assign',
-            last_name='person', role='Instructor', phone='1334577890', address='135 assign Street'
+            username='assigneduser', password="notImportant", email='assignuser@example.com',
+            first_name='assign', last_name='person', role='Instructor', phone='1334577890',
+            address='135 assign Street'
         )
 
         self.courses = [
@@ -209,7 +247,7 @@ class TestGetProfileWithAssignments(ProfileAssertions):
                                           start_time="2:00", end_time="3:15", course=self.courses[1]),
              CourseSection.objects.create(course_section_number="051", instructor=self.other_user, days="We",
                                           start_time="2:30", end_time="3:15", course=self.courses[1])
-            ],
+             ],
         ]
         self.assigned_lab_sections = [
             [
@@ -220,50 +258,58 @@ class TestGetProfileWithAssignments(ProfileAssertions):
             ],
             [],
         ]
-        # TODO: Add additional data that shouldn't be included in tests
 
         self.lab_assignments = [
             [
-              TALabAssignment.objects.create(lab_section=self.assigned_lab_sections[0][0], ta=self.other_user),
-              TALabAssignment.objects.create(lab_section=self.assigned_lab_sections[0][1], ta=self.other_user)
+                TALabAssignment.objects.create(lab_section=self.assigned_lab_sections[0][0], ta=self.other_user),
+                TALabAssignment.objects.create(lab_section=self.assigned_lab_sections[0][1], ta=self.other_user)
             ],
             []
         ]
 
-    def testAdminGetCorrectUser(self):
-        self.loginAsAdmin()
-
+    def test_AdminGetCorrectUser(self):
+        print("Testing Admin access to correct user profile.")
+        self._loginAsAdmin()
         response = self.client.get(reverse("profile", kwargs={"username": self.other_user.username}))
         user_profile: PrivateUserProfile = response.context["data"]
+        print("Asserting user profile type is PrivateUserProfile.")
         self.assertIsInstance(user_profile, PrivateUserProfile, "Did not return private profile data for admin")
-        self.assertSameUser(self.other_user, user_profile)
+        self._assertSameUser(self.other_user, user_profile)
+        print("Admin correct user profile access test completed.")
 
-
-    def testAdminGetCorrectCoursesAssigned(self):
-        self.loginAsAdmin()
-
+    def test_AdminGetCorrectCoursesAssigned(self):
+        print("Testing Admin access for correct courses assigned.")
+        self._loginAsAdmin()
         response = self.client.get(reverse("profile", kwargs={"username": self.other_user.username}))
         user_profile: PrivateUserProfile = response.context["data"]
+        print("Asserting courses and sections are correctly assigned.")
         self.assertIsInstance(user_profile, PrivateUserProfile, "Did not return private profile data for admin")
         self.assertEqual(len(user_profile.courses_assigned), len(self.courses))
         for i in range(len(self.courses)):
-            self.assertEqual(self.courses[i].course_code, user_profile.courses_assigned[i].code, "Sections are not in descending order by course number")
-            self.assertEqual(self.courses[i].course_name, user_profile.courses_assigned[i].name, "Course has incorrect name")
-            self.assertEqual(self.courses[i].semester.semester_name, user_profile.courses_assigned[i].semester, "Course has incorrect semester")
+            self.assertEqual(self.courses[i].course_code, user_profile.courses_assigned[i].code,
+                             "Sections are not in descending order by course number")
+            self.assertEqual(self.courses[i].course_name, user_profile.courses_assigned[i].name,
+                             "Course has incorrect name")
+            self.assertEqual(self.courses[i].semester.semester_name, user_profile.courses_assigned[i].semester,
+                             "Course has incorrect semester")
 
             assigned_sections = self.assigned_course_sections[i]
             profile_sections = user_profile.courses_assigned[i].course_sections
-            self.assertEqual(len(assigned_sections),len(profile_sections),"Course has wrong number of sections")
+            self.assertEqual(len(assigned_sections), len(profile_sections), "Course has wrong number of sections")
             for j in range(len(self.assigned_course_sections[i])):
-                self.assertEqual(profile_sections[j].section_number, assigned_sections[j].course_section_number, "One of the sections is out of order")
-                self.assertEqual(profile_sections[j].instructor.username, self.other_user.username, "Returned section user isn't assigned to")
+                self.assertEqual(profile_sections[j].section_number, assigned_sections[j].course_section_number,
+                                 "One of the sections is out of order")
+                self.assertEqual(profile_sections[j].instructor.username, self.other_user.username,
+                                 "Returned section user isn't assigned to")
 
             assigned_lab_sections = self.assigned_lab_sections[i]
             lab_assignments = self.lab_assignments[i]
             profile_lab_sections = user_profile.courses_assigned[i].lab_sections
-            self.assertEqual(len(assigned_lab_sections),len(profile_lab_sections),"Course has wrong number of sections")
+            self.assertEqual(len(assigned_lab_sections), len(profile_lab_sections),
+                             "Course has wrong number of sections")
             for j in range(len(self.assigned_course_sections[i])):
                 self.assertEqual(profile_lab_sections[j].section_number, assigned_lab_sections[j].course_section_number,
                                  "One of the sections is out of order")
                 self.assertEqual(lab_assignments[j].ta.username, self.other_user.username,
                                  "Returned section someone else is assigned to")
+        print("Admin correct courses assigned test completed.")
