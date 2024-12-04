@@ -96,19 +96,19 @@ class TestGetUser(TestCase):
         _create_lab_assignment(self.lab_section, self.ta)
 
     def test_validAssignments_for_instructor(self):
-        profile = UserController.getUser(self.instructor.id, self.admin_user)
+        profile = UserController.getUser(self.instructor.username, self.admin_user)
         self._assert_instructor_profile_fields(profile, self.instructor)
         self._assert_course_overviews(profile.courses_assigned, expected_course_codes=['CS101'],
                                       expected_lab_sections=True)
 
     def test_validAssignments_for_ta(self):
-        profile = UserController.getUser(self.ta.id, self.admin_user)
+        profile = UserController.getUser(self.ta.username, self.admin_user)
         self._assert_ta_profile_fields(profile, self.ta)
         self._assert_course_overviews(profile.courses_assigned, expected_course_codes=['CS101'],
                                       expected_lab_sections=True)
 
     def test_validAssignments_for_admin(self):
-        profile = UserController.getUser(self.admin_user.id, self.admin_user)
+        profile = UserController.getUser(self.admin_user.username, self.admin_user)
         self._assert_admin_profile_fields(profile, self.admin_user)
         self._assert_course_overviews(profile.courses_assigned, expected_course_codes=['CS101'],
                                       expected_lab_sections=True)
@@ -139,6 +139,7 @@ class TestGetUser(TestCase):
     def _assert_private_profile_fields(self, profile, user):
         self.assertEqual(profile.address, user.address)
         self.assertEqual(profile.phone, user.phone)
+
 
 class TestSearchUserCaseInsensitive(TestCase):
     def setUp(self):

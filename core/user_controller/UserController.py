@@ -11,7 +11,7 @@ Helper Methods start with an underscore ______
 class UserController:
 
     @staticmethod
-    def getUser(user_id, requesting_user):
+    def getUser(username, requesting_user):
         """
         Preconditions: user_id is a valid id matching a record of a user in the Users table.
         Postconditions: Retrieves the user with id of user_id, along with a list of the courses associated with the user.
@@ -22,12 +22,12 @@ class UserController:
         Returns: Dictionary containing user, courses, course_sections, lab_sections, lab_assignments, and course_assignments
         linked to the specified user.
         """
-        if not isinstance(user_id, int) or not user_id:
-            raise ValueError("Invalid user_id: must be a non-empty integer")
+        if not isinstance(username, str) or not username:
+            raise ValueError("Invalid username: must be a non-empty string")
         if not isinstance(requesting_user, User):
             raise ValueError("Invalid requesting_user: must be a valid User instance")
 
-        user = get_object_or_404(User, id=user_id)
+        user = get_object_or_404(User, username=username)
         course_ids = UserController._get_course_ids_based_on_role(user)
         courses = Course.objects.filter(id__in=course_ids)
         course_overviews = UserController._construct_course_overviews(user, courses)
@@ -36,7 +36,7 @@ class UserController:
 
     @staticmethod
     def _get_course_ids_based_on_role(user):
-        if user.role in["Instructor", "Admin"]:
+        if user.role in ["Instructor", "Admin"]:
             return user.coursesection_set.values_list("course", flat=True)
         elif user.role == "TA":
             return user.tacourseassignment_set.values_list("course", flat=True)
