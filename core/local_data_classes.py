@@ -92,6 +92,19 @@ class PrivateUserProfile(UserProfile):
     address: str
     phone: str
 
+@dataclass
+class UserFormData:
+    """
+    A dataclass that contains all the information used to fill the user creation/editing form
+    """
+    username: str | None
+    first_name: str | None
+    last_name: str | None
+    role: str | None
+    office_hours: str | None
+    email: str | None
+    address: str | None
+    phone: str | None
 
 @dataclass
 class LabFormData:

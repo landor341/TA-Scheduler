@@ -12,6 +12,7 @@ class UserForm(View):
         Side-effects: N/A
         TODO: Describe request structure when testing
         '''
+        #  Included so that tests fail instead of throwing errors
         return render(request, 'login/login.html', {"data": {}})
 
     def post(self, request, username: str | None = None):
@@ -23,7 +24,8 @@ class UserForm(View):
         Side-effects: New User model is added to the DB
         TODO: Describe request structure when testing
         '''
-        pass
+        #  Included so that tests fail instead of throwing errors
+        return render(request, 'login/login.html', {"data": {}})
 
 
 
