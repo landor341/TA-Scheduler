@@ -1,8 +1,8 @@
-from django.test import TestCase
-from datetime import time
+from core.local_data_classes import LabSectionFormData, CourseSectionFormData
 from ta_scheduler.models import Course, CourseSection, LabSection, User, Semester
-from core.local_data_classes import LabFormData, CourseSectionFormData
 from core.section_controller.SectionController import SectionController
+from datetime import time
+from django.test import TestCase
 
 
 class SectionControllerTestBase(TestCase):
@@ -13,23 +13,26 @@ class SectionControllerTestBase(TestCase):
         self.ta = User.objects.create(username="ta1", role="TA", email="ta1@test.com")
 
         # Lab section setup
-        self.lab_data = LabFormData(
+        self.lab_data = LabSectionFormData(
             course=self.course,
-            lab_section_number=1,
+            section_number=1,
             days="Monday, Wednesday",
             start_time=time(10, 0),
             end_time=time(11, 0),
+            section_type="Lab",
         )
 
         # Course section setup
         self.course_section_data = CourseSectionFormData(
             course=self.course,
             instructor=self.instructor,
-            course_section_number=101,
+            section_number=101,
             days="Tuesday, Thursday",
             start_time=time(9, 0),
             end_time=time(10, 30),
+            section_type="Course",
         )
+
 
 
 class TestSaveLabSection(SectionControllerTestBase):
@@ -47,12 +50,13 @@ class TestSaveLabSection(SectionControllerTestBase):
         lab_section = LabSection.objects.create(
             course=self.course, lab_section_number=1, days="Monday", start_time=time(9, 0), end_time=time(10, 0)
         )
-        updated_lab_data = LabFormData(
+        updated_lab_data = LabSectionFormData(
             course=self.course,
-            lab_section_number=1,
+            section_number=1,
             days="Monday, Wednesday",
             start_time=time(10, 0),
             end_time=time(11, 0),
+            section_type="Lab",
         )
         result = SectionController.save_lab_section(updated_lab_data, lab_section.id)
 
@@ -111,10 +115,11 @@ class TestSaveCourseSection(SectionControllerTestBase):
         updated_course_section_data = CourseSectionFormData(
             course=self.course,
             instructor=self.instructor,
-            course_section_number=101,
+            section_number=101,
             days="Tuesday, Thursday",
             start_time=time(9, 0),
             end_time=time(10, 30),
+            section_type="Course",
         )
         result = SectionController.save_course_section(updated_course_section_data, course_section.id)
 
