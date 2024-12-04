@@ -119,10 +119,16 @@ class UserController:
                     requesting_user: The user making the request.
         Returns: User instance if successful, otherwise raises an exception.
         """
+        if requesting_user.role != "Admin" and user_data["username"] != requesting_user.username:
+            raise PermissionDenied(f"Non admins can only edit themselves")
+
         required_fields = ['username', 'role']
         UserController._validate_user_data(user_data, requesting_user, required_fields)
-
-        user_to_edit = UserController._get_user_by_id(user_data.get('id')) if 'id' in user_data else User()
+        try:
+            user_to_edit = UserController._get_user_by_username(user_data.get('username'))
+        except ObjectDoesNotExist:
+            user_to_edit = User()
+            user_to_edit.username = user_data.get("username")
         UserController._request_permission_check(requesting_user, user_data, user_to_edit)
         UserController._update_user_fields(user_to_edit, user_data)
 
@@ -143,19 +149,19 @@ class UserController:
             raise ValidationError("Error: 'requesting_user' field is required")
 
     @staticmethod
-    def deleteUser(user_id):
+    def deleteUser(username):
         """
-        Preconditions: id provided must be a valid user id.
-        Postconditions: Deletes the user with the matching id as the specified id. If no matching records are found, nothing happens.
+        Preconditions: username provided must be a valid user username.
+        Postconditions: Deletes the user with the matching username as the specified username. If no matching records are found, nothing happens.
         Side-effects: Removes a record from the Users table.
-        Parameters: user_id: String value for the user_id of the user to be deleted.
+        Parameters: username: String value for the username of the user to be deleted.
         Returns: None
         """
-        if not isinstance(user_id, int) or not user_id:
+        if not isinstance(username, str) or not username:
             raise ValueError("Invalid user_id: must be a non-empty integer")
 
         try:
-            User.objects.get(id=user_id).delete()
+            User.objects.get(username=username).delete()
         except User.DoesNotExist:
             raise ValueError("User not found")
 
@@ -181,16 +187,16 @@ class UserController:
                 for user in matching_users]
 
     @staticmethod
-    def _get_user_by_id(user_id):
+    def _get_user_by_username(username):
         try:
-            return User.objects.get(id=user_id)
+            return User.objects.get(username=username)
         except User.DoesNotExist:
-            raise ObjectDoesNotExist("Error: User with the provided ID does not exist")
+            raise ObjectDoesNotExist("Error: User with the provided username does not exist")
 
     @staticmethod
     def _request_permission_check(requesting_user, user_data, user_to_edit):
         if requesting_user.role == 'Admin':
-            if user_to_edit.id == requesting_user.id and 'role' in user_data and user_data['role'] != user_to_edit.role:
+            if user_to_edit.username == requesting_user.username and 'role' in user_data and user_data['role'] != user_to_edit.role:
                 raise PermissionDenied("Admins cannot change their own role.")
 
             if user_to_edit.role == 'Admin' and 'role' in user_data and user_data['role'] != user_to_edit.role:
@@ -212,10 +218,6 @@ class UserController:
 
     @staticmethod
     def _set_unique_fields(user, user_data):
-        new_username = user_data.get('username', user.username)
-        UserController._validate_unique_field(User, 'username', new_username, user.id)
-        user.username = new_username
-
         new_email = user_data.get('email', user.email)
         UserController._validate_unique_field(User, 'email', new_email, user.id)
         user.email = new_email
