@@ -21,13 +21,16 @@ class CourseViewTests(TestCase):
             role='TA'
         )
 
-        self.semester = Semester.objects.create(start_date=datetime(2000, 1, 1),
-                                                end_date=datetime(2000, 5, 5))
+        self.semester = Semester.objects.create(
+            semester_name='Spring 2000',
+            start_date=datetime(2000, 1, 1),
+            end_date=datetime(2000, 5, 5)
+        )
 
         self.course = Course.objects.create(
             course_code='CS101',
             course_name='Intro to Computer Science',
-            semester_id=1
+            semester=self.semester
         )
 
         self.course_section = CourseSection.objects.create(
@@ -51,26 +54,32 @@ class CourseViewTests(TestCase):
         )
 
     def test_course_view_renders_correct_template(self):
-        response = self.client.get(reverse('course_view', args=[self.course.id]))
+        url = reverse('course_view', args=[self.course.course_code, self.semester.semester_name])
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'selected_course/selected_course.html')
 
     def test_course_view_displays_course_information(self):
-        response = self.client.get(reverse('course_view', args=[self.course.id]))
+        url = reverse('course_view', args=[self.course.course_code, self.semester.semester_name])
+        response = self.client.get(url)
         self.assertContains(response, 'Intro to Computer Science')
 
     def test_course_view_displays_sections(self):
-        response = self.client.get(reverse('course_view', args=[self.course.id]))
+        url = reverse('course_view', args=[self.course.course_code, self.semester.semester_name])
+        response = self.client.get(url)
         self.assertContains(response, self.course_section.course_section_number)
 
     def test_course_view_displays_tas(self):
-        response = self.client.get(reverse('course_view', args=[self.course.id]))
+        url = reverse('course_view', args=[self.course.course_code, self.semester.semester_name])
+        response = self.client.get(url)
         self.assertContains(response, self.ta.username)
 
     def test_course_view_displays_instructors(self):
-        response = self.client.get(reverse('course_view', args=[self.course.id]))
+        url = reverse('course_view', args=[self.course.course_code, self.semester.semester_name])
+        response = self.client.get(url)
         self.assertContains(response, self.instructor.username)
 
-    def test_course_view_with_invalid_course_id(self):
-        response = self.client.get(reverse('course_view', args=[999]))  # Assuming 999 is an invalid ID
+    def test_course_view_with_invalid_course_code_and_semester(self):
+        url = reverse('course_view', args=['INVALID_CODE', 'INVALID_SEMESTER'])
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
