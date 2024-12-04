@@ -16,14 +16,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from views.course_form import CourseForm
 from views.course_view import CourseView
-from views.login import Home, Login, Logout
+from views.login import Login, Logout
 from views.profile_view import ProfileView
+from views.user_form import UserForm
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', ProfileView.as_view(), name='home'),  # Root
     path('login/', Login.as_view(), name='login'),  # Login Page
     path('course/<str:course_code>/<str:semester_name>/', CourseView.as_view(), name='course_view'), #selected_course view
     path('profile/<str:username>', ProfileView.as_view(), name='profile'),  # Profile-view
+    path('create-user/<str:username>/', UserForm.as_view(), name="user-form"),  # User-form
+    path('create-user/', UserForm.as_view(), name="user-creator"),  # User-form
     path('logout/', Logout.as_view(), name='logout'),  # LogOut
+    path('edit-course/<str:code>/<str:semester>/', CourseForm.as_view(), name='course-form'),  # Course-form
+    path('create-course/', CourseForm.as_view(), name='course-creator')  # Course-form
 ]
