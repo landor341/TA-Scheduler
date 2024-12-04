@@ -111,9 +111,9 @@ class UserController:
     def saveUser(user_data, requesting_user):
         """
         Preconditions: user_data contains valid information for the user fields.
-        Postconditions: Adds a new user record if no id is provided to the Users table or updates the user’s information
-        that has a matching id to the one provided as the argument.
-        Raises an error if id is invalid or any part of the user_data is invalid.
+        Postconditions: Adds a new user record to the Users table or updates the user’s information
+        that has a matching username to the one provided as the argument.
+        Raises an error if username is invalid or any part of the user_data is invalid.
         Side-effects: Inserts or updates a record in the Users table.
         Parameters: user_data: A dictionary object with the appropriately ordered sequence and data type to match the required fields defined in the Users model.
                     requesting_user: The user making the request.
