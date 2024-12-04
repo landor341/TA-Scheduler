@@ -13,7 +13,6 @@ class UserRef:
     name: str
     username: str
 
-
 @dataclass
 class LabSectionRef:
     """
@@ -32,7 +31,6 @@ class CourseSectionRef:
     section_number: str
     instructor: UserRef
 
-
 @dataclass
 class CourseFormData:
     """
@@ -41,8 +39,6 @@ class CourseFormData:
     course_code: str | None
     course_name: str | None
     semester: Semester | None
-
-
 
 @dataclass
 class CourseRef:
@@ -61,7 +57,6 @@ class TACourseRef(CourseRef):
     instructor: UserRef | None
     is_grader: bool
     assigned_lab_sections: List[int]
-
 
 @dataclass
 class CourseOverview:
@@ -82,7 +77,6 @@ class UserProfile:
     office_hours: str | None
     courses_assigned: List[CourseOverview]
 
-
 @dataclass
 class PrivateUserProfile(UserProfile):
     """
@@ -90,8 +84,7 @@ class PrivateUserProfile(UserProfile):
     """
     address: str
     phone: str
-
-
+      
 @dataclass
 class LabFormData:
     """
@@ -114,5 +107,3 @@ class CourseSectionFormData:
     days: str | None
     start_time: time | None
     end_time: time | None
-
-
