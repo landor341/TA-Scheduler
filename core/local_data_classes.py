@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from datetime import time
 from typing import List
 
-from ta_scheduler.models import Semester
+from ta_scheduler.models import Semester, Course, User
 
 
 @dataclass
@@ -11,7 +12,6 @@ class UserRef:
     """
     name: str
     username: str
-
 
 @dataclass
 class LabSectionRef:
@@ -31,7 +31,6 @@ class CourseSectionRef:
     section_number: str
     instructor: UserRef
 
-
 @dataclass
 class CourseFormData:
     """
@@ -39,11 +38,7 @@ class CourseFormData:
     """
     course_code: str | None
     course_name: str | None
-    instructor: UserRef | None
     semester: Semester | None
-    lab_sections_codes: List[int] | None
-    course_sections_codes: List[int] | None
-
 
 @dataclass
 class CourseRef:
@@ -63,6 +58,13 @@ class TACourseRef(CourseRef):
     is_grader: bool
     assigned_lab_sections: List[int]
 
+@dataclass
+class CourseOverview:
+    code: str
+    name: str
+    semester: Semester | None
+    course_sections: List[CourseSectionRef]
+    lab_sections: List[LabSectionRef]
 
 @dataclass
 class UserProfile:
@@ -73,8 +75,7 @@ class UserProfile:
     email: str
     role: str
     office_hours: str | None
-    courses_assigned: List[CourseRef]
-
+    courses_assigned: List[CourseOverview]
 
 @dataclass
 class PrivateUserProfile(UserProfile):
@@ -83,12 +84,26 @@ class PrivateUserProfile(UserProfile):
     """
     address: str
     phone: str
+      
+@dataclass
+class LabFormData:
+    """
+    A dataclass that exposes the data necessary to fill/submit the LabCreationForm
+    """
+    course: Course
+    lab_section_number: int
+    days: str | None
+    start_time: time | None
+    end_time: time | None
 
 @dataclass
-class CourseOverview:
-    code: str
-    name: str
-    instructor: UserRef
-    course_sections: List[CourseSectionRef]
-    lab_sections: List[LabSectionRef]
-
+class CourseSectionFormData:
+    """
+    A dataclass that exposes the data necessary to fill/submit the CourseSectionCreationForm
+    """
+    course: Course
+    instructor: User
+    course_section_number: int
+    days: str | None
+    start_time: time | None
+    end_time: time | None

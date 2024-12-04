@@ -17,7 +17,7 @@ class Semester(models.Model):
         return self.courses.all()
 
 class Course(models.Model):
-    course_code = models.CharField(max_length=255, unique=True)
+    course_code = models.CharField(max_length=255)
     course_name = models.CharField(max_length=255)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="courses")
 
@@ -81,6 +81,7 @@ class CourseSection(models.Model):
 class LabSection(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     lab_section_number = models.PositiveIntegerField()
+    days = models.CharField(max_length=255, blank=True, null=True)
     start_time = models.TimeField()
     end_time = models.TimeField()
 
