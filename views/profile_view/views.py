@@ -3,7 +3,7 @@ from django.views import View
 
 
 class ProfileView(View):
-    def get(self, request):
+    def get(self, request, username: None | str=None):
         if not request.user.is_authenticated:
             return redirect('login')
         return render(request, 'profile_view/profile.html', {
@@ -13,4 +13,5 @@ class ProfileView(View):
             'phone': request.user.phone,
             'address': request.user.address,
             'office_hours': request.user.office_hours,
+            "data": {}
         })

@@ -84,7 +84,7 @@ class PrivateUserProfile(UserProfile):
     """
     address: str
     phone: str
-
+      
 @dataclass
 class LabFormData:
     """
