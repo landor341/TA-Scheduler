@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course.course_name }}</title>
+</head>
+<body>
+    <h1>{{ course.course_name }} ({{ course.course_code }})</h1>
+    <h2>Course Sections</h2>
+    <ul>
+        {% for section in sections %}
+            <li>Section {{ section.course_section_number }}: {{ section.start_time }} - {{ section.end_time }}</li>
+        {% empty %}
+            <li>No sections available for this course.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Teaching Assistants</h2>
+    <ul>
+        {% for ta in tas %}
+            <li>{{ ta.username }}</li>
+        {% empty %}
+            <li>No teaching assistants assigned to this course.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Instructors</h2>
+    <ul>
+        {% for instructor in instructors %}
+            <li>{{ instructor.username }}</li>
+        {% empty %}
+            <li>No instructors assigned to this course.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
