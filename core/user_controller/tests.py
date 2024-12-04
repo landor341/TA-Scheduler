@@ -6,8 +6,6 @@ django.setup()
 from datetime import date
 from ta_scheduler.models import (
     Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester)
-from core.local_data_classes import (
-    UserRef, PrivateUserProfile, UserProfile, CourseOverview, LabSectionRef)
 from core.user_controller.UserController import UserController
 
 

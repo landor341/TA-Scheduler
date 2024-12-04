@@ -1,9 +1,10 @@
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.db import models
 from django.shortcuts import get_object_or_404
-from core.local_data_classes import UserRef, CourseRef, LabSectionRef, TACourseRef, UserProfile, PrivateUserProfile, \
+
+from core.local_data_classes import UserRef, LabSectionRef, UserProfile, PrivateUserProfile, \
     CourseSectionRef, CourseOverview
-from ta_scheduler.models import User, Course, CourseSection, LabSection, TALabAssignment, TACourseAssignment
+from ta_scheduler.models import User, Course, CourseSection, LabSection
 
 """
 Helper Methods start with an underscore ______
