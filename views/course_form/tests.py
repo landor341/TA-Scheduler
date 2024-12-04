@@ -4,7 +4,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 
 from core.local_data_classes import CourseFormData
-from ta_scheduler.models import User, Semester, Course, TACourseAssignment
+from ta_scheduler.models import User, Semester, Course, TACourseAssignment, LabSection, TALabAssignment, CourseSection
 from views.course_form import CourseForm
 
 
@@ -331,3 +331,80 @@ class TestPostExistingCourseForm(TestCase):
         self.assertTrue(Course.objects.filter(
             course_code="400",
         ).exists(), "Failed to reject course on empty form submission")
+
+
+class TestDeleteCourseForm(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.semester = Semester.objects.create(semester_name="test semester", start_date="2024-09-21", end_date="2024-10-01")
+        self.course = Course.objects.create(course_name="test", course_code="1", semester=self.semester)
+        self.ta1 = User.objects.create_user(
+            username="a", password="1", email="1@uwm.edu", first_name="a", last_name="b",
+            role="TA", phone="1222333444", address="888 poodle drive", office_hours="Tuesday"
+        )
+        self.ta2 = User.objects.create_user(
+            username="b", password="2", email="2@uwm.edu", first_name="c", last_name="d",
+            role="TA", phone="1222333444", address="888 poodle drive", office_hours="Wednesday"
+        )
+        self.ta_assignments = [
+            TACourseAssignment.objects.create(ta=self.ta1, course=self.course, grader_status=False),
+            TACourseAssignment.objects.create(ta=self.ta2, course=self.course, grader_status=True)
+        ]
+        self.lab_section = LabSection.objects.create(
+            course=self.course, days="MW", lab_section_number="1",
+            end_time="05:00", start_time="03:30"
+        )
+        self.lab_assignment = TALabAssignment.objects.create(
+            lab_section=self.lab_section, ta=self.ta1
+        )
+        instructor = User.objects.create_user(
+            username="test instuctor", password="2", email="3@uwm.edu", first_name="d", last_name="e",
+            role="Instructor", phone="1222333444", address="888 noodle drive", office_hours="Tuesday"
+        )
+        self.course_section = CourseSection.objects.create(
+            start_time="03:00", end_time="10:20", course=self.course, days="TuTH",
+            instructor=instructor, course_section_number="50"
+        )
+
+        self.normal_ta_list = "a, b"  # Alphabetical order
+        self.url = reverse("course-form", kwargs={
+            "code": self.course.course_code,
+            "semester": self.semester.semester_name
+        })
+
+    def testAdminDelete(self):
+        self.user = loginAsRole(self.client, "Admin", "test")
+        response = self.client.delete(self.url)
+        self.assertFalse(Course.objects.filter(
+            course_code=self.course.course_code,
+        ).exists(), "Failed to let admin delete course")
+        for assignment in self.ta_assignments:
+            self.assertFalse(TACourseAssignment.objects.filter(
+                id=assignment.id,
+            ).exists(), "Failed to delete ta assignment on course deletion")
+        self.assertFalse(LabSection.objects.filter(
+            id=self.lab_section.id,
+        ).exists(), "Failed to delete lab section on course deletion")
+        self.assertFalse(TALabAssignment.objects.filter(
+            id=self.lab_assignment.id,
+        ).exists(), "Failed to delete lab assignment on course deletion")
+        self.assertFalse(CourseSection.objects.filter(
+            id=self.course_section.id,
+        ).exists(), "Failed to delete course section section on course deletion")
+
+
+    def testTADelete(self):
+        self.user = loginAsRole(self.client, "TA", "test")
+        response = self.client.delete(self.url)
+        self.assertFalse(Course.objects.filter(
+            course_code=self.course.course_code,
+        ).exists(), "Allowed TA to delete course")
+
+
+    def testInstructorDelete(self):
+        self.user = loginAsRole(self.client, "Instructor", "test")
+        response = self.client.delete(self.url)
+        self.assertFalse(Course.objects.filter(
+            course_code=self.course.course_code,
+        ).exists(), "Allowed instructor to delete course")
+

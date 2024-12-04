@@ -561,3 +561,75 @@ class TestPostExistingUserForm(UserFormAssertions):
             address="New address",
             role="TA"
         ).exists(), "Failed to save modified user")
+
+
+class TestDeleteUser(UserFormAssertions):
+    def setUp(self):
+        self.client = Client()
+
+        self.user = User.objects.create_user(
+            username="realguy", password="1", email="1@uwm.edu", first_name="a", last_name="b",
+            role="TA", phone="1222333444", address="888 poodle drive", office_hours="Tuesday"
+        )
+
+        self.url = reverse("user-form", kwargs={
+            "username": self.user.username
+        })
+
+    def testTADeleteOther(self):
+        self.login_user = loginAsRole(self.client, "TA", "test")
+        response = self.client.delete(self.url)
+
+        self.assertTrue(User.objects.filter(
+            username=self.user.username,
+        ).exists(), "Allowed TA to delete a user")
+
+    def testTADeleteSelf(self):
+        self.login_user = loginAsRole(self.client, "TA", "test")
+        self.login_user_url = reverse("user-form", kwargs={
+            "username": self.login_user.username
+        })
+        response = self.client.delete(self.login_user_url)
+
+        self.assertTrue(User.objects.filter(
+            username=self.login_user.username,
+        ).exists(), "Allowed TA to delete themselves")
+
+    def testInstructorDeleteOther(self):
+        self.login_user = loginAsRole(self.client, "Instructor", "test")
+        response = self.client.delete(self.url)
+
+        self.assertTrue(User.objects.filter(
+            username=self.user.username,
+        ).exists(), "Allowed instructor to delete a user")
+
+    def testInstructorDeleteSelf(self):
+        self.login_user = loginAsRole(self.client, "Instructor", "test")
+        self.login_user_url = reverse("user-form", kwargs={
+            "username": self.login_user.username
+        })
+        response = self.client.delete(self.login_user_url)
+
+        self.assertTrue(User.objects.filter(
+            username=self.login_user.username,
+        ).exists(), "Allowed instructor to delete themselves")
+
+    def testAdminDeleteOther(self):
+        self.login_user = loginAsRole(self.client, "Admin", "test")
+        response = self.client.delete(self.url)
+
+        self.assertFalse(User.objects.filter(
+            username=self.user.username,
+        ).exists(), "Didn't Allow admin to delete a user")
+
+    def testAdminDeleteSelf(self):
+        self.login_user = loginAsRole(self.client, "Admin", "test")
+        self.login_user_url = reverse("user-form", kwargs={
+            "username": self.login_user.username
+        })
+        response = self.client.delete(self.login_user_url)
+
+        self.assertTrue(User.objects.filter(
+            username=self.login_user.username,
+        ).exists(), "Allowed instructor to delete themselves")
+

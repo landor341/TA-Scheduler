@@ -26,5 +26,14 @@ class CourseForm(View):
         return render(request, 'login/login.html')
 
 
+    def delete(self, request, code: str, semester: str):
+        '''
+        Preconditions: Admin user logged in.
+        Postconditions: If the given course code and semester is a valid user and the logged in user is an
+            administrator then the course with the given info is deleted from the database
+        Side-effects: Course and all linked sections/assignments are deleted
+        '''
+        #  Included so that tests fail instead of throwing errors
+        return render(request, 'login/login.html')
 
 
