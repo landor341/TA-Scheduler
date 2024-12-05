@@ -160,7 +160,7 @@ class TestAdminGetUserForm(UserFormAssertions):
         self.assertRedirects(response, "home")
 
     def testGetCreateForm(self):
-        response = self.client.get(reverse("course-creator"))
+        response = self.client.get(reverse("user-creater"))
         form_data: UserFormData = response.context["data"]
         self.assertIsInstance(form_data, UserFormData, "Returned data of wrong type")
         self.assertEqual(form_data.username, "", "Form prefilled username on new user form")
@@ -322,8 +322,8 @@ class TestPostNewCourseForm(UserFormAssertions):
 
     def testPostInvalidRole(self):
         count = 1
-        for value in ["", "FakeRole", "1213", "\`^7"]:
-            response = self.client.post("course-creater", {
+        for value in ["", "FakeRole", "1213", "`^7"]:
+            response = self.client.post("user-creater", {
                 "username": "test" + str(count),
                 "first_name": self.user.first_name,
                 "last_name": self.user.last_name,
@@ -486,7 +486,7 @@ class TestPostExistingUserForm(UserFormAssertions):
 
     def testPostInvalidRole(self):
         count = 1
-        for value in ["", "FakeRole", "1213", "\`^7"]:
+        for value in ["", "FakeRole", "1213", "`^7"]:
             response = self.client.post(self.url, {
                 "username": self.user.username,
                 "first_name": self.user.first_name,

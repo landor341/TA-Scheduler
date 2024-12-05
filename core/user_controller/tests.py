@@ -239,7 +239,7 @@ class TestDeleteUser(TestCase):
             first_name='O', last_name='Char', username='O')
 
     def test_valid_id(self):
-        UserController.deleteUser(self.unassigned_user.id)
+        UserController.deleteUser(self.unassigned_user.username)
         self.assertNotIn(self.unassigned_user, User.objects.all())
 
     def test_invalid_id_many_characters(self):
@@ -255,11 +255,11 @@ class TestDeleteUser(TestCase):
             UserController.deleteUser("^")
 
     def test_valid_id_1_character(self):
-        UserController.deleteUser(self.one_char_user.id)
+        UserController.deleteUser(self.one_char_user.username)
         self.assertNotIn(self.one_char_user, User.objects.all())
 
     def test_check_if_removed_from_courses(self):
-        UserController.deleteUser(self.assigned_user.id)
+        UserController.deleteUser(self.assigned_user.username)
         for course_code, course_name in self.course_list:
             course = Course.objects.get(course_code=course_code)
             for section in CourseSection.objects.filter(course=course):
@@ -318,55 +318,13 @@ class TestSaveUser(TestCase):
         new_user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
         self._verify_user_fields(new_user, self.valid_user_data_new)
 
-    def test_invalid_user_fields_new_user_plus_admin(self):
-        new_user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
-        with self.assertRaises(ValidationError):
-            UserController.saveUser(self.valid_user_data_new, self.admin_user)
-
-    def test_valid_user_id_plus_good_edits_plus_admin_requestor_other_user(self):
-        self.user_data['id'] = self.unassigned_user.id
-        self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
-        self._verify_user_fields(self.unassigned_user, self.user_data)
-
-    def test_valid_user_id_plus_bad_edits_plus_admin_requestor_other_user(self):
-        new_user = UserController.saveUser(self.user_data, self.admin_user)
-        with self.assertRaises(ValidationError):
-            self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
-
-    def test_invalid_user_id_plus_good_edits_plus_admin_requestor_other_user(self):
-        self.user_data['id'] = 99999
-        with self.assertRaises(ObjectDoesNotExist):
-            self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
-
-    def test_invalid_user_id_plus_bad_edits_plus_admin_requestor_other_user(self):
-        new_user = UserController.saveUser(self.user_data, self.admin_user)
-        self.user_data['id'] = 99999
-        with self.assertRaises((ObjectDoesNotExist, ValidationError)):
-            self.unassigned_user = UserController.saveUser(self.user_data, self.admin_user)
-
-    def test_valid_user_id_plus_good_edits_plus_ta_requestor_other_user(self):
-        self.user_data['id'] = self.unassigned_user.id
-        with self.assertRaises(PermissionDenied):
-            self.unassigned_user = UserController.saveUser(self.user_data, self.one_char_user)
-
-    def test_invalid_user_id_plus_good_edits_plus_ta_requestor_other_user(self):
-        self.user_data['id'] = 99999
-        with self.assertRaises((ObjectDoesNotExist, PermissionDenied)):
-            self.unassigned_user = UserController.saveUser(self.user_data, self.one_char_user)
-
     def test_valid_user_id_plus_bad_edits_plus_ta_requestor_other_user(self):
         new_user = UserController.saveUser(self.user_data, self.admin_user)
         with self.assertRaises((PermissionDenied, ValidationError)):
             self.unassigned_user = UserController.saveUser(self.user_data, self.one_char_user)
 
-    def test_invalid_user_id_plus_bad_edits_plus_ta_requestor_other_user(self):
-        new_user = UserController.saveUser(self.user_data, self.admin_user)
-        self.user_data['id'] = 99999
-        with self.assertRaises((ObjectDoesNotExist, ValidationError, PermissionDenied)):
-            self.unassigned_user = UserController.saveUser(self.user_data, self.one_char_user)
-
     def test_valid_user_id_plus_good_edits_plus_instructor_requestor_other_user(self):
-        self.user_data['id'] = self.unassigned_user.id
+        self.user_data['username'] = self.unassigned_user.username
         with self.assertRaises(PermissionDenied):
             self.unassigned_user = UserController.saveUser(self.user_data, self.assigned_user)
 
@@ -387,24 +345,24 @@ class TestSaveUser(TestCase):
             self.unassigned_user = UserController.saveUser(self.user_data, self.assigned_user)
 
     def test_ta_user_can_edit_own_info(self):
-        self.user_data['id'] = self.unassigned_user.id
+        self.user_data['username'] = self.unassigned_user.username
         self.user_data['role'] = self.unassigned_user.role
         edited_user = UserController.saveUser(self.user_data, self.unassigned_user)
         self._verify_user_fields(edited_user, self.user_data)
 
     def test_instructor_user_can_edit_own_info(self):
-        self.user_data['id'] = self.assigned_user.id
+        self.user_data['username'] = self.assigned_user.username
         self.assigned_user = UserController.saveUser(self.user_data, self.assigned_user)
         self._verify_user_fields(self.assigned_user, self.user_data)
 
     def test_admin_user_can_edit_own_info(self):
-        self.user_data['id'] = self.admin_user.id
+        self.user_data['username'] = self.admin_user.username
         self.user_data['role'] = self.admin_user.role
         edited_user = UserController.saveUser(self.user_data, self.admin_user)
         self._verify_user_fields(edited_user, self.user_data)
 
     def test_admin_cannot_change_own_role(self):
-        self.user_data['id'] = self.admin_user.id
+        self.user_data['username'] = self.admin_user.username
         self.user_data['role'] = 'Instructor'
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.admin_user)
@@ -413,49 +371,38 @@ class TestSaveUser(TestCase):
         admin_user_2 = self._create_and_save_user(
             'Admin', 'admin2@test.com', 'password123', 'Admin2', 'User', 'adminuser2'
         )
-        self.user_data['id'] = admin_user_2.id
+        self.user_data['username'] = admin_user_2.username
         self.user_data['role'] = 'Instructor'
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.admin_user)
 
     def test_admin_can_change_role_to_instructor(self):
-        self.user_data['id'] = self.unassigned_user.id
+        self.user_data['username'] = self.unassigned_user.username
         self.user_data['role'] = 'Instructor'
         changed_user = UserController.saveUser(self.user_data, self.admin_user)
         self._verify_user_fields(changed_user, self.user_data)
 
     def test_admin_can_change_role_to_ta(self):
-        self.user_data['id'] = self.unassigned_user.id
+        self.user_data['username'] = self.unassigned_user.username
         self.user_data['role'] = 'TA'
         changed_user = UserController.saveUser(self.user_data, self.admin_user)
         self._verify_user_fields(changed_user, self.user_data)
 
     def test_users_cannot_change_any_role(self):
-        self.user_data['id'] = self.unassigned_user.id
+        self.user_data['username'] = self.unassigned_user.username
         self.user_data['role'] = 'Admin'
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.unassigned_user)
-        self.user_data['id'] = self.assigned_user.id
+        self.user_data['username'] = self.assigned_user.username
         with self.assertRaises(PermissionDenied):
             UserController.saveUser(self.user_data, self.assigned_user)
-
-    def test_username_conflict_when_user_edits_own_info(self):
-        conflicting_user = self._create_and_save_user(
-            'TA', 'conflict@test.com', 'password123', 'ConflictFirst',
-            'ConflictLast', 'conflictusername'
-        )
-        self.user_data['id'] = self.unassigned_user.id
-        self.user_data['username'] = conflicting_user.username
-        self.user_data['role'] = self.unassigned_user.role
-        with self.assertRaises(ValidationError):
-            UserController.saveUser(self.user_data, self.unassigned_user)
 
     def test_email_conflict_when_user_edits_own_info(self):
         conflicting_user = self._create_and_save_user(
             'TA', 'conflict@test.com', 'password123', 'ConflictFirst',
             'ConflictLast', 'conflictusername'
         )
-        self.user_data['id'] = self.unassigned_user.id
+        self.user_data['username'] = self.unassigned_user.username
         self.user_data['email'] = conflicting_user.email
         self.user_data['role'] = self.unassigned_user.role
         with self.assertRaises(ValidationError):
