@@ -14,7 +14,9 @@ class ProfileView(View):
         try:
             user_profile = UserController.getUser(username or request.user.username, request.user)
         except ValueError:
-            raise Http404("User profile not found.")
+            return redirect('home')
+        except Http404:
+            return redirect('home')
 
         context = {
             'user_profile': user_profile,
