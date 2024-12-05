@@ -130,7 +130,7 @@ class UserController:
         required_fields = ['username', 'role']
         UserController._validate_user_data(user_data, requesting_user, required_fields)
         try:
-            user_to_edit = UserController._get_user_by_username(user_data.get('username'))
+            user_to_edit = User.objects.get(username=user_data.get('username'))
         except ObjectDoesNotExist:
             user_to_edit = User()
             user_to_edit.username = user_data.get("username")
@@ -191,7 +191,7 @@ class UserController:
             user = User.objects.get(username=username)
             user.delete()
         except User.DoesNotExist:
-            raise Http404(f"User {username} does not exist.")
+            raise ValueError(f"User {username} does not exist.")
 
     @staticmethod
     def searchUser(user_search_string):
@@ -214,21 +214,6 @@ class UserController:
 
         return [UserRef(name=f"{user.first_name} {user.last_name}", username=user.username)
                 for user in matching_users]
-
-    @staticmethod
-    def _get_user_by_id(user_id):
-        """
-        Preconditions: N/A
-        Postconditions: Retrieves a user with a specific ID, raises an error if no such user exists.
-        Side-effects: None.
-        Parameters:
-        - user_id: An integer representing a user ID.
-        Returns: A User instance with the matching ID, otherwise raises an exception.
-        """
-        try:
-            return User.objects.get(username=username)
-        except User.DoesNotExist:
-            raise ObjectDoesNotExist("Error: User with the provided username does not exist")
 
     @staticmethod
     def _request_permission_check(requesting_user, user_data, user_to_edit):

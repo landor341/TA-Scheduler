@@ -325,7 +325,7 @@ class TestSaveUser(TestCase):
 
     def test_valid_user_id_plus_bad_edits_plus_ta_requestor_other_user(self):
         new_user = UserController.saveUser(self.user_data, self.admin_user)
-        with self.assertRaises((PermissionDenied, ValidationError)):
+        with self.assertRaises(PermissionDenied):
             self.unassigned_user = UserController.saveUser(self.user_data, self.one_char_user)
 
     def test_valid_user_id_plus_good_edits_plus_instructor_requestor_other_user(self):
@@ -335,18 +335,18 @@ class TestSaveUser(TestCase):
 
     def test_invalid_user_id_plus_good_edits_plus_instructor_requestor_other_user(self):
         self.user_data['id'] = 99999
-        with self.assertRaises((ObjectDoesNotExist, PermissionDenied)):
+        with self.assertRaises(PermissionDenied):
             self.unassigned_user = UserController.saveUser(self.user_data, self.assigned_user)
 
     def test_valid_user_id_plus_bad_edits_plus_instructor_requestor_other_user(self):
         new_user = UserController.saveUser(self.user_data, self.admin_user)
-        with self.assertRaises((PermissionDenied, ValidationError)):
+        with self.assertRaises(PermissionDenied):
             self.unassigned_user = UserController.saveUser(self.user_data, self.assigned_user)
 
     def test_invalid_user_id_plus_bad_edits_plus_instructor_requestor_other_user(self):
         new_user = UserController.saveUser(self.user_data, self.admin_user)
         self.user_data['id'] = 99999
-        with self.assertRaises((ObjectDoesNotExist, ValidationError, PermissionDenied)):
+        with self.assertRaises(PermissionDenied):
             self.unassigned_user = UserController.saveUser(self.user_data, self.assigned_user)
 
     def test_ta_user_can_edit_own_info(self):
