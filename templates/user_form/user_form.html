@@ -93,11 +93,12 @@ select{
     {% endif %}
     {% if not data.username or data.isAdmin %}
 	<p>
-		<label for="role">Role: </label>
-		<input
-            type="text" id="role" tabindex="1"
-            name="role" placeholder="{{ data.role }}"
-        />
+        <label for="role">Role: </label>
+            <select name="role">
+                <option value="TA">TA</option>
+                <option value="Instructor">Instructor</option>
+                <option value="Admin">Admin</option>
+            </select>
 	</p>
     {% endif %}
 	<p>
