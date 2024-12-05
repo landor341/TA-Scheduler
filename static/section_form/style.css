@@ -1,12 +1,16 @@
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
     margin: 20px;
+    line-height: 1.6;
 }
 
 h1 {
     margin-bottom: 20px;
+    font-size: 1.8em;
 }
 
+/* Form Group Styles */
 .form-group {
     margin-bottom: 15px;
 }
@@ -15,39 +19,75 @@ h1 {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    font-size: 1em;
 }
 
 .form-group input,
-.form-group select,
-.form-actions button,
-.form-actions a {
+.form-group select {
     width: 100%;
     padding: 8px;
     margin: 5px 0;
     box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
 }
 
+/* Form Actions Styles */
 .form-actions {
     margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
+.form-actions button,
+.form-actions a {
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+/* Save Button */
 .form-actions button {
-    margin-right: 10px;
-    padding: 8px 12px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
 }
 
+/* Cancel Link Button */
 a.cancel-link {
     text-decoration: none;
-    color: black;
-    padding: 8px 12px;
-    border: 1px solid black;
+    color: #333;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
     display: inline-block;
 }
 
+/* Hover Effects */
+.form-actions button:hover {
+    background-color: #45a049; /* Darker green */
+}
+
+a.cancel-link:hover {
+    background-color: #e6e6e6; /* Slightly darker for hover */
+}
+
+/* Delete Section Styles */
 button.delete-button {
     background-color: red;
     color: white;
     border: none;
-    padding: 8px 12px;
+    padding: 10px 15px;
     cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+button.delete-button:hover {
+    background-color: darkred; /* Darker red for hover */
 }
