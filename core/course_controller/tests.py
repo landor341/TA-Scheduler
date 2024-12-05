@@ -54,41 +54,41 @@ class CourseControllerTestBase(TestCase):
 # Testing save courses
 class TestSaveCourse(CourseControllerTestBase):
     def test_save_new_course(self):
-        course_data = CourseFormData(course_code="NewCourse", course_name="AI and ML", semester=self.semester)
+        course_data = CourseFormData(course_code="NewCourse", course_name="AI and ML", semester=self.semester, ta_username_list="")
         result = CourseController.save_course(course_data)
         self.assertIsNotNone(result)
         self.assertTrue(Course.objects.filter(course_code="NewCourse").exists())
 
     def test_duplicate_course_code_same_semester_fails(self):
-        course_data = CourseFormData(course_code="Test1", course_name="Duplicate Course", semester=self.semester)
+        course_data = CourseFormData(course_code="Test1", course_name="Duplicate Course", semester=self.semester, ta_username_list="")
         with self.assertRaises(ValueError):
             CourseController.save_course(course_data)
 
     def test_empty_course_code_fails(self):
-        course_data = CourseFormData(course_code=None, course_name="AI and ML", semester=self.semester)
+        course_data = CourseFormData(course_code="", course_name="AI and ML", semester=self.semester, ta_username_list="")
         with self.assertRaises(ValueError):
             CourseController.save_course(course_data)
 
     def test_course_with_no_semester_fails(self):
-        course_data = CourseFormData(course_code="NoSemester", course_name="No Semester", semester=None)
+        course_data = CourseFormData(course_code="NoSemester", course_name="No Semester", semester="", ta_username_list="")
         with self.assertRaises(ValueError):
             CourseController.save_course(course_data)
 
     def test_modify_existing_course(self):
         course = Course.objects.first()
-        course_data = CourseFormData(course_code=course.course_code, course_name="Updated Course", semester=self.semester)
+        course_data = CourseFormData(course_code=course.course_code, course_name="Updated Course", semester=self.semester, ta_username_list="")
         result = CourseController.save_course(course_data, course_id=course.id)
         self.assertEqual(result, str(course.id))
         self.assertEqual(Course.objects.get(id=course.id).course_name, "Updated Course")
 
     def test_modify_course_without_changes(self):
         course = Course.objects.first()
-        course_data = CourseFormData(course_code=course.course_code, course_name=course.course_name, semester=course.semester)
+        course_data = CourseFormData(course_code=course.course_code, course_name=course.course_name, semester=course.semester, ta_username_list="")
         result = CourseController.save_course(course_data, course_id=course.id)
         self.assertEqual(result, str(course.id))
 
     def test_modify_nonexistent_course_fails(self):
-        course_data = CourseFormData(course_code="InvalidCode", course_name="Invalid Course", semester=self.semester)
+        course_data = CourseFormData(course_code="InvalidCode", course_name="Invalid Course", semester=self.semester, ta_username_list="")
         with self.assertRaises(ValueError):
             CourseController.save_course(course_data, course_id=999)
 
@@ -96,7 +96,7 @@ class TestSaveCourse(CourseControllerTestBase):
         new_semester = Semester.objects.create(
             semester_name="Spring 2025", start_date=date(2025, 1, 1), end_date=date(2025, 5, 15)
         )
-        course_data = CourseFormData(course_code="Test1", course_name="Same Code Different Semester", semester=new_semester)
+        course_data = CourseFormData(course_code="Test1", course_name="Same Code Different Semester", semester=new_semester, ta_username_list="")
         result = CourseController.save_course(course_data)
         self.assertIsNotNone(result)
         self.assertTrue(Course.objects.filter(course_code="Test1", semester=new_semester).exists())

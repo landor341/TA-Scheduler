@@ -113,19 +113,26 @@ class UserController:
     @staticmethod
     def saveUser(user_data, requesting_user):
         """
-        Preconditions: 'user_data' must contain valid fields for a User object, and 'requesting_user' must have permission.
-        Postconditions: Adds a new user or updates the existing user's information matching the provided 'id'.
-        Will raise an error for an invalid 'id' or if 'user_data' is invalid.
+        Preconditions: user_data contains valid information for the user fields.
+        Postconditions: Adds a new user record to the Users table or updates the user’s information
+        that has a matching username to the one provided as the argument.
+        Raises an error if username is invalid or any part of the user_data is invalid.
         Side-effects: Inserts or updates a record in the Users table.
         Parameters:
         - user_data: A dictionary with user fields required by the Users model.
         - requesting_user: The user instance making the request.
         Returns: A User instance if the process is successful; otherwise, raises an exception.
         """
+        if requesting_user.role != "Admin" and user_data["username"] != requesting_user.username:
+            raise PermissionDenied(f"Non admins can only edit themselves")
+
         required_fields = ['username', 'role']
         UserController._validate_user_data(user_data, requesting_user, required_fields)
-
-        user_to_edit = UserController._get_user_by_id(user_data.get('id')) if 'id' in user_data else User()
+        try:
+            user_to_edit = UserController._get_user_by_username(user_data.get('username'))
+        except ObjectDoesNotExist:
+            user_to_edit = User()
+            user_to_edit.username = user_data.get("username")
         UserController._request_permission_check(requesting_user, user_data, user_to_edit)
         UserController._update_user_fields(user_to_edit, user_data)
 
@@ -182,8 +189,6 @@ class UserController:
         try:
             user = User.objects.get(username=username)
             user.delete()
-        except User.DoesNotExist:
-            raise ValueError("User not found")
 
     @staticmethod
     def searchUser(user_search_string):
@@ -218,9 +223,9 @@ class UserController:
         Returns: A User instance with the matching ID, otherwise raises an exception.
         """
         try:
-            return User.objects.get(id=user_id)
+            return User.objects.get(username=username)
         except User.DoesNotExist:
-            raise ObjectDoesNotExist("Error: User with the provided ID does not exist")
+            raise ObjectDoesNotExist("Error: User with the provided username does not exist")
 
     @staticmethod
     def _request_permission_check(requesting_user, user_data, user_to_edit):
@@ -236,7 +241,7 @@ class UserController:
         Returns: None.
         """
         if requesting_user.role == 'Admin':
-            if user_to_edit.id == requesting_user.id and 'role' in user_data and user_data['role'] != user_to_edit.role:
+            if user_to_edit.username == requesting_user.username and 'role' in user_data and user_data['role'] != user_to_edit.role:
                 raise PermissionDenied("Admins cannot change their own role.")
 
             if user_to_edit.role == 'Admin' and 'role' in user_data and user_data['role'] != user_to_edit.role:
@@ -280,7 +285,7 @@ class UserController:
         new_username = user_data.get('username', user.username)
         UserController._validate_unique_field(User, 'username', new_username, user.id)
         user.username = new_username
-
+        
         new_email = user_data.get('email', user.email)
         UserController._validate_unique_field(User, 'email', new_email, user.id)
         user.email = new_email

@@ -103,24 +103,29 @@ class UserFormData:
 
 
 @dataclass
-class LabFormData:
+class SectionFormData:
+    """
+    A dataclass that exposes the data necessary to fill/submit section creation
+    """
+    course: Course
+    section_number: int
+    days: str | None
+    start_time: time | None
+    end_time: time | None
+    section_type: str | None
+
+
+@dataclass
+class LabSectionFormData(SectionFormData):
     """
     A dataclass that exposes the data necessary to fill/submit the LabCreationForm
     """
-    course: Course
-    lab_section_number: int
-    days: str | None
-    start_time: time | None
-    end_time: time | None
+    section_type = "Lab"
 
 @dataclass
-class CourseSectionFormData:
+class CourseSectionFormData(SectionFormData):
     """
     A dataclass that exposes the data necessary to fill/submit the CourseSectionCreationForm
     """
-    course: Course
     instructor: User
-    course_section_number: int
-    days: str | None
-    start_time: time | None
-    end_time: time | None
+    section_type = "Course"
