@@ -6,8 +6,6 @@ django.setup()
 from datetime import date
 from ta_scheduler.models import (
     Course, CourseSection, User, TACourseAssignment, LabSection, TALabAssignment, Semester)
-from core.local_data_classes import (
-    UserRef, PrivateUserProfile, UserProfile, CourseOverview, LabSectionRef)
 from core.user_controller.UserController import UserController
 
 
@@ -237,33 +235,40 @@ class TestDeleteUser(TestCase):
         self.one_char_user = User.objects.create_user(
             role='TA', email='EMAIL_TEST_ONE_CHAR', password='PASSWORD_TEST_ONE_CHAR',
             first_name='O', last_name='Char', username='O')
+        self.admin_user = User.objects.create_user(
+            role='Admin', email='admin@example.com', password='AdminPass',
+            first_name='Admin', last_name='User', username='adminuser')
 
-    def test_valid_id(self):
-        UserController.deleteUser(self.unassigned_user.username)
+    def test_valid_username(self):
+        UserController.deleteUser(self.unassigned_user.username, self.admin_user)
         self.assertNotIn(self.unassigned_user, User.objects.all())
 
-    def test_invalid_id_many_characters(self):
+    def test_invalid_username_many_characters(self):
         with self.assertRaises(ValueError):
-            UserController.deleteUser("9999999999999999999999999")
+            UserController.deleteUser("nonexistentusername", self.admin_user)
 
-    def test_no_id(self):
+    def test_no_username(self):
         with self.assertRaises(ValueError):
-            UserController.deleteUser("")
+            UserController.deleteUser("", self.admin_user)
 
-    def test_invalid_id_1_character(self):
+    def test_invalid_username_1_character(self):
         with self.assertRaises(ValueError):
-            UserController.deleteUser("^")
+            UserController.deleteUser("^", self.admin_user)
 
-    def test_valid_id_1_character(self):
-        UserController.deleteUser(self.one_char_user.username)
+    def test_valid_username_1_character(self):
+        UserController.deleteUser(self.one_char_user.username, self.admin_user)
         self.assertNotIn(self.one_char_user, User.objects.all())
 
     def test_check_if_removed_from_courses(self):
-        UserController.deleteUser(self.assigned_user.username)
+        UserController.deleteUser(self.assigned_user.username, self.admin_user)
         for course_code, course_name in self.course_list:
             course = Course.objects.get(course_code=course_code)
             for section in CourseSection.objects.filter(course=course):
                 self.assertNotEqual(section.instructor, self.assigned_user)
+
+    def test_non_admin_user_cannot_delete(self):
+        with self.assertRaises(PermissionDenied):
+            UserController.deleteUser(self.assigned_user.username, self.unassigned_user)
 
 
 class TestSaveUser(TestCase):

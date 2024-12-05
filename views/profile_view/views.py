@@ -1,17 +1,25 @@
+from django.http import Http404
 from django.shortcuts import render, redirect
 from django.views import View
 
 
 class ProfileView(View):
-    def get(self, request, username: None | str=None):
+    def get(self, request, username=None):
+        #intentionally delay import to avoid apps not loaded error
+        from core.user_controller.UserController import UserController
+
         if not request.user.is_authenticated:
             return redirect('login')
-        return render(request, 'profile_view/profile.html', {
-            'user': f"{request.user.first_name}, {request.user.last_name}",
-            'email': request.user.email,
-            'role': request.user.role,
-            'phone': request.user.phone,
-            'address': request.user.address,
-            'office_hours': request.user.office_hours,
-            "data": {}
-        })
+
+        try:
+            user_profile = UserController.getUser(username or request.user.username, request.user)
+        except ValueError:
+            return redirect('home')
+        except Http404:
+            return redirect('home')
+
+        context = {
+            'user_profile': user_profile,
+        }
+
+        return render(request, 'profile_view/profile.html', context)
