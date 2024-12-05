@@ -2,6 +2,7 @@ from copy import deepcopy
 
 from django.test import TestCase, Client
 from django.urls import reverse
+from datetime import time
 
 from core.local_data_classes import CourseFormData, SectionFormData
 from ta_scheduler.models import User, Semester, Course, TACourseAssignment, LabSection, TALabAssignment, CourseSection
@@ -54,21 +55,21 @@ class TestGetNewSectionForm(TestSectionFormTestCase):
     def testTAGetNewSectionForm(self):
         self.user = loginAsRole(self.client, "TA", "test")
         response = self.client.get(self.new_url)
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
 
     def testInstructorGetNewUnrelatedCourseForm(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         response = self.client.get(self.new_url)
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
 
     def testInstructorGetNewRelatedCourseForm(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.user,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.user,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         response = self.client.get(self.new_url)
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
 
 
 class TestInstructorGetExistingSectionForm(TestSectionFormTestCase):
@@ -78,21 +79,21 @@ class TestInstructorGetExistingSectionForm(TestSectionFormTestCase):
     def testInstructorGetUnrelatedExistingLabSection(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         section = LabSection.objects.create(
-            lab_section_number="003", days="MWF",
-            start_time="4:00", end_time="5:30", course=self.course
+            lab_section_number=3, days="MWF",
+            start_time=time(16, 0), end_time=time(17, 30), course=self.course
         )
         response = self.client.get(self.get_url(section.lab_section_number))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
 
     def testInstructorGetRelatedExistingLabSection(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.user,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.user,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         section = LabSection.objects.create(
-            lab_section_number="003", days="MWF",
-            start_time="4:00", end_time="5:30", course=self.course
+            lab_section_number=3, days="MWF",
+            start_time=time(16, 0), end_time=time(17, 30), course=self.course
         )
         response = self.client.get(self.get_url(section.lab_section_number))
         self.assertIsInstance(
@@ -104,11 +105,11 @@ class TestInstructorGetExistingSectionForm(TestSectionFormTestCase):
     def testInstructorGetRelatedExistingCourseSection(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         section = CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.user,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.user,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         response = self.client.get(self.get_url(section.course_section_number))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
 
 
 class TestAdminGetExistingSectionForm(TestSectionFormTestCase):
@@ -118,8 +119,8 @@ class TestAdminGetExistingSectionForm(TestSectionFormTestCase):
     def testAdminGetExistingLabSection(self):
         self.user = loginAsRole(self.client, "Admin", "test")
         section = LabSection.objects.create(
-            lab_section_number="003", days="MWF",
-            start_time="4:00", end_time="5:30", course=self.course
+            lab_section_number=3, days="MWF",
+            start_time=time(16, 0), end_time=time(17,30), course=self.course
         )
         response = self.client.get(self.get_url(section.lab_section_number))
         form: SectionFormData = response.context["data"]
@@ -137,8 +138,8 @@ class TestAdminGetExistingSectionForm(TestSectionFormTestCase):
     def testAdminGetExistingCourseSection(self):
         self.user = loginAsRole(self.client, "Admin", "test")
         section = CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.test_instructor,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.test_instructor,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         response = self.client.get(self.get_url(section.course_section_number))
         form: SectionFormData = response.context["data"]
@@ -168,7 +169,7 @@ class TestPostSectionFormPermissions(TestSectionFormTestCase):
     def testTAPostNewSectionForm(self):
         self.user = loginAsRole(self.client, "TA", "test")
         response = self.client.post(self.new_url, self.section_test_data)
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
         self.assertFalse(LabSection.objects.filter(
             lab_section_number=self.section_test_data["section_number"]
         ), "Allowed TA to post new lab section")
@@ -176,11 +177,11 @@ class TestPostSectionFormPermissions(TestSectionFormTestCase):
     def testInstructorPostNewRelatedCourseForm(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.user,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.user,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         response = self.client.post(self.new_url, self.section_test_data)
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
         self.assertFalse(LabSection.objects.filter(
             lab_section_number=self.section_test_data["section_number"]
         ), "Allowed Instructor to post new lab section")
@@ -188,11 +189,11 @@ class TestPostSectionFormPermissions(TestSectionFormTestCase):
     def testAdminPostNewRelatedCourseForm(self):
         self.user = loginAsRole(self.client, "Admin", "test")
         CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.test_instructor,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.test_instructor,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         response = self.client.post(self.new_url, self.section_test_data)
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
         self.assertTrue(LabSection.objects.filter(
             lab_section_number=self.section_test_data["section_number"]
         ), "Failed to allow admin to post new lab section")
@@ -203,12 +204,12 @@ class TestAdminPostExistingSectionForm(TestSectionFormTestCase):
         self.doSetup()
         self.user = loginAsRole(self.client, "Instructor", "test")
         self.course_section = CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.test_instructor,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.test_instructor,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         self.lab_section = LabSection.objects.create(
-            lab_section_number="003", days="Tu",
-            start_time="2:00", end_time="8:30", course=self.course
+            lab_section_number=3, days="Tu",
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         TALabAssignment.objects.create(
             ta=self.test_ta, lab_section=self.lab_section
@@ -222,24 +223,24 @@ class TestAdminPostExistingSectionForm(TestSectionFormTestCase):
             "end_time": self.lab_section.end_time,
             "days": self.lab_section.days
         })
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
         self.assertFalse(LabSection.objects.filter(
             lab_section_number=self.course_section.course_section_number
         ), "Allowed lab section to have same section number as course section")
 
     def testEditLabSection(self):
         response = self.client.post(self.get_url(self.course_section.course_section_number), {
-            "section_number": "999",
+            "section_number": 999,
             "section_type": "Course",
-            "start_time": "4:00",
-            "end_time": "5:00",
+            "start_time": time(16, 0),
+            "end_time": time(17, 0),
             "days": "Sa"
         })
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
         self.assertTrue(CourseSection.objects.filter(
-            course_section_number="999",
-            start_time="4:00",
-            end_time="5:00",
+            course_section_number=999,
+            start_time=time(16, 0),
+            end_time=time(17, 0),
             days="Sa"
         ), "Did not allow admin to modify section data")
 
@@ -251,7 +252,7 @@ class TestAdminPostExistingSectionForm(TestSectionFormTestCase):
             "end_time": self.course_section.end_time,
             "days": self.course_section.days
         })
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse('home'))
         self.assertFalse(LabSection.objects.filter(
             lab_section_number=self.course_section.course_section_number
         ), "Allowed admin to change course section into lab section")
@@ -261,12 +262,12 @@ class TestDeleteSectionFormPermissions(TestSectionFormTestCase):
     def setUp(self):
         self.doSetup()
         self.course_section = CourseSection.objects.create(
-            course_section_number="001", days="M", instructor=self.test_instructor,
-            start_time="2:00", end_time="8:30", course=self.course
+            course_section_number=1, days="M", instructor=self.test_instructor,
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         self.lab_section = LabSection.objects.create(
-            lab_section_number="001", days="M",
-            start_time="2:00", end_time="8:30", course=self.course
+            lab_section_number=1, days="M",
+            start_time=time(14, 0), end_time=time(20, 30), course=self.course
         )
         self.lab_assignment = TALabAssignment.objects.create(lab_section=self.lab_section, ta=self.test_ta)
 

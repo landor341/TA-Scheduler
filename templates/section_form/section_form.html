@@ -8,82 +8,75 @@
     <link rel="stylesheet" href="{% static 'section_form/style.css' %}">
 </head>
 <body>
-    <h1>{{ form.section_type }} Section Form</h1>
+    <h1>{{ data.section_type }} Section Form</h1>
 
     <form method="post" action="">
         {% csrf_token %}
 
+        <!-- Section Number -->
         <div class="form-group">
             <label for="section_number">Section Number</label>
             <input
                 type="text"
                 id="section_number"
                 name="section_number"
-                value="{{ form.section_number }}"
-                {% if form.is_read_only %}readonly{% endif %}
+                value="{{ data.section_number }}"
+                {% if data.is_read_only %}readonly{% endif %}
             >
         </div>
 
+        <!-- Section Type -->
         <div class="form-group">
             <label for="section_type">Section Type</label>
             <select id="section_type" name="section_type">
-                <option value="Course" {% if form.section_type == "Course" %}selected{% endif %}>Course</option>
-                <option value="Lab" {% if form.section_type == "Lab" %}selected{% endif %}>Lab</option>
+                <option value="Course" {% if data.section_type == "Course" %}selected{% endif %}>Course</option>
+                <option value="Lab" {% if data.section_type == "Lab" %}selected{% endif %}>Lab</option>
             </select>
         </div>
 
+        <!-- Days -->
         <div class="form-group">
             <label for="days">Days</label>
             <input
                 type="text"
                 id="days"
                 name="days"
-                value="{{ form.days }}"
+                value="{{ data.days }}"
             >
         </div>
 
+        <!-- Start Time -->
         <div class="form-group">
             <label for="start_time">Start Time</label>
             <input
                 type="time"
                 id="start_time"
                 name="start_time"
-                value="{{ form.start_time }}"
+                value="{{ data.start_time }}"
             >
         </div>
 
+        <!-- End Time -->
         <div class="form-group">
             <label for="end_time">End Time</label>
             <input
                 type="time"
                 id="end_time"
                 name="end_time"
-                value="{{ form.end_time }}"
+                value="{{ data.end_time }}"
             >
         </div>
 
-        {% if form.section_type == "Lab" %}
-        <div class="form-group">
-            <label for="assigned_ta">Assigned TA</label>
-            <select id="assigned_ta" name="assigned_ta">
-                <option value="" {% if not form.assigned_ta %}selected{% endif %}>None</option>
-                {% for ta in form.available_tas %}
-                <option value="{{ ta.id }}" {% if ta.id == form.assigned_ta %}selected{% endif %}>
-                    {{ ta.get_full_name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        {% endif %}
-
+        <!-- Form Actions -->
         <div class="form-actions">
             <button type="submit">Save</button>
             <a href="{% url 'home' %}" class="cancel-link">Cancel</a>
         </div>
     </form>
 
-    {% if form.is_deletable %}
-    <form method="post" action="{% url 'section-delete' form.section_number %}">
+    <!-- Delete Section Form -->
+    {% if data.is_deletable %}
+    <form method="post" action="{% url 'section-form' code=course.course_code semester=semester section_number=data.section_number %}">
         {% csrf_token %}
         <button type="submit" class="delete-button">Delete Section</button>
     </form>
