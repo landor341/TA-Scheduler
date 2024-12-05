@@ -5,7 +5,6 @@ from django.views import View
 from core.local_data_classes import UserFormData, UserProfile, PrivateUserProfile
 from core.user_controller.UserController import UserController
 
-
 class UserForm(View):
     def get(self, request, username: str | None = None):
         """
