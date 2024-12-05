@@ -5,6 +5,28 @@ from django.views import View
 
 class ProfileView(View):
     def get(self, request, username=None):
+        """
+        Preconditions:
+        - `username` is an optional parameter which can be a string representing the username or `None`.
+        - `request` is a valid HttpRequest object and must have an authenticated user.
+
+        Postconditions:
+        - Retrieves the specified user's profile data and renders the 'profile_view/profile.html' template.
+        - If the user is not authenticated, redirects to the login page.
+        - If the specified user profile is not found, redirects to the home page.
+
+        Side-effects:
+        - Importing `UserController` within the method to avoid "apps not loaded" error.
+
+        Parameters:
+        - request: An HttpRequest object containing metadata about the request.
+        - username: An optional string representing the username in the Users table. If `None`, the authenticated user's username is used.
+
+        Returns:
+        - An HttpResponse object rendering the 'profile_view/profile.html' template with user profile data in the context.
+        - Redirects to 'login' if the user is not authenticated.
+        - Redirects to 'home' if user profile is not found due to `ValueError` or `Http404`.
+        """
         #intentionally delay import to avoid apps not loaded error
         from core.user_controller.UserController import UserController
 
