@@ -13,7 +13,9 @@ class UserController:
     @staticmethod
     def getUser(username, requesting_user):
         """
-        Preconditions: 'username' must be a non-empty string.
+        Preconditions:
+        - 'username' must be a non-empty string.
+        - 'requesting_user' must be a valid User instance.
         Postconditions: Retrieves the user data with the given username, including courses and their assignments or sections
         based on the user's role. Returns embedded information for TAs and instructors/administrators.
         Side-effects: None.
@@ -156,20 +158,30 @@ class UserController:
             raise ValidationError("Error: 'requesting_user' field is required")
 
     @staticmethod
-    def deleteUser(user_id):
+    def deleteUser(username, requesting_user):
         """
-        Preconditions: 'user_id' must be a valid integer representing an existing user.
-        Postconditions: Deletes the user with the specified 'user_id'. Does nothing if no matching user is found.
+        Preconditions:
+        - 'username' must be a non-empty string representing an existing user.
+        - 'requesting_user' must be an admin user to perform this operation.
+
+        Postconditions: Deletes the user with the specified 'username'. Raises an error if no matching user is found or if the requesting user is not an admin.
         Side-effects: Removes the record from the Users table.
+
         Parameters:
-        - user_id: An integer representing the user's ID in the Users table.
+        - username: A string representing the user's username in the Users table.
+        - requesting_user: An instance of the User making the request, which must have an admin role.
+
         Returns: None.
         """
-        if not isinstance(user_id, int) or not user_id:
-            raise ValueError("Invalid user_id: must be a non-empty integer")
+        if not isinstance(username, str) or not username:
+            raise ValueError("Invalid username: must be a non-empty string")
+
+        if requesting_user.role != 'Admin':
+            raise PermissionDenied("Only administrators can delete users.")
 
         try:
-            User.objects.get(id=user_id).delete()
+            user = User.objects.get(username=username)
+            user.delete()
         except User.DoesNotExist:
             raise ValueError("User not found")
 
@@ -177,7 +189,7 @@ class UserController:
     def searchUser(user_search_string):
         """
         Preconditions: 'user_search_string' must not be empty.
-        Postconditions: Returns a list of users that match the search criteria or raises an error if the input is invalid.
+        Postconditions: Returns a list of users that match the search criteria or raises an error if the input is invalid/empty.
         Side-effects: None.
         Parameters:
         - user_search_string: A string containing search parameters for finding users.
