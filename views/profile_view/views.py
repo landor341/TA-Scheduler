@@ -1,21 +1,19 @@
 from django.http import Http404
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.views import View
-
-
-from core.user_controller.UserController import UserController#This import is causing the apps aren't loaded yet error idk how to fix it
 
 
 class ProfileView(View):
     def get(self, request, username=None):
+        #intentionally delay import to avoid apps not loaded error
+        from core.user_controller.UserController import UserController
+
         if not request.user.is_authenticated:
             return redirect('login')
 
-        # Use UserController to fetch the user profile
         try:
             user_profile = UserController.getUser(username or request.user.username, request.user)
         except ValueError:
-            # Handle the case where username or other parameters might be invalid
             raise Http404("User profile not found.")
 
         context = {
