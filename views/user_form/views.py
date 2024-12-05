@@ -5,16 +5,30 @@ from django.views import View
 from core.local_data_classes import UserFormData, UserProfile, PrivateUserProfile
 from core.user_controller.UserController import UserController
 
-
 class UserForm(View):
     def get(self, request, username: str | None = None):
-        '''
-        Preconditions: Admin user logged in or username is logged in users username.
-        Postconditions: Renders a form for creating a user.
-            If the request URL contains a valid user ID then the
-            form is preloaded with that users current data
-        Side-effects: N/A
-        '''
+        """
+        Preconditions:
+        - `username` is an optional parameter that can be a string or `None`.
+        - `request` is a valid HttpRequest object.
+
+        Postconditions:
+        - Renders the user form for an admin or the specified user.
+        - If the role is Admin and username is not provided, a blank form is rendered.
+        - If the admin or the user whose username is provided accesses the form, it pre-fills the form with user data.
+        - Redirects to home if access is unauthorized.
+
+        Side-effects:
+        - None.
+
+        Parameters:
+        - request: An HttpRequest object containing metadata about the request.
+        - username: An optional string representing the username in the Users table.
+
+        Returns:
+        - An HttpResponse object rendering the 'user_form/user_form.html' template with appropriate user data.
+        - Redirects to home if the user does not have the necessary permissions.
+        """
         if request.user.role == "Admin" and username is None:
             return render(request, 'user_form/user_form.html', {
                 "data": UserFormData("", "", "", "", "", "", "", "")
@@ -35,15 +49,25 @@ class UserForm(View):
             return redirect(reverse("home"))
 
     def post(self, request, username: str | None = None):
-        '''
-        Preconditions: Admin user logged in.
-        Postconditions: If the request contains valid user data, then the user data is saved
-            to the database. If request URL doesn't contain an ID then a new user
-            is created. The user is redirected back to the edited users page.
-            Valid data contains the following keys:
-            "username","first_name","last_name","office_hours","email","phone","address","role"
-        Side-effects: New User model is added to the DB
-        '''
+        """
+        Preconditions:
+        - `username` is an optional parameter that can be a string or `None`.
+        - `request` is a valid HttpRequest object, containing POST data with user details.
+
+        Postconditions:
+        - Saves or updates the user data based on the provided form data.
+        - Redirects to the user's profile page after saving.
+
+        Side-effects:
+        - Modifies or creates user data in the database.
+
+        Parameters:
+        - request: An HttpRequest object containing POST data with user details.
+        - username: An optional string representing the username in the Users table.
+
+        Returns:
+        - Redirects to the user's profile page after saving the form data.
+        """
         user_data = {
             "username": request.POST.get("username"),
             "first_name": request.POST.get("first_name"),
@@ -63,12 +87,26 @@ class UserForm(View):
         return redirect(reverse("profile", kwargs={"username": user.username}))
 
     def delete(self, request, username: str):
-        '''
-        Preconditions: Admin user logged in.
-        Postconditions: If the given username is a valid user and the logged in user is an
-            administrater then the user with the given username is deleted from the database
-        Side-effects: User model is deleted from DB
-        '''
+        """
+        Preconditions:
+        - `username` must be a non-empty string.
+        - `request` is a valid HttpRequest object with an authenticated user who has Admin privileges.
+
+        Postconditions:
+        - Deletes the specified user if the request is made by an admin.
+        - Redirects to home after deletion.
+
+        Side-effects:
+        - Removes user data from the database.
+
+        Parameters:
+        - request: An HttpRequest object containing metadata about the request.
+        - username: A string representing the username in the Users table to be deleted.
+
+        Returns:
+        - Redirects to home after deleting the user if performed by an Admin.
+        """
+
         if request.user.role == "Admin":
             UserController.deleteUser(username)
         return redirect(reverse("home"))
