@@ -27,7 +27,7 @@ class CourseController:
 
 
     @staticmethod
-    def save_course(course_data: CourseFormData, course_id: int | None = None) -> str:
+    def save_course(course_data: CourseFormData,semester_name: str,  course_id: int | None = None) -> str:
         """
         Pre-conditions: course_data contains valid information for creating a course.
             if course_id is provided, it matches an existing course in the Courses table.
@@ -40,6 +40,13 @@ class CourseController:
         """
         if not course_data.course_code:
             raise ValueError("Course code cannot be empty.")
+
+        #Get semester instance using semester name
+        try:
+            semester = Semester.objects.get(semester_name = semester_name)
+        except Semester.DoesNotExist:
+            raise ValueError(f"Semester {semester_name} does not exist.")
+
 
         # Check for duplicate course_code within the same semester
         if course_data.semester:
@@ -76,15 +83,25 @@ class CourseController:
         return str(course.id)
 
     @staticmethod
-    def get_course(course_id: int) -> CourseOverview:
+    def get_course(course_id: int, semester_name: str) -> CourseOverview:
         """
         Pre-conditions: course_id provided is a valid course id
         Post-conditions: Returns an object containing course, sections, and assignment
             information for object in the Courses table with the given course_code.
         Side-effects: N/A
         """
+        #Get semester instance using semester_name
+
+        try:
+            semester = Semester.objects.get(semester_name= semester_name)
+        except Semester.DoesNotExist:
+            raise ValueError(f"Semester {semester_name} does not exist.")
+
+
+        #Get course based on course idk and provided semester
         try:
             course = Course.objects.get(id=course_id)
+            semester = Course.objects.get(id=semester_name)
         except Course.DoesNotExist:
             raise ValueError("Course with the given code does not exist.")
 
@@ -147,17 +164,17 @@ class CourseController:
         ]
     
     @staticmethod
-    def delete_course(course_id: int) -> None:
+    def delete_course(course_id: int, semester_name:str) -> None:
         """
         Pre-conditions: Course id is a valid value matching a record in courses.
         Post-conditions: Removes a record from Course with matching course_id.
         Side-effects: removes matching record from Course table and any objects with foreign key references to it.
         """
         try:
-            course = Course.objects.get(id=course_id)
+            course = Course.objects.get(id=course_id, semester__semester_name=semester_name)
             course.delete()
         except Course.DoesNotExist:
-            raise ValueError("Course with the given code does not exist.")
+            raise ValueError(f"Course {course_id} does not exist.")
 
     @staticmethod
     def validate_semester(semester_name: str) -> bool:
