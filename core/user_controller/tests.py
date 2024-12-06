@@ -290,7 +290,9 @@ class TestSaveUser(TestCase):
             'first_name': 'New',
             'last_name': 'User',
             'email': 'newuser@test.com',
-            'password': 'password123'
+            'password': 'password123',
+            'phone': '',
+            'address': '',
         }
 
         self.user_data = {
@@ -299,14 +301,17 @@ class TestSaveUser(TestCase):
             'first_name': 'Updated',
             'last_name': 'User',
             'email': 'updateduser@test.com',
-            'password': 'password123'
+            'password': 'password123',
+            'phone': '',
+            'address': ''
         }
 
     # Helper methods
-    def _create_and_save_user(self, role, email, password, first_name, last_name, username):
+    def _create_and_save_user(self, role, email, password, first_name, last_name, username, phone=None, address=None):
         return User.objects.create(
             role=role, email=email, password=password,
-            first_name=first_name, last_name=last_name, username=username
+            first_name=first_name, last_name=last_name, username=username,
+            phone=phone, address=address
         )
 
     def _verify_user_fields(self, user, user_data):
@@ -315,6 +320,21 @@ class TestSaveUser(TestCase):
         self.assertEqual(user.last_name, user_data['last_name'])
         self.assertEqual(user.role, user_data['role'])
         self.assertEqual(user.email, user_data['email'])
+        self.assertEqual(user.phone, user_data['phone'])
+        self.assertEqual(user.address, user_data['address'])
+
+    def test_save_user_with_phone_and_address(self):
+        self.user_data['phone'] = '1234567890'
+        self.user_data['address'] = '123 Main St, Springfield, USA'
+        updated_user = UserController.saveUser(self.user_data, self.admin_user)
+        self._verify_user_fields(updated_user, self.user_data)
+
+    def test_update_user_phone_and_address(self):
+        self.user_data['username'] = self.unassigned_user.username
+        self.user_data['phone'] = '9876543210'
+        self.user_data['address'] = '456 Elm St, Metropolis, USA'
+        updated_user = UserController.saveUser(self.user_data, self.admin_user)
+        self._verify_user_fields(updated_user, self.user_data)
 
     def test_valid_user_fields_new_user_plus_admin(self):
         new_user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
