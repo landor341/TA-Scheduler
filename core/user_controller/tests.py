@@ -165,8 +165,7 @@ class TestSearchUserCaseInsensitive(TestCase):
         result = UserController.searchUser("In")
         self.assertTrue(
             all("in" in (user.username + user.name).lower() for user in result),
-            f"Usernames or names in the result do not all contain 'in': {[(user.username, user.name)
-                                                                          for user in result]}")
+            f"Usernames or names in the result do not all contain 'in': {[(user.username, user.name)for user in result]}")
 
     def test_empty_search(self):
         result = UserController.searchUser("NonExistentUser")
@@ -176,16 +175,14 @@ class TestSearchUserCaseInsensitive(TestCase):
         result = UserController.searchUser("A")
         self.assertTrue(
             all("a" in (user.username + user.name).lower() for user in result),
-            f"Usernames or names in the result do not all contain 'a': {[(user.username, user.name)
-                                                                         for user in result]}"
+            f"Usernames or names in the result do not all contain 'a': {[(user.username, user.name)for user in result]}"
         )
 
     def test_valid_string_1_character_0_user(self):
         result = UserController.searchUser("0")
         self.assertTrue(
             all("0" in (user.username + user.name).lower() for user in result),
-            f"Usernames or names in the result do not all contain '0': {[(user.username, user.name)
-                                                                         for user in result]}"
+            f"Usernames or names in the result do not all contain '0': {[(user.username, user.name)for user in result]}"
         )
 
     def test_valid_string_full_username(self):
