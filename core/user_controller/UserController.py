@@ -127,11 +127,13 @@ class UserController:
         if requesting_user.role != "Admin" and user_data["username"] != requesting_user.username:
             raise PermissionDenied(f"Non admins can only edit themselves")
 
-        required_fields = ['username', 'role']
+        required_fields = ['username']
         UserController._validate_user_data(user_data, requesting_user, required_fields)
         try:
             user_to_edit = User.objects.get(username=user_data.get('username'))
         except ObjectDoesNotExist:
+            required_fields = ['role']
+            UserController._validate_user_data(user_data, requesting_user, required_fields)
             user_to_edit = User()
             user_to_edit.username = user_data.get("username")
         UserController._request_permission_check(requesting_user, user_data, user_to_edit)
