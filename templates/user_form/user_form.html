@@ -53,13 +53,13 @@
                 {% if password or not data.username %}
                 <p>
                     <label for="pwd">Password: </label>
-                    <input type="password" id="pwd" name="password">
+                    <input type="password" id="pwd" name="password" tabindex="1">
                 </p>
                 {% endif %}
                 {% if not data.username or isAdmin %}
                 <p>
                     <label for="role" >Role: </label>
-                        <select name="role">
+                        <select name="role" tabindex="1">
                             <option value="TA"{% if data.role == "TA" %} selected {% endif %}>TA</option>
                             <option value="Instructor"{% if data.role == "Instructor" %} selected {% endif %}>Instructor</option>
                             <option value="Admin"{% if data.role == "Admin" %} selected {% endif %}>Admin</option>
