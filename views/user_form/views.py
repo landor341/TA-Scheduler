@@ -31,7 +31,8 @@ class UserForm(View):
         """
         if request.user.role == "Admin" and username is None:
             return render(request, 'user_form/user_form.html', {
-                "data": UserFormData("", "", "", "", "", "", "", "")
+                "data": UserFormData("", "", "", "", "", "", "", ""),
+                "isAdmin": True
             })
         elif request.user.role == "Admin" or username == request.user.username:
             user: PrivateUserProfile = UserController.getUser(username, request.user)
@@ -68,6 +69,9 @@ class UserForm(View):
         Returns:
         - Redirects to the user's profile page after saving the form data.
         """
+        if request.user.role == "Admin" and request.POST.get("_method") == "DELETE":
+            return self.delete(request, username)
+
         user_data = {
             "username": request.POST.get("username"),
             "first_name": request.POST.get("first_name"),
@@ -106,9 +110,8 @@ class UserForm(View):
         Returns:
         - Redirects to home after deleting the user if performed by an Admin.
         """
-
         if request.user.role == "Admin":
-            UserController.deleteUser(username)
+            UserController.deleteUser(username, request.user)
         return redirect(reverse("home"))
 
 

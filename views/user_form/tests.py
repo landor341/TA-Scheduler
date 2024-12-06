@@ -160,7 +160,7 @@ class TestAdminGetUserForm(UserFormAssertions):
         self.assertRedirects(response, "home")
 
     def testGetCreateForm(self):
-        response = self.client.get(reverse("user-creater"))
+        response = self.client.get(reverse("user-creator"))
         form_data: UserFormData = response.context["data"]
         self.assertIsInstance(form_data, UserFormData, "Returned data of wrong type")
         self.assertEqual(form_data.username, "", "Form prefilled username on new user form")
