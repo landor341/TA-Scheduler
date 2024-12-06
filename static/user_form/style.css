@@ -31,7 +31,7 @@ input {
     flex: 2;
     text-align: right;
 }
-input,select {
+input,select, .delete-user{
     width: 40%;
     padding: 10px;
     margin-bottom: 15px;
@@ -40,7 +40,7 @@ input,select {
     font-size: 14px;
     margin-left: 10px;
 }
-#submit {
+#submit ,.delete-user{
     text-align: center;
     margin-left: 0;
     background-color: #5cb85c;
@@ -51,4 +51,11 @@ input,select {
 }
 #submit:hover {
     background-color: #4cae4c;
+}
+.delete-user {
+    background-color: red;
+    color: white;
+}
+.delete-user:hover {
+    background-color: darkred;
 }
