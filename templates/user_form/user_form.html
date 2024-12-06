@@ -53,26 +53,25 @@
                 {% if password or not data.username %}
                 <p>
                     <label for="pwd">Password: </label>
-                    <input type="password" id="pwd" name="password">
+                    <input type="password" id="pwd" name="password" tabindex="1">
                 </p>
                 {% endif %}
                 {% if not data.username or isAdmin %}
                 <p>
                     <label for="role" >Role: </label>
-                        <select name="role">
-                            <option value="TA">TA</option>
-                            <option value="Instructor">Instructor</option>
-                            <option value="Admin">Admin</option>
+                        <select name="role" tabindex="1">
+                            <option value="TA"{% if data.role == "TA" %} selected {% endif %}>TA</option>
+                            <option value="Instructor"{% if data.role == "Instructor" %} selected {% endif %}>Instructor</option>
+                            <option value="Admin"{% if data.role == "Admin" %} selected {% endif %}>Admin</option>
                         </select>
                 </p>
                 {% endif %}
                 <p>
                     <label for="email">Email: </label>
-                    <input
-                        type="email" id="email" tabindex="1"
-                        name="email" placeholder="{{ data.email }}"
-                        required
+                    <input type="email" id="email" tabindex="1"
+                           name="email" placeholder="{{ data.email }}" required
                     />
+
                 </p>
                 <p>
                     <label for="office_hours">Office Hours: </label>
@@ -86,7 +85,6 @@
                     <input
                         type="tel" id="phone" tabindex="1"
                         name="phone" placeholder="{{ data.phone }}"
-                        required
                     />
                 </p>
                 <p>

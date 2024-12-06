@@ -71,14 +71,13 @@ class UserForm(View):
         """
         if request.user.role == "Admin" and request.POST.get("_method") == "DELETE":
             return self.delete(request, username)
-
         user_data = {
             "username": request.POST.get("username"),
             "first_name": request.POST.get("first_name"),
             "last_name": request.POST.get("last_name"),
             "email": request.POST.get("email"),
             "office_hours": request.POST.get("office_hours"),
-            "phone_number": request.POST.get("phone_number"),
+            "phone": request.POST.get("phone"),
             "address": request.POST.get("address"),
             "role": request.POST.get("role")
         }

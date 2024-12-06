@@ -2,8 +2,7 @@ from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoes
 from django.db import models
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from core.local_data_classes import UserRef, LabSectionRef, UserProfile, PrivateUserProfile, \
-    CourseSectionRef, CourseOverview
+from core.local_data_classes import UserRef, LabSectionRef, UserProfile, PrivateUserProfile, CourseSectionRef, CourseOverview
 from ta_scheduler.models import User, Course, CourseSection, LabSection
 
 """
@@ -255,7 +254,8 @@ class UserController:
         user.first_name = user_data.get('first_name', user.first_name)
         user.last_name = user_data.get('last_name', user.last_name)
         user.office_hours = user_data.get('office_hours', user.office_hours)
-
+        user.phone = user_data.get('phone', user.phone)
+        user.address = user_data.get('address', user.address)
         UserController._set_unique_fields(user, user_data)
 
         user.role = user_data.get('role', user.role)
