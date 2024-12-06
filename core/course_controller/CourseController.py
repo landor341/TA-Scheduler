@@ -2,10 +2,30 @@ from typing import List
 
 from core.local_data_classes import CourseFormData, CourseOverview, CourseRef, UserRef, CourseSectionRef, LabSectionRef
 from django.db import models
-from ta_scheduler.models import Course, CourseSection, LabSection
+from ta_scheduler.models import Course, CourseSection, LabSection, Semester
+
 
 
 class CourseController:
+
+    @staticmethod
+    def has_duplicate_course_id(course_code: str, semester: Semester, exclude_course_id: int | None = None) -> bool:
+        """
+        Checks if there is a duplicate course with the same course_code in the given semester.
+        Pre-conditions: course_code is a valid string, and semester is a valid Semester instance.
+        Post-conditions: Returns True if a duplicate exists, False otherwise.
+        Side-effects: None.
+        """
+        duplicate_course_query = Course.objects.filter(
+            course_code=course_code,
+            semester=semester,
+        )
+        # Exclude a specific course ID if provided (e.g., during updates)
+        if exclude_course_id:
+            duplicate_course_query = duplicate_course_query.exclude(id=exclude_course_id)
+        return duplicate_course_query.exists()
+
+
     @staticmethod
     def save_course(course_data: CourseFormData, course_id: int | None = None) -> str:
         """
@@ -139,3 +159,19 @@ class CourseController:
         except Course.DoesNotExist:
             raise ValueError("Course with the given code does not exist.")
 
+    @staticmethod
+    def validate_semester(semester_name: str) -> bool:
+        """
+        Validates whether a semester with the given name exists.
+        Args:
+            semester_name (str): The name of the semester to validate.
+        Returns:
+            bool: True if the semester exists, False otherwise.
+        """
+        try:
+            # Query the database for the semester using the model
+            return Semester.objects.filter(semester_name=semester_name).exists()
+        except Exception as e:
+            # Log error or handle it as needed (example: log to a monitoring system)
+            print(f"Error validating semester: {e}")
+            return False
