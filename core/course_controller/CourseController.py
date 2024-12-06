@@ -91,7 +91,7 @@ class CourseController:
         Side-effects: N/A
         """
         #Get semester instance using semester_name
-
+        #Refactored
         try:
             semester = Semester.objects.get(semester_name= semester_name)
         except Semester.DoesNotExist:
