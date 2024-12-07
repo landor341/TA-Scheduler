@@ -13,14 +13,13 @@
             <ul class="operation">
                 <li><a href="#">Explorer</a></li>
                 <li><a href="#">Notification</a></li>
-                <li><a href="/create-section/">+ Add Section</a></li>
                 {% if isAdmin%}
                     <li><a href="/create-course/">+ Add Course</a></li>
-                    <li><a href="/create-user/">Create User</a></li>
+                    <li><a href="/create-user/">+ Create User</a></li>
                 {% endif %}
             </ul>
             <ul class="account">
-                <li><a href="/">{{ request_username }}</a> </li>
+                <li><a href="/">{{ full_name }}</a> </li>
                 <li><a href="{% url 'logout' %}">Logout</a></li>
             </ul>
         </nav>
@@ -51,7 +50,7 @@
             {% endif %}
             {% if isAdmin or self %}
             <li>
-                <p><a href="{% if not self and isAdmin %}/create-user/{{ username }}{% endif %}" style="color: blue">Edit</a></p>
+                <p><a href="/create-user/{{ username }}" style="color: blue">Edit</a></p>
             </li>
             {% endif %}
         </ul>
