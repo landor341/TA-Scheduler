@@ -84,6 +84,8 @@ class UserForm(View):
         password = request.POST.get("password")
         if password:
             user_data["password"] = password
+        if user_data["role"] is None:
+            del user_data["role"]
 
         user = UserController.saveUser(user_data, request.user)
 
