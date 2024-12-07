@@ -24,12 +24,12 @@ class TestGetCourseFormRedirects(TestCase):
     def testTAGetNewCourseForm(self):
         self.user = loginAsRole(self.client, "TA", "test")
         response = self.client.get(reverse("course-creator"))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse("home"))
 
     def testInstructorGetNewCourseForm(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         response = self.client.get(reverse("course-creator"))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse("home"))
 
 
 class TestAdminGetCourseForm(TestCase):
@@ -41,12 +41,12 @@ class TestAdminGetCourseForm(TestCase):
         response = self.client.get(reverse("course-form", kwargs={
             "code": "3", "semester" : "Spring 2024"
         }))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse("home"))
 
     def testGetCreateForm(self):
         response = self.client.get(reverse("course-creator"))
         form: CourseFormData = response.context["data"]
-        self.assertIsInstance(form, CourseFormData, "Returnd data of wrong type")
+        self.assertIsInstance(form, CourseFormData, "Returned data of wrong type")
         self.assertEqual(form.semester, "", "Gave a semester when getting create course page")
         self.assertEqual(form.course_code, "", "Gave a course code when getting create course page")
         self.assertEqual(form.course_name, "", "Gave a course name when getting create course page")
@@ -75,7 +75,7 @@ class TestAdminGetCourseForm(TestCase):
 
         response = self.client.get(url)
         form_data: CourseFormData = response.context["data"]
-        self.assertIsInstance(form_data, CourseFormData, "Returnd data of wrong type")
+        self.assertIsInstance(form_data, CourseFormData, "Returned data of wrong type")
         self.assertEqual(form_data.course_name, course.course_name, "Incorrect course name on get course form")
         self.assertEqual(form_data.course_code, course.course_code, "Incorrect course code on get course form")
         self.assertEqual(form_data.semester, semester.semester_name, "Incorrect semester name on get course form")
@@ -87,7 +87,7 @@ class TestPostNewCourseForm(TestCase):
         self.user = loginAsRole(self.client, "Admin", "test")
 
     def testPostEmpty(self):
-        response = self.client.post("course-creater", {
+        response = self.client.post(reverse("course-creator"), {
             "code": "",
             "name": "",
             "semester": "",
@@ -105,7 +105,7 @@ class TestPostNewCourseForm(TestCase):
         for c in "!@#$%^&*()_=+`~'\"|]}[{<>?/\\":
             code = "1234" + c
             name = "course" + str(count)
-            response = self.client.post("course-creater", {
+            response = self.client.post(reverse("course-creator"), {
                 "code": code,
                 "name": name,
                 "semester": "test semester",
@@ -121,7 +121,7 @@ class TestPostNewCourseForm(TestCase):
         for c in "!@#$%^&*()_=+`~'\"|]}[{<>?/\\":
             code = "course" + str(count)
             name = "1234" + c
-            response = self.client.post("course-creater", {
+            response = self.client.post(reverse("course-creator"), {
                 "code": code,
                 "name": name,
                 "semester": "test semester",
@@ -132,7 +132,7 @@ class TestPostNewCourseForm(TestCase):
             count = count + 1
 
     def testPostFakeSemester(self):
-        response = self.client.post("course-creater", {
+        response = self.client.post(reverse("course-creator"), {
             "code": "1234",
             "name": "test course name",
             "semester": "fake semester",
@@ -143,7 +143,7 @@ class TestPostNewCourseForm(TestCase):
 
     def testPostFakeTAs(self):
         Semester.objects.create(semester_name="test semester", start_date="2024-09-21", end_date="2024-10-01")
-        response = self.client.post("course-creater", {
+        response = self.client.post(reverse("course-creator"), {
             "code": "1234",
             "name": "test course name",
             "semester": "test semester",
@@ -158,7 +158,7 @@ class TestPostNewCourseForm(TestCase):
             role="Instructor", phone="1222333444", address="888 poodle drive", office_hours="Tuesday"
         )
         Semester.objects.create(semester_name="test semester", start_date="2024-09-21", end_date="2024-10-01")
-        response = self.client.post("course-creater", {
+        response = self.client.post(reverse("course-creator"), {
             "code": "1234",
             "name": "test course name",
             "semester": "test semester",
@@ -170,7 +170,7 @@ class TestPostNewCourseForm(TestCase):
     def testPostDuplicate(self):
         semester = Semester.objects.create(semester_name="test semester", start_date="2024-09-21", end_date="2024-10-01")
         course = Course.objects.create(course_name="test", course_code="1", semester=semester)
-        response = self.client.post("course-creater", {
+        response = self.client.post(reverse("course-creator"), {
             "code": course.course_code,
             "name": "overwritten",
             "semester": semester.semester_name,
@@ -394,17 +394,26 @@ class TestDeleteCourseForm(TestCase):
 
 
     def testTADelete(self):
+        # Check the response status
         self.user = loginAsRole(self.client, "TA", "test")
         response = self.client.delete(self.url)
-        self.assertFalse(Course.objects.filter(
+
+        self.assertEqual(response.status_code, 403, "TA was not denied permission to delete course")
+
+        # Confirm that the course still exists
+        self.assertTrue(Course.objects.filter(
             course_code=self.course.course_code,
-        ).exists(), "Allowed TA to delete course")
+        ).exists(), "Course was deleted even though TA should not have permission")
 
 
     def testInstructorDelete(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         response = self.client.delete(self.url)
-        self.assertFalse(Course.objects.filter(
+        # Check the response status
+        self.assertEqual(response.status_code, 403, "Instructor was not denied permission to delete course")
+
+        # Confirm that the course still exists
+        self.assertTrue(Course.objects.filter(
             course_code=self.course.course_code,
-        ).exists(), "Allowed instructor to delete course")
+        ).exists(), "Course was deleted even though Instructor should not have permission")
 

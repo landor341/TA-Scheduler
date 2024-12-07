@@ -51,6 +51,9 @@ class CourseControllerTestBase(TestCase):
             )
 
 
+
+
+
 # Testing save courses
 class TestSaveCourse(CourseControllerTestBase):
     def test_save_new_course(self):
@@ -183,5 +186,64 @@ class TestDeleteCourse(CourseControllerTestBase):
         self.assertFalse(LabSection.objects.filter(course=course).exists())
 
 
+class TestValidateSemester(CourseControllerTestBase):
+    def setUp(self):
+        super().setUp()
+        # Create semesters for testing
+        self.semester = Semester.objects.create(
+            semester_name="Fall 2024", start_date=date(2024, 9, 1), end_date=date(2024, 12, 15)
+        )
 
+    def test_validate_semester_exists(self):
+        # Validate an existing semester
+        self.assertTrue(
+            CourseController.validate_semester(semester_name="Fall 2024"),
+            "Failed to validate an existing semester."
+        )
+
+    def test_validate_semester_nonexistent(self):
+        # Validate a non-existent semester
+        self.assertFalse(
+            CourseController.validate_semester(semester_name="Nonexistent Semester"),
+            "Incorrectly validated a non-existent semester."
+        )
+
+#Tests for new static methods
+class TestHasDuplicateCourseId(CourseControllerTestBase):
+    def setUp(self):
+        super().setUp()
+        # Create semesters and courses for testing
+        self.semester = Semester.objects.create(
+            semester_name="Fall 2024", start_date=date(2024, 9, 1), end_date=date(2024, 12, 15)
+        )
+        self.another_semester = Semester.objects.create(
+            semester_name="Spring 2025", start_date=date(2025, 1, 1), end_date=date(2025, 5, 15)
+        )
+        self.course1 = Course.objects.create(
+            course_code="CS101", course_name="Intro to CS", semester=self.semester
+        )
+        self.course2 = Course.objects.create(
+            course_code="CS102", course_name="Data Structures", semester=self.semester
+        )
+
+    def test_has_duplicate_course_id_true(self):
+        # Duplicate course code in the same semester
+        self.assertTrue(
+            CourseController.has_duplicate_course_id(course_code="CS101", semester=self.semester),
+            "Failed to detect duplicate course code in the same semester."
+        )
+
+    def test_has_duplicate_course_id_false_different_semester(self):
+        # Same course code but in a different semester
+        self.assertFalse(
+            CourseController.has_duplicate_course_id(course_code="CS101", semester=self.another_semester),
+            "Incorrectly flagged duplicate course code in a different semester."
+        )
+
+    def test_has_duplicate_course_id_exclude_self(self):
+        # Exclude the current course ID from the duplicate check
+        self.assertFalse(
+            CourseController.has_duplicate_course_id(course_code="CS101", semester=self.semester, exclude_course_id=self.course1.id),
+            "Failed to exclude current course ID from duplicate check."
+        )
 
