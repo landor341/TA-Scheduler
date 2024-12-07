@@ -8,26 +8,55 @@
     <link rel="stylesheet" href="{% static 'profile_view/style.css' %}">
 </head>
 <body>
+    <header>
+        <nav>
+            <ul class="operation">
+                <li><a href="#">Explorer</a></li>
+                <li><a href="#">Notification</a></li>
+                {% if isAdmin%}
+                    <li><a href="/create-course/">+ Add Course</a></li>
+                    <li><a href="/create-user/">+ Create User</a></li>
+                {% endif %}
+            </ul>
+            <ul class="account">
+                <li><a href="/">{{ full_name }}</a> </li>
+                <li><a href="{% url 'logout' %}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
     <div class="container">
-        <h2>Welcome, {{ user_profile.name }}!</h2>
-        <p><strong>Email:</strong> {{ user_profile.email }}</p>
-        <p><strong>Role:</strong> {{ user_profile.role }}</p>
-        
-        {% if user_profile.office_hours %}
-            <p><strong>Office Hours:</strong> {{ user_profile.office_hours }}</p>
-        {% endif %}
-        
-        <p><strong>Courses:</strong> {{ user_profile.courses_assigned }}</p>
-
-        {% if user_profile.address %}
-            <p><strong>Address:</strong> {{ user_profile.address }}</p>
-        {% endif %}
-
-        {% if user_profile.phone %}
-            <p><strong>Phone:</strong> {{ user_profile.phone }}</p>
-        {% endif %}
-
-        <a class="logout-link" href="{% url 'logout' %}">Logout</a>
+        <ul class="information">
+            <li>
+                <p style="font-size: 30px; font-family: 'Times New Roman';"><strong>{{ user_profile.name }}</strong></p>
+                <p>{{ user_profile.role }}</p>
+            </li>
+            {% if user_profile.email %}
+            <li>
+                <p>Email</p>
+                <p style="font-family: 'Times New Roman'">{{ user_profile.email }}</p>
+            </li>
+            {% endif %}
+            {% if user_profile.phone %}
+            <li>
+                <p>Phone</p>
+                <p style="font-family: 'Times New Roman'">{{ user_profile.phone }}</p>
+            </li>
+            {% endif %}
+            {% if user_profile.address %}
+            <li>
+                <p>Address</p>
+                <p style="font-family: 'Times New Roman'">{{ user_profile.address }}</p>
+            </li>
+            {% endif %}
+            {% if isAdmin or self %}
+            <li>
+                <p><a href="/create-user/{{ username }}" style="color: blue">Edit</a></p>
+            </li>
+            {% endif %}
+        </ul>
+        <div class="Course">
+            <p><strong>Courses:</strong> {{ user_profile.courses_assigned }}</p>
+        </div>
     </div>
 </body>
 </html>
