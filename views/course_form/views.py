@@ -1,5 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views import View
+
+from core.course_controller.CourseController import CourseController
+from core.local_data_classes import CourseFormData
+from ta_scheduler.models import User
 
 
 class CourseForm(View):
@@ -10,9 +15,15 @@ class CourseForm(View):
             If the request URL contains a valid course ID then the form is
             preloaded with that courses current data
         Side-effects: N/A
-        TODO: Describe request structure when testing
         '''
-        return render(request, 'login/login.html', {"data": {}})
+        if not self.__can_use_form(request.user, code, semester):
+            return redirect(reverse("home"))
+
+        return render(request, 'course_form/course_form.html', {
+            "data": CourseForm,
+            "isAdmin": request.user.role == "Admin",
+            "isEditing": code is not None
+        })
 
     def post(self, request, code: str | None = None, semester: str | None = None):
         '''
@@ -21,9 +32,20 @@ class CourseForm(View):
             to the database. If request URL doesn't contain an ID then a new course
             is created. The user is redirected back to the edited courses page.
         Side-effects: New Course, CourseSection, and LabSection models are added to the DB
-        TODO: Describe request structure when testing
         '''
-        return render(request, 'login/login.html')
+        if not self.__can_use_form(request.user, code, semester):
+            return redirect(reverse("home"))
+
+        form = CourseFormData(
+            course_code=request.POST.get('course_code'),
+            semester=request.POST.get('semester'),
+            course_name=request.POST.get('course_name'),
+            ta_username_list=""
+        )
+
+        CourseController.save_course(form, code, semester)
+
+        return redirect(f"/course/{form.course_code}/{form.semester}")
 
 
     def delete(self, request, code: str, semester: str):
@@ -33,7 +55,25 @@ class CourseForm(View):
             administrator then the course with the given info is deleted from the database
         Side-effects: Course and all linked sections/assignments are deleted
         '''
+        if not self.__can_use_form(request.user, code, semester):
+            return redirect(reverse("home"))
+
+        CourseController.delete_course(code, semester)
+
         #  Included so that tests fail instead of throwing errors
-        return render(request, 'login/login.html')
+        return redirect(reverse("home"))
+
+
+    def __can_use_form(self, user: User, code: str, semester: str):
+        # Need to check permissions. Could refactor in future to be controller method
+        if user.role != "Admin":
+            if code is None:
+                return False
+            course_form = CourseController.get_course(code, semester)
+            for section in course_form.course_sections:
+                if section.instructor.username == user.username:
+                    return True
+            return False
+        return True
 
 
