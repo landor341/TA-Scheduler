@@ -44,7 +44,7 @@ class ProfileView(View):
             'user_profile': user_profile,
             'isAdmin': request.user.role == 'Admin',
             'self': username == None,
-            'username': "" if username is None else username,
+            'username': request.user.username if username is None else username,
         }
 
         return render(request, 'profile_view/profile.html', context)
