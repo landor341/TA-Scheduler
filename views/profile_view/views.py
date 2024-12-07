@@ -39,9 +39,11 @@ class ProfileView(View):
             return redirect('home')
         except Http404:
             return redirect('home')
-
         context = {
+            'username': f"{request.user.first_name} {request.user.last_name}",
             'user_profile': user_profile,
+            'isAdmin': request.user.role == 'Admin',
+            'self': username == None,
         }
 
         return render(request, 'profile_view/profile.html', context)
