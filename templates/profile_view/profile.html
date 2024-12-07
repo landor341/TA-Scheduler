@@ -51,7 +51,7 @@
             {% endif %}
             {% if isAdmin or self %}
             <li>
-                <p><a href="{% if not self %}/create-user/{{ username }}{% endif %}" style="color: blue">Edit</a></p>
+                <p><a href="{% if not self and isAdmin %}/create-user/{{ username }}{% endif %}" style="color: blue">Edit</a></p>
             </li>
             {% endif %}
         </ul>
