@@ -6,28 +6,43 @@
     <title>Profile</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'profile_view/style.css' %}">
+    <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
 </head>
 <body>
+    {% include 'navigation_bar/navigation.html' %}
     <div class="container">
-        <h2>Welcome, {{ user_profile.name }}!</h2>
-        <p><strong>Email:</strong> {{ user_profile.email }}</p>
-        <p><strong>Role:</strong> {{ user_profile.role }}</p>
-        
-        {% if user_profile.office_hours %}
-            <p><strong>Office Hours:</strong> {{ user_profile.office_hours }}</p>
-        {% endif %}
-        
-        <p><strong>Courses:</strong> {{ user_profile.courses_assigned }}</p>
-
-        {% if user_profile.address %}
-            <p><strong>Address:</strong> {{ user_profile.address }}</p>
-        {% endif %}
-
-        {% if user_profile.phone %}
-            <p><strong>Phone:</strong> {{ user_profile.phone }}</p>
-        {% endif %}
-
-        <a class="logout-link" href="{% url 'logout' %}">Logout</a>
+        <ul class="information">
+            <li>
+                <p style="font-size: 30px; font-family: 'Times New Roman';"><strong>{{ user_profile.name }}</strong></p>
+                <p style="font-family: 'Times New Roman'"><strong>{{ user_profile.role }}</strong></p>
+            </li>
+            {% if user_profile.email %}
+            <li>
+                <p>Email</p>
+                <p style="font-family: 'Times New Roman'">{{ user_profile.email }}</p>
+            </li>
+            {% endif %}
+            {% if user_profile.phone %}
+            <li>
+                <p>Phone</p>
+                <p style="font-family: 'Times New Roman'">{{ user_profile.phone }}</p>
+            </li>
+            {% endif %}
+            {% if user_profile.address %}
+            <li>
+                <p>Address</p>
+                <p style="font-family: 'Times New Roman'">{{ user_profile.address }}</p>
+            </li>
+            {% endif %}
+            {% if isAdmin or self %}
+            <li>
+                <p><a href="/create-user/{{ username }}" style="color: blue">Edit</a></p>
+            </li>
+            {% endif %}
+        </ul>
+        <div class="Course">
+            <p><strong>Courses:</strong> {{ user_profile.courses_assigned }}</p>
+        </div>
     </div>
 </body>
 </html>

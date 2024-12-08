@@ -3,15 +3,24 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>User Creator</title>
+        {% if data.username %}
+            <title>User Editor</title>
+        {% else %}
+            <title>User Creator</title>
+        {% endif %}
         {% load static %}
         <link rel="stylesheet" href="{% static 'user_form/style.css' %}">
+        <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
     </head>
+
     <body>
+        {% include 'navigation_bar/navigation.html' %}
         <div class="container">
-            <h1>
-                User Creator
-            </h1>
+            {% if data.username %}
+                <h1>User Editor</h1>
+            {% else %}
+                <h1>User Creator</h1>
+            {% endif %}
             {% if data.username %}
             <form id="myForm" action="/create-user/{{ data.username }}/" method="post">
             {% else %}
@@ -22,14 +31,14 @@
                     <label for="un">Username: </label>
                     {% if not data.username %}
                     <input
-                            type="text" id="un" tabindex="1" autofocus placeholder="{{ data.username }}"
+                            type="text" id="un" tabindex="1" autofocus value="{{ data.username }}"
                             name="username"
                             required
                     />
                     {% endif %}
                     {% if data.username %}
                     <input
-                            type="text" id="un" tabindex="1" readonly placeholder="{{ data.username }}"
+                            type="text" id="un" tabindex="1" readonly value="{{ data.username }}"
                             name="username"
                     />
                     {% endif %}
@@ -38,7 +47,7 @@
                     <label for="fn">First Name: </label>
                     <input
                             type="text" id="fn" tabindex="1" name="first_name"
-                            autofocus placeholder="{{ data.first_name }}"
+                            autofocus value="{{ data.first_name }}"
                             required
                     />
                 </p>
@@ -46,7 +55,7 @@
                     <label for="ln">Last Name: </label>
                     <input
                             type="text" id="ln" size="30" tabindex="1"
-                            placeholder="{{ data.last_name }}" name="last_name"
+                            value="{{ data.last_name }}" name="last_name"
                             required
                     />
                 </p>
@@ -69,7 +78,7 @@
                 <p>
                     <label for="email">Email: </label>
                     <input type="email" id="email" tabindex="1"
-                           name="email" placeholder="{{ data.email }}" required
+                           name="email" value="{{ data.email }}" required
                     />
 
                 </p>
@@ -77,21 +86,21 @@
                     <label for="office_hours">Office Hours: </label>
                     <input
                         type="text" id="office_hours" tabindex="1"
-                        name="office_hours" placeholder="{{ data.office_hours }}"
+                        name="office_hours" value="{{ data.office_hours }}"
                     />
                 </p>
                 <p>
                     <label for="phone">Phone Number: </label>
                     <input
                         type="tel" id="phone" tabindex="1"
-                        name="phone" placeholder="{{ data.phone }}"
+                        name="phone" value="{{ data.phone }}"
                     />
                 </p>
                 <p>
                     <label for="address">Address: </label>
                     <input
                         type="text" id="address" tabindex="1"
-                       name="address" placeholder="{{ data.address }}"
+                       name="address" value="{{ data.address }}"
 
                     />
                 </p>
