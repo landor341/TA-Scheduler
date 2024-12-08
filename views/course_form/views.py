@@ -22,7 +22,8 @@ class CourseForm(View):
         return render(request, 'course_form/course_form.html', {
             "data": CourseForm,
             "isAdmin": request.user.role == "Admin",
-            "isEditing": code is not None
+            "isEditing": code is not None,
+            'full_name': f"{request.user.first_name} {request.user.last_name}",
         })
 
     def post(self, request, code: str | None = None, semester: str | None = None):

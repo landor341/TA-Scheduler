@@ -6,54 +6,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Section Form</title>
     <link rel="stylesheet" href="{% static 'course_form/style.css' %}">
+    <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
 </head>
 <body>
-    <h1>Course Form</h1>
-    <form method="post" action="">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="course_code">Course Code</label>
-            <input
-                type="text"
-                id="course_code"
-                name="course_code"
-                value="{{ data.course_code }}"
-                {% if isEditing %}readonly{% endif %}
-            >
-        </div>
-        <div class="form-group">
-            <label for="semester">Semester</label>
-            <input
-                type="text"
-                id="semester"
-                name="semester"
-                value="{{ data.semester }}"
-            >
-        </div>
-        <div class="form-group">
-            <label for="course_name">Course Name</label>
-            <input
-                type="text"
-                id="course_name"
-                name="course_name"
-                value="{{ data.course_name }}"
-            >
-        </div>
+    {% include 'navigation_bar/navigation.html' %}
+    <div class="container">
+        <h1>Course Form</h1>
+        <form method="post" action="">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="course_code">Course Code</label>
+                <input
+                    type="text"
+                    id="course_code"
+                    name="course_code"
+                    value="{{ data.course_code }}"
+                    {% if isEditing %}readonly{% endif %}
+                >
+            </div>
+            <div class="form-group">
+                <label for="semester">Semester</label>
+                <input
+                    type="text"
+                    id="semester"
+                    name="semester"
+                    value="{{ data.semester }}"
+                >
+            </div>
+            <div class="form-group">
+                <label for="course_name">Course Name</label>
+                <input
+                    type="text"
+                    id="course_name"
+                    name="course_name"
+                    value="{{ data.course_name }}"
+                >
+            </div>
 
-        <!-- Form Actions -->
-        <div class="form-actions">
-            <button type="submit">Save</button>
-            <a href="{% url 'home' %}" class="cancel-link">Cancel</a>
-        </div>
-    </form>
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit">Save</button>
+                <a href="{% url 'home' %}" class="cancel-link">Cancel</a>
+            </div>
+        </form>
 
-    <!-- Delete Section Form -->
-    {% if data.is_deletable %}
-    <form method="post" action="{% url 'section-form' code=course.course_code semester=semester section_number=data.section_number %}">
-        {% csrf_token %}
-        <button type="submit" class="delete-button">Delete Section</button>
-    </form>
-    {% endif %}
+        <!-- Delete Section Form -->
+        {% if data.is_deletable %}
+        <form method="post" action="{% url 'section-form' code=course.course_code semester=semester section_number=data.section_number %}">
+            {% csrf_token %}
+            <button type="submit" class="delete-button">Delete Section</button>
+        </form>
+        {% endif %}
+    </div>
+
 </body>
 </html>
 

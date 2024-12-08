@@ -43,7 +43,7 @@ class ProfileView(View):
             'full_name': f"{request.user.first_name} {request.user.last_name}",
             'user_profile': user_profile,
             'isAdmin': request.user.role == 'Admin',
-            'self': username == request.user.username,
+            'self': username == None or username == request.user.username,
             'username': request.user.username if username is None else username,
         }
 
