@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
-
+from core.semester_controller.SemesterController import SemesterController
 from core.course_controller.CourseController import CourseController
 from core.local_data_classes import CourseFormData
 from ta_scheduler.models import User
