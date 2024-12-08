@@ -43,6 +43,13 @@ input, .detail {background-color: transparent;}
 .detail:hover {background-color: #949d9a}
 .save:hover {background-color: green}
 .delete-semester:hover {background-color: darkred}
+.error {
+    color: red;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+}
 /* Header */
 h2 {
     text-align: center;

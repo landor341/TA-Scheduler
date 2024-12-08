@@ -14,9 +14,6 @@
     </head>
     <body>
         {% include 'navigation_bar/navigation.html' %}
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
         {% if creator %}
         <div class="information">
             <h2>Current Semester Information</h2>
@@ -79,5 +76,8 @@
                 </form>
             {% endif %}
         </div>
+        {% if error %}
+            <p class="error">Error: {{ error }}</p>
+        {% endif %}
     </body>
 </html>
