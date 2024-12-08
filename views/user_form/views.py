@@ -39,7 +39,6 @@ class UserForm(View):
             first_name = user.name.split(" ", 1)
             last_name = first_name[1]
             first_name = first_name[0]
-
             return render(request, 'user_form/user_form.html', {
                 "data": UserFormData(username, first_name, last_name,
                                      user.role, user.office_hours, user.email, user.address, user.phone),

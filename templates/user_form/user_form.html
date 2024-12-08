@@ -3,15 +3,21 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>User Creator</title>
+        {% if data.username %}
+            <title>User Editor</title>
+        {% else %}
+            <title>User Creator</title>
+        {% endif %}
         {% load static %}
         <link rel="stylesheet" href="{% static 'user_form/style.css' %}">
     </head>
     <body>
         <div class="container">
-            <h1>
-                User Creator
-            </h1>
+            {% if data.username %}
+                <h1>User Editor</h1>
+            {% else %}
+                <h1>User Creator</h1>
+            {% endif %}
             {% if data.username %}
             <form id="myForm" action="/create-user/{{ data.username }}/" method="post">
             {% else %}
