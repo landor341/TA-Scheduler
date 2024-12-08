@@ -19,8 +19,10 @@ class CourseForm(View):
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
 
+        course_form = CourseController.get_course(code, semester) if code else {}
+
         return render(request, 'course_form/course_form.html', {
-            "data": CourseForm,
+            "data": course_form,
             "isAdmin": request.user.role == "Admin",
             "isEditing": code is not None,
             'full_name': f"{request.user.first_name} {request.user.last_name}",
