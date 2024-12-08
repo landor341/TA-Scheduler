@@ -10,8 +10,11 @@
         {% endif %}
         {% load static %}
         <link rel="stylesheet" href="{% static 'user_form/style.css' %}">
+        <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
     </head>
+
     <body>
+        {% include 'navigation_bar/navigation.html' %}
         <div class="container">
             {% if data.username %}
                 <h1>User Editor</h1>

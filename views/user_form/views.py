@@ -31,6 +31,7 @@ class UserForm(View):
         """
         if request.user.role == "Admin" and username is None:
             return render(request, 'user_form/user_form.html', {
+                'full_name': f"{request.user.first_name} {request.user.last_name}",
                 "data": UserFormData("", "", "", "", "", "", "", ""),
                 "isAdmin": True
             })
@@ -40,6 +41,7 @@ class UserForm(View):
             last_name = first_name[1]
             first_name = first_name[0]
             return render(request, 'user_form/user_form.html', {
+                'full_name': f"{request.user.first_name} {request.user.last_name}",
                 "data": UserFormData(username, first_name, last_name,
                                      user.role, user.office_hours, user.email, user.address, user.phone),
                 "password": True,
