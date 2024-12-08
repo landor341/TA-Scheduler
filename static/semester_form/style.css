@@ -1,0 +1,61 @@
+/* Universal */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+.container,.information {
+    max-width: 95%;
+    margin: 100px auto 50px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.information ul li{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px;
+    padding: 10px;
+    border: 3px solid black;
+    border-radius: 5px;
+}
+.container form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.container form label, .container form input {
+    margin: 10px;
+}
+.detail, .delete-semester, .save, input {
+    color: black;
+    border: 1px solid #949d9a;
+    padding: 10px;
+    border-radius: 5px;
+}
+input, .detail {background-color: transparent;}
+.delete-semester {background-color: red}
+.save {background-color: lightgreen}
+.detail:hover {background-color: #949d9a}
+.save:hover {background-color: green}
+.delete-semester:hover {background-color: darkred}
+.error {
+    color: red;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Times New Roman";
+    border: 1px red solid;
+    border-radius: 5px;
+    font-size: 30px;
+}
+/* Header */
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}

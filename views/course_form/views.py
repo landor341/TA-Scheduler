@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
-
+from core.semester_controller.SemesterController import SemesterController
 from core.course_controller.CourseController import CourseController
 from core.local_data_classes import CourseFormData
 from ta_scheduler.models import User
@@ -19,10 +19,9 @@ class CourseForm(View):
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
 
-        course_form = CourseController.get_course(code, semester) if code else {}
-
         return render(request, 'course_form/course_form.html', {
-            "data": course_form,
+            "existSemester": SemesterController.list_semester(),
+            "data": CourseForm,
             "isAdmin": request.user.role == "Admin",
             "isEditing": code is not None,
             'full_name': f"{request.user.first_name} {request.user.last_name}",
