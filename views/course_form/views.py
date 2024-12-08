@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.views import View
 
 from core.course_controller.CourseController import CourseController
+from core.semester_controller.SemesterController import SemesterController
 from core.local_data_classes import CourseFormData
 from ta_scheduler.models import User
 
@@ -20,6 +21,7 @@ class CourseForm(View):
             return redirect(reverse("home"))
 
         return render(request, 'course_form/course_form.html', {
+            "existSemester": SemesterController.list_semester(),
             "data": CourseForm,
             "isAdmin": request.user.role == "Admin",
             "isEditing": code is not None,

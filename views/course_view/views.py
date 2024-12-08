@@ -40,6 +40,8 @@ class CourseView(View):
         instructors = User.objects.filter(id__in=sections.values_list('instructor', flat=True), role='Instructor')
 
         context = {
+            'full_name': f"{request.user.first_name} {request.user.last_name}",
+            'isAdmin': request.user.role == 'Admin',
             'course': course,
             'sections': sections,
             'tas': tas,
