@@ -3,7 +3,6 @@ from django.urls import reverse
 from django.views import View
 
 from core.course_controller.CourseController import CourseController
-from core.semester_controller.SemesterController import SemesterController
 from core.local_data_classes import CourseFormData
 from ta_scheduler.models import User
 
