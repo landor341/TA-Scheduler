@@ -75,9 +75,9 @@
                     <button class="delete-semester" type="submit">Delete Semester</button>
                 </form>
             {% endif %}
+            {% if error %}
+                <p class="error">Error: {{ error }}</p>
+            {% endif %}
         </div>
-        {% if error %}
-            <p class="error">Error: {{ error }}</p>
-        {% endif %}
     </body>
 </html>

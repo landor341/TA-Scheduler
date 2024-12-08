@@ -48,6 +48,9 @@ input, .detail {background-color: transparent;}
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: "Times New Roman";
+    border: 1px red solid;
+    border-radius: 5px;
     font-size: 30px;
 }
 /* Header */
