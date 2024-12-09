@@ -13,7 +13,24 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+.infoAndButton{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
+}
+.button {
+    background-color: lightgreen;
+    color: black;
+    text-decoration: none;
+    border: 1px solid gray;
+    margin: 10px;
+    padding: 5px;
+    border-radius: 5px;
+}
+.button:hover {
+    background-color: green;
+}
 /* Header */
 h2 {
     text-align: center;

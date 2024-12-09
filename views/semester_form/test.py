@@ -31,7 +31,7 @@ class TestSemesterFormView(TestCase):
         response = self.client.get(reverse("semester-creator"))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["creator"])
-        self.assertEqual(len(response.context["existSemester"]), 2)
+        self.assertEqual(len(response.context["semesters"]), 2)
 
     def test_get_editor_mode(self):
         self.client.login(username="admin", password="adminpass")

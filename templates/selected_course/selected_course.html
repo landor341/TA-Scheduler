@@ -8,10 +8,19 @@
     <link rel="stylesheet" href="{% static 'selected_course/style.css' %}">
     <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
 </head>
-<body>
+<p>
     {% include 'navigation_bar/navigation.html' %}
     <div class="container">
-        <h1>{{ course.course_name }} ({{ course.course_code }})</h1>
+        <div class="infoAndButton">
+            <h1>{{ course.course_name }} ({{ course.course_code }})</h1>
+            {% if isAdmin %}
+            <div class="createAndEdit">
+                <a class="button" href="/edit-course/{{course.course_code}}/{{course.semester.semester_name}}">Edit Course</a>
+                <a class="button" href="/create-section/{{course.course_code}}/{{course.semester.semester_name}}">+ Create Section</a>
+            </div>
+            {% endif %}
+        </div>
+
         <h2>Course Sections</h2>
         <ul>
             {% for section in sections %}
@@ -29,7 +38,6 @@
                 <li>No teaching assistants assigned to this course.</li>
             {% endfor %}
         </ul>
-
         <h2>Instructors</h2>
         <ul>
             {% for instructor in instructors %}

@@ -30,7 +30,6 @@ class CourseView(View):
         """
         # Get semester object
         semester = get_object_or_404(Semester, semester_name=semester_name)
-
         # Get course object
         course = get_object_or_404(Course, course_code=course_code, semester=semester)
 
