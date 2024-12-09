@@ -23,6 +23,7 @@ from views.profile_view import ProfileView
 from views.section_form.views import SectionForm
 from views.user_form import UserForm
 from views.semester_form import SemesterFormView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', ProfileView.as_view(), name='home'),  # Root
