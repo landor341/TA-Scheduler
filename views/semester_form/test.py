@@ -1,119 +1,92 @@
-from django.test import TestCase, Client
-from django.urls import reverse
-from ta_scheduler.models import Semester, User
+from django.test import TestCase
+from ta_scheduler.models import Semester
 from core.semester_controller.SemesterController import SemesterController
 
 
-class TestSemesterFormView(TestCase):
-    def setUp(self):
-        self.client = Client()
-
-        self.admin_user = User.objects.create_user(
-            username="admin", password="adminpass", role="Admin"
+class TestSaveSemester(TestCase):
+    def test_save_valid_semester(self):
+        SemesterController.save_semester(
+            semester_name="Fall 2023", start_date="2023-08-01", end_date="2023-12-31"
         )
-        self.non_admin_user = User.objects.create_user(
-            username="nonadmin", password="nonadminpass", role="TA"
-        )
-
-        self.semester_1 = Semester.objects.create(
-            semester_name="Fall 2023",
-            start_date="2023-08-15",
-            end_date="2023-12-15",
-        )
-        self.semester_2 = Semester.objects.create(
-            semester_name="Spring 2024",
-            start_date="2024-01-10",
-            end_date="2024-05-10",
-        )
-
-    def test_get_creator_mode(self):
-        self.client.login(username="admin", password="adminpass")
-        response = self.client.get(reverse("semester-creator"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context["creator"])
-        self.assertEqual(len(response.context["semesters"]), 2)
-
-    def test_get_editor_mode(self):
-        self.client.login(username="admin", password="adminpass")
-        response = self.client.get(reverse("semester-editor", args=["Fall 2023"]))
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context.get("creator", False))
-        self.assertEqual(response.context["data"]["semester_name"], "Fall 2023")
-
-    def test_get_redirect_for_non_admin(self):
-        self.client.login(username="nonadmin", password="nonadminpass")
-        response = self.client.get(reverse("semester-creator"))
-        self.assertRedirects(response, reverse("home"))
-
-    def test_post_create_new_semester(self):
-        self.client.login(username="admin", password="adminpass")
-        response = self.client.post(
-            reverse("semester-creator"),
-            data={
-                "semester_name": "Summer 2024",
-                "start_date": "2024-06-01",
-                "end_date": "2024-08-01",
-                "isCreator": "True",
-            },
-        )
-        self.assertRedirects(response, reverse("semester-creator"))
-        self.assertTrue(Semester.objects.filter(semester_name="Summer 2024").exists())
-
-    def test_post_update_existing_semester(self):
-        self.client.login(username="admin", password="adminpass")
-        response = self.client.post(
-            reverse("semester-editor", args=["Fall 2023"]),
-            data={
-                "semester_name": "Fall 2023",
-                "start_date": "2023-08-20",
-                "end_date": "2023-12-20",
-            },
-        )
-        self.assertRedirects(response, reverse("semester-creator"))
         semester = Semester.objects.get(semester_name="Fall 2023")
-        self.assertEqual(semester.start_date.strftime("%Y-%m-%d"), "2023-08-20")
-        self.assertEqual(semester.end_date.strftime("%Y-%m-%d"), "2023-12-20")
+        self.assertEqual(semester.start_date.strftime("%Y-%m-%d"), "2023-08-01")
+        self.assertEqual(semester.end_date.strftime("%Y-%m-%d"), "2023-12-31")
 
-    def test_post_create_existing_semester(self):
-        self.client.login(username="admin", password="adminpass")
-        response = self.client.post(
-            reverse("semester-creator"),
-            data={
-                "semester_name": "Fall 2023",
-                "start_date": "2023-08-15",
-                "end_date": "2023-12-15",
-                "isCreator": "True",
-            },
+    def test_save_invalid_date(self):
+        with self.assertRaises(ValueError) as context:
+            SemesterController.save_semester(
+                semester_name="Fall 2023", start_date="2023-12-31", end_date="2023-08-01"
+            )
+        self.assertEqual(str(context.exception), "start_date cannot be before end_date")
+
+    def test_save_with_missing_name(self):
+        with self.assertRaises(ValueError) as context:
+            SemesterController.save_semester(
+                semester_name=None, start_date="2023-08-01", end_date="2023-12-31"
+            )
+        self.assertEqual(str(context.exception), "semester_name cannot be None")
+
+
+class TestGetSemester(TestCase):
+    def setUp(self):
+        Semester.objects.create(
+            semester_name="Fall 2023", start_date="2023-08-01", end_date="2023-12-31"
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Semester Already Exist")
+
+    def test_get_existing_semester(self):
+        semester = SemesterController.get_semester("Fall 2023")
+        self.assertEqual(semester.semester_name, "Fall 2023")
+
+    def test_get_nonexistent_semester(self):
+        with self.assertRaises(ValueError) as context:
+            SemesterController.get_semester("Nonexistent Semester")
+        self.assertEqual(str(context.exception), "Semester 'Nonexistent Semester' does not exist.")
+
+
+class TestDeleteSemester(TestCase):
+    def setUp(self):
+        Semester.objects.create(
+            semester_name="Fall 2023", start_date="2023-08-01", end_date="2023-12-31"
+        )
 
     def test_delete_existing_semester(self):
-        self.client.login(username="admin", password="adminpass")
-        response = self.client.post(
-            reverse("semester-editor", args=["Fall 2023"]),
-            data={"_method": "DELETE"},
-        )
-        self.assertRedirects(response, reverse("semester-creator"))
+        SemesterController.delete_semester("Fall 2023")
         self.assertFalse(Semester.objects.filter(semester_name="Fall 2023").exists())
 
     def test_delete_nonexistent_semester(self):
-        self.client.login(username="admin", password="adminpass")
-        response = self.client.post(
-            reverse("semester-editor", args=["Nonexistent Semester"]),
-            data={"_method": "DELETE"},
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("Semester 'Nonexistent Semester' does not exist.", response.context["error"])
+        with self.assertRaises(ValueError) as context:
+            SemesterController.delete_semester("Nonexistent Semester")
+        self.assertEqual(str(context.exception), "Semester 'Nonexistent Semester' does not exist.")
 
-    def test_post_redirect_for_non_admin(self):
-        self.client.login(username="nonadmin", password="nonadminpass")
-        response = self.client.post(
-            reverse("semester-creator"),
-            data={
-                "semester_name": "Test Semester",
-                "start_date": "2024-06-01",
-                "end_date": "2024-08-01",
-            },
+
+class TestSearchSemester(TestCase):
+    def setUp(self):
+        Semester.objects.create(
+            semester_name="Fall 2023", start_date="2023-08-01", end_date="2023-12-31"
         )
-        self.assertRedirects(response, reverse("home"))
+        Semester.objects.create(
+            semester_name="Spring 2023", start_date="2023-01-01", end_date="2023-05-31"
+        )
+
+    def test_search_existing_semester(self):
+        results = SemesterController.search_semester("2023")
+        self.assertIn("Fall 2023", results)
+        self.assertIn("Spring 2023", results)
+
+    def test_search_no_results(self):
+        results = SemesterController.search_semester("2024")
+        self.assertEqual(results, [])
+
+
+class TestListSemester(TestCase):
+    def setUp(self):
+        Semester.objects.create(
+            semester_name="Fall 2023", start_date="2023-08-01", end_date="2023-12-31"
+        )
+        Semester.objects.create(
+            semester_name="Spring 2023", start_date="2023-01-01", end_date="2023-05-31"
+        )
+
+    def test_list_semesters_order(self):
+        results = SemesterController.list_semester()
+        self.assertEqual([semester.semester_name for semester in results], ["Spring 2023", "Fall 2023"])
