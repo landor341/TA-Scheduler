@@ -38,6 +38,7 @@ class SectionForm(View):
                 # Attempt to retrieve a CourseSection
                 section = CourseSection.objects.get(course=course, course_section_number=section_number)
                 form_data = CourseSectionFormData(
+
                     course=section.course,
                     section_number=section.course_section_number,
                     days=section.days,
@@ -58,7 +59,11 @@ class SectionForm(View):
                     section_type="Lab"
                 )
 
-        return render(request, 'section_form/section_form.html', {"data": form_data})
+        return render(request, 'section_form/section_form.html', {
+            "data": form_data,
+            'full_name': f"{request.user.first_name} {request.user.last_name}",
+            'isAdmin': request.user.role == 'Admin',
+        })
 
 
     def post(self, request, code: str | None = None, semester: str | None = None, section_number: str = None):

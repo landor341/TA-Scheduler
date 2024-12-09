@@ -30,7 +30,6 @@ class CourseView(View):
         """
         # Get semester object
         semester = get_object_or_404(Semester, semester_name=semester_name)
-
         # Get course object
         course = get_object_or_404(Course, course_code=course_code, semester=semester)
 
@@ -40,6 +39,8 @@ class CourseView(View):
         instructors = User.objects.filter(id__in=sections.values_list('instructor', flat=True), role='Instructor')
 
         context = {
+            'full_name': f"{request.user.first_name} {request.user.last_name}",
+            'isAdmin': request.user.role == 'Admin',
             'course': course,
             'sections': sections,
             'tas': tas,

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {% if creator %}
+            <title>Semester Creator</title>
+        {% else %}
+            <title>Semester Editor</title>
+        {% endif %}
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'semester_form/style.css' %}">
+        <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
+    </head>
+    <body>
+        {% include 'navigation_bar/navigation.html' %}
+        {% if creator %}
+        <div class="information">
+            <h2>Current Semester Information</h2>
+            <ul>
+                {% for semester in semesters %}
+                <li>
+                    <p>Semester: {{ semester.semester_name }}</p>
+                    <p>Start Date: {{ semester.start_date }}</p>
+                    <p>End Date:{{  semester.end_date }}</p>
+                    <form method="get" action="{% url 'semester-editor' semester.semester_name %}">
+                        <button type="submit" class="detail">View Details</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <div class="container">
+            {% if not creator %}
+            <h2>Semester Editor</h2>
+            {% else %}
+            <h2>Semester Creator</h2>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <label for="semester_name">Semester Name:</label>
+                <input
+                    type="text"
+                    id="semester_name"
+                    name="semester_name"
+                    value="{{ data.semester_name }}"
+                    required
+                />
+                <label for="start_date">Start Date:</label>
+                <input
+                    type="date"
+                    id="start_date"
+                    name="start_date"
+                    value="{{ data.start_date }}"
+                    required
+                />
+                <label for="end_date">End Date:</label>
+                <input
+                    type="date"
+                    id="end_date"
+                    name="end_date"
+                    value="{{ data.end_date }}"
+                    required
+                />
+                {% if creator %}
+                    <input type="hidden" value="True" name="isCreator">
+                {% endif %}
+                <button type="submit" class="save">Save</button>
+            </form>
+            {% if not creator %}
+                <form action="{% url 'semester-editor' data.semester_name %}" method="post" onsubmit="return confirm('Are you sure you want to delete this semester?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button class="delete-semester" type="submit">Delete Semester</button>
+                </form>
+            {% endif %}
+            {% if error %}
+                <p class="error">Error: {{ error }}</p>
+            {% endif %}
+        </div>
+    </body>
+</html>
