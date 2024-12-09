@@ -5,6 +5,7 @@ from core.semester_controller.SemesterController import SemesterController
 from core.course_controller.CourseController import CourseController
 from core.local_data_classes import CourseFormData
 from ta_scheduler.models import User
+import re
 
 
 class CourseForm(View):
@@ -18,6 +19,9 @@ class CourseForm(View):
         '''
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
+
+
+
         course_form = CourseController.get_course(code, semester) if code else {}
         return render(request, 'course_form/course_form.html', {
             "existSemester": SemesterController.list_semester(),
@@ -38,6 +42,63 @@ class CourseForm(View):
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
 
+            # Handle delete action
+        if request.POST.get('action') == 'delete':
+            # Check if the user is an admin
+            if request.user.role != "Admin":
+                return redirect(reverse("home"))  # Redirect non-admins to home
+            CourseController.delete_course(code, semester)
+            return redirect(reverse("home"))
+
+        #validation checks
+        #gather input data
+        course_code = request.POST.get('course_code', '').strip()
+        course_name = request.POST.get('course_name', '').strip()
+        selected_semester = request.POST.get('semester', '').strip()
+
+        # Validation errors dictionary
+        errors = {
+            "course_code": "",
+            "course_name": "",
+            "semester": "",
+        }
+
+        # Validation checks
+        if not course_code:
+            errors["course_code"] = "Field empty"
+        elif not re.match(r'^[A-Za-z0-9]+$', course_code):
+            errors["course_code"] = "Course code must be a valid alphanumeric value."
+
+        if not course_name:
+            errors["course_name"] = "Field empty"
+        elif not re.match(r'^[A-Za-z0-9 ]+$', course_name):
+            errors["course_name"] = "Course name must be a valid alphanumeric value."
+
+        valid_semesters = [s.semester_name for s in SemesterController.list_semester()]
+        if not selected_semester:
+            errors["semester"] = "Field empty"
+        elif selected_semester not in valid_semesters:
+            errors["semester"] = "The selected semester doesn't exist."
+
+        # Check if there are any errors
+        if any(errors.values()):
+            # Re-render the form with errors and previous inputs
+            return render(request, 'course_form/course_form.html', {
+                "existSemester": SemesterController.list_semester(),
+                "data": {
+                    "code": course_code,
+                    "name": course_name
+                },
+                "errors": errors,  # Pass errors to the template
+                "isAdmin": request.user.role == "Admin",
+                "isEditing": code is not None,
+                'full_name': f"{request.user.first_name} {request.user.last_name}",
+            })
+
+
+
+
+        #Save function
         form = CourseFormData(
             course_code=request.POST.get('course_code'),
             semester=request.POST.get('semester'),
