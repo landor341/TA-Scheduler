@@ -78,7 +78,7 @@ class SemesterFormView(View):
             "start_date": request.POST.get("start_date"),
             "end_date": request.POST.get("end_date"),
         }
-        if SemesterController.semester_exists(semester_data.get("semester_name")) and request.POST.get("isCreator") == "True":
+        if SemesterController.semester_exists(semester_data.get("semester_name")) and request.POST.get("isCreator") == "True" :
             return render(request, 'semester_form/semester_form.html', {
                 "existSemester": SemesterController.list_semester(),
                 "creator": True,
@@ -95,8 +95,10 @@ class SemesterFormView(View):
             )
         except ValueError as e:
             return render(request, 'semester_form/semester_form.html', {
+                "existSemester": SemesterController.list_semester(),
+                'creator': True,
                 'full_name': f"{request.user.first_name} {request.user.last_name}",
-                "data": semester_data,
+                "data": {"semester_name": "", "start_date": "", "end_date": ""},
                 "isAdmin": True,
                 "error": str(e),
             })
@@ -125,9 +127,9 @@ class SemesterFormView(View):
         try:
             SemesterController.delete_semester(semester_name)
         except ValueError as e:
-            if semester_name is None:
-                semester_name = 'NonExistentSemester'
             return render(request, 'semester_form/semester_form.html', {
+                'existSemester': SemesterController.list_semester(),
+                'creator': True,
                 'full_name': f"{request.user.first_name} {request.user.last_name}",
                 "data": {"semester_name": semester_name, "start_date": "", "end_date": ""},
                 "error": str(e),
