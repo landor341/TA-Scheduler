@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Section Form</title>
     <link rel="stylesheet" href="{% static 'section_form/style.css' %}">
+    <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
 </head>
 <body>
+    {% include 'navigation_bar/navigation.html' %}
+    <div class="container">
     <h1>{{ data.section_type }} Section Form</h1>
 
     <form method="post" action="">
@@ -81,6 +84,7 @@
         <button type="submit" class="delete-button">Delete Section</button>
     </form>
     {% endif %}
+    </div>
 </body>
 </html>
 
