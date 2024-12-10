@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'search_view/style.css' %}">
+    <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
+</head>
+<body>
+    {% include 'navigation_bar/navigation.html' %}
+    <div class="container">
+        <div class="search-toggle">
+            <a href="{% url 'search' 'course' %}" {% if type == "course" %}class="active"{% endif %}>Search Courses</a>
+            <a href="{% url 'search' 'user' %}" {% if type == "user" %}class="active"{% endif %}>Search Users</a>
+        </div>
+        <h1>Search {{ type|title }}</h1>
+
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="query" placeholder="Enter search keyword" value="{{ query|default_if_none:'' }}">
+            {% if type == "course" %}
+                <select name="semester_name">
+                    <option value="">All Semesters</option>
+                    {% for semester in semesters %}
+                        <option value="{{ semester.semester_name }}" {% if semester.semester_name == selected_semester %}selected{% endif %}>
+                            {{ semester.semester_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+            <button type="submit">Search</button>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% for result in search_results %}
+            <ul class="result">
+                {% if type == "course" %}
+                    {% for course in result.courses %}
+                        <li>
+                            <p><a href="{% url 'course_view'  course.course_code result.semester %}">{{ course.course_code }}</a></p>
+                            <p>{{ course.course_name }}</p>
+                            <p>{{ result.semester}}</p>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>
+                        <p><a href="{% url 'profile' result.username %}">{{ result.username }}</a> </p>
+                        <p>{{ result.name }}</p>
+                    </li>
+                {% endif %}
+            </ul>
+        {% endfor %}
+    </div>
+</body>
+</html>

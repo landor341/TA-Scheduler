@@ -40,5 +40,5 @@ urlpatterns = [
     path('create-section/<str:code>/<str:semester>', SectionForm.as_view(), name='section-creator'),  # Section-form
     path('create-semester/', SemesterFormView.as_view(), name='semester-creator'),
     path('create-semester/<str:semester_name>', SemesterFormView.as_view(), name='semester-editor'),
-    path('search/<str:type>', SearchView.as_view(), name='search'),
+    path('search/<str:type>/', SearchView.as_view(), name='search'),
 ]
