@@ -11,12 +11,13 @@
 <body>
     {% include 'navigation_bar/navigation.html' %}
     <div class="container">
-        <div class="search-toggle">
-            <a href="{% url 'search' 'course' %}" {% if type == "course" %}class="active"{% endif %}>Search Courses</a>
-            <a href="{% url 'search' 'user' %}" {% if type == "user" %}class="active"{% endif %}>Search Users</a>
+        <div class="searchbar">
+            <h1>Search {{ type|title }}</h1>
+            <div class="search-toggle">
+                <a href="{% url 'search' 'course' %}" {% if type == "course" %}class="active"{% endif %}>Search Courses</a>
+                <a href="{% url 'search' 'user' %}" {% if type == "user" %}class="active"{% endif %}>Search Users</a>
+            </div>
         </div>
-        <h1>Search {{ type|title }}</h1>
-
 
         <form method="post">
             {% csrf_token %}

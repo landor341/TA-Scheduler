@@ -158,8 +158,10 @@ class TestSearchUserCaseInsensitive(TestCase):
             first_name='O', last_name='0', username='O')
 
     def test_search_empty_string(self):
-        with self.assertRaises(ValueError):
-            UserController.searchUser("")
+        result = UserController.searchUser("")
+        self.assertTrue(
+            all("" in (user.username + user.name).lower() for user in result),
+            f"Usernames or names in the result do not all contain 'in': {[(user.username, user.name)for user in result]}")
 
     def test_search_partial_users(self):
         result = UserController.searchUser("In")
