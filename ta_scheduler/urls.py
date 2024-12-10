@@ -24,6 +24,7 @@ from views.section_form.views import SectionForm
 from views.user_form import UserForm
 from views.semester_form import SemesterFormView
 from views.search_view import SearchView
+from views.api.views import search_user_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -41,4 +42,5 @@ urlpatterns = [
     path('create-semester/', SemesterFormView.as_view(), name='semester-creator'),
     path('create-semester/<str:semester_name>', SemesterFormView.as_view(), name='semester-editor'),
     path('search/<str:type>/', SearchView.as_view(), name='search'),
+    path("api/search/user/", search_user_api, name="search_user_api"),
 ]

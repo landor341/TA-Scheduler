@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from ta_scheduler.models import Semester, Course, User
+from core.user_controller.UserController import UserController
 
 class TestSearchCourses(TestCase):
     def setUp(self):
@@ -35,7 +36,7 @@ class TestSearchCourses(TestCase):
         self.assertContains(response, "CS101")
 
 
-class TestSearchUsers(TestCase):
+class TestSearchUsersAPI(TestCase):
     def setUp(self):
         self.admin_user = User.objects.create_user(
             username='admin', first_name='Admin', last_name='User', password='adminpass', role='Admin'
@@ -43,22 +44,22 @@ class TestSearchUsers(TestCase):
         self.client = Client()
         self.client.login(username='admin', password='adminpass')
 
-        self.user1 = User.objects.create_user(username='jboy', first_name='John', last_name='Boyland', password='password')
-        self.user2 = User.objects.create_user(username='lanfar', first_name='Landon', last_name='Faris', password='password')
+        self.user1 = User.objects.create_user(username='jboy', first_name='John', last_name='Boyland',
+                                              password='password')
+        self.user2 = User.objects.create_user(username='lanfar', first_name='Landon', last_name='Faris',
+                                              password='password')
 
-    def test_get_user_initial_load(self):
-        response = self.client.get(reverse('search', args=['user']))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "John Boyland")
-        self.assertContains(response, "Landon Faris")
+    def test_api_search_users(self):
+        queries = ['j','','lanfar','faris','l','jb','admin']
+        for query in queries:
+            results = UserController.searchUser(query)
+            expected_results = [{"username": user.username, "name": user.name} for user in results]
 
-    def test_post_user_search(self):
-        response = self.client.post(reverse('search', args=['user']), {
-            'query': 'jb'
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "John Boyland")
-        self.assertNotContains(response, "Landon Faris")
+            response = self.client.get(f'/api/search/user/?query={query}')
+
+            self.assertEqual(response.status_code, 200)
+
+            self.assertJSONEqual(response.content, expected_results)
 
 class TestSearchViewPermissions(TestCase):
     def setUp(self):

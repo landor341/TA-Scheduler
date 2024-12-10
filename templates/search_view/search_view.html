@@ -19,10 +19,26 @@
             </div>
         </div>
 
-        <form method="post">
-            {% csrf_token %}
-            <input type="text" name="query" placeholder="Enter search keyword" value="{{ query|default_if_none:'' }}">
-            {% if type == "course" %}
+        {% if type == "user" %}
+            <form>
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Search Users"
+                    autocomplete="off"
+                    value="{{ query|default_if_none:'' }}"
+                />
+            </form>
+            <ul class="result">
+                <div id="dynamic-results">
+                    <!-- JavaScript result -->
+                </div>
+            </ul>
+
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" name="query" placeholder="Enter search keyword" value="{{ query|default_if_none:'' }}">
                 <select name="semester_name">
                     <option value="">All Semesters</option>
                     {% for semester in semesters %}
@@ -31,32 +47,61 @@
                         </option>
                     {% endfor %}
                 </select>
-            {% endif %}
-            <button type="submit">Search</button>
-        </form>
+                <button type="submit">Search</button>
+            </form>
 
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
-
-        {% for result in search_results %}
+            {% for result in search_results %}
             <ul class="result">
-                {% if type == "course" %}
-                    {% for course in result.courses %}
-                        <li>
-                            <p><a href="{% url 'course_view'  course.course_code result.semester %}">{{ course.course_code }}</a></p>
-                            <p>{{ course.course_name }}</p>
-                            <p>{{ result.semester}}</p>
-                        </li>
-                    {% endfor %}
-                {% else %}
+                {% for course in result.courses %}
                     <li>
-                        <p><a href="{% url 'profile' result.username %}">{{ result.username }}</a> </p>
-                        <p>{{ result.name }}</p>
+                        <p><a href="{% url 'course_view'  course.course_code result.semester %}">{{ course.course_code }}</a></p>
+                        <p>{{ course.course_name }}</p>
+                        <p>{{ result.semester}}</p>
                     </li>
-                {% endif %}
+                {% endfor %}
             </ul>
-        {% endfor %}
+            {% endfor %}
+        {% endif %}
     </div>
+    <script>
+        function fetchUsers(query = "") {
+            fetch(`/api/search/user/?query=${encodeURIComponent(query)}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    const resultsContainer = document.getElementById("dynamic-results");
+                    resultsContainer.innerHTML = "";
+
+                    // Handle no results case
+                    if (data.length === 0) {
+                        resultsContainer.innerHTML = "<p>No users found.</p>";
+                        return;
+                    }
+
+                    // Display results
+                    data.forEach((user) => {
+                        const userDiv = document.createElement("div");
+                        userDiv.classList.add("result-item");
+                        userDiv.innerHTML = `
+                            <li>
+                                <p><a href="/profile/${user.username}">${user.username}</a></p>
+                                <p>${user.name}</p>
+                            </li>
+                        `;
+                        resultsContainer.appendChild(userDiv);
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error fetching user data:", error);
+                });
+        }
+
+        document.getElementById("search-input").addEventListener("input", function () {
+            fetchUsers(this.value);
+        });
+
+        window.addEventListener("DOMContentLoaded", function () {
+            fetchUsers();
+        });
+    </script>
 </body>
 </html>

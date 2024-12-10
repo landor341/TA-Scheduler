@@ -30,10 +30,10 @@ class SearchView(View):
             'full_name': f"{request.user.first_name} {request.user.last_name}",
             'isAdmin': request.user.role == 'Admin',
             "type": type,
-            "search_results": [],
         }
 
         if type == "course":
+            context["search_results"] = []
             context["semesters"] = SemesterController.list_semester()
             for semester in SemesterController.list_semester():
                 semester_courses = CourseController.search_courses("", semester.semester_name)
@@ -41,8 +41,6 @@ class SearchView(View):
                     "semester": semester.semester_name,
                     "courses": semester_courses,
                 })
-        else:
-            context["search_results"] = UserController.searchUser("")
         return render(request, 'search_view/search_view.html', context)
 
     def post(self, request, type: str):
@@ -73,17 +71,11 @@ class SearchView(View):
         semester_name = request.POST.get("semester_name", None)
 
         if type == "user":
-            try:
-                search_results = UserController.searchUser(query)
-            except ValueError as e:
-                return render(request, 'search_view/search_view.html', {
-                    'full_name': f"{request.user.first_name} {request.user.last_name}",
-                    'isAdmin': request.user.role == 'Admin',
-                    "type": type,
-                    "error": str(e),
-                    "search_results": [],
-                    "semesters": SemesterController.list_semester(),
-                })
+            return render(request, 'search_view/search_view.html', {
+                'full_name': f"{request.user.first_name} {request.user.last_name}",
+                'isAdmin': request.user.role == 'Admin',
+                "type": type,
+            })
         elif type == "course":
             search_results = []
             if semester_name:
