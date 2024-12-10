@@ -1,0 +1,57 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+.container {
+    max-width: 95%;
+    margin: 100px auto 50px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.search-toggle a, form input, form select, form button, .result li a{
+    text-decoration: none;
+    color: black;
+    margin: 10px;
+    padding:5px;
+    border: 1px solid black;
+    border-radius: 5px;
+}
+form input, form select, form button, .result li a, .result li p {font-size: 20px}
+form button, .search-toggle a {background-color: lightgreen}
+.search-toggle a:hover, form button:hover{
+    background-color: green;
+}
+.result li p {
+    font-weight: bold;
+    font-family: "Times New Roman";
+}
+.result li a:hover {background-color: grey}
+.result li{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px;
+    padding: 10px;
+    border: 3px solid black;
+    border-radius: 5px;
+}
+.error {
+    color: red;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Times New Roman";
+    border: 1px red solid;
+    border-radius: 5px;
+    font-size: 30px;
+}
+.searchbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+h1 {font-size: 40px}

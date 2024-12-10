@@ -195,17 +195,15 @@ class UserController:
             raise ValueError(f"User {username} does not exist.")
 
     @staticmethod
-    def searchUser(user_search_string):
+    def searchUser(user_search_string = ""):
         """
-        Preconditions: 'user_search_string' must not be empty.
+        Preconditions: 'user_search_string' can be empty.
         Postconditions: Returns a list of users that match the search criteria or raises an error if the input is invalid/empty.
         Side-effects: None.
         Parameters:
         - user_search_string: A string containing search parameters for finding users.
         Returns: A list of matching user objects, containing minimal info for displaying in an explore page.
         """
-        if not user_search_string:
-            raise ValueError("Invalid search: string cannot be empty")
 
         matching_users = User.objects.filter(
             models.Q(username__icontains=user_search_string) |
