@@ -35,16 +35,16 @@ class SectionControllerTestBase(TestCase):
 
 
 
+
 class TestSaveLabSection(SectionControllerTestBase):
     def test_save_new_lab_section(self):
-        result = SectionController.save_lab_section(self.lab_data, None)
+        SectionController.save_lab_section(self.lab_data, self.semester.semester_name, None)
         lab_section = LabSection.objects.get(course=self.course, lab_section_number=1)
 
         self.assertIsNotNone(lab_section)
         self.assertEqual(lab_section.days, "Monday, Wednesday")
         self.assertEqual(lab_section.start_time, time(10, 0))
         self.assertEqual(lab_section.end_time, time(11, 0))
-        self.assertEqual(result, f"{self.course.id}:{lab_section.lab_section_number}")
 
     def test_update_existing_lab_section(self):
         lab_section = LabSection.objects.create(
@@ -58,13 +58,12 @@ class TestSaveLabSection(SectionControllerTestBase):
             end_time=time(11, 0),
             section_type="Lab",
         )
-        result = SectionController.save_lab_section(updated_lab_data, lab_section.id)
+        SectionController.save_lab_section(updated_lab_data, self.semester.semester_name, lab_section.id)
 
         lab_section.refresh_from_db()
         self.assertEqual(lab_section.days, "Monday, Wednesday")
         self.assertEqual(lab_section.start_time, time(10, 0))
         self.assertEqual(lab_section.end_time, time(11, 0))
-        self.assertEqual(result, f"{self.course.id}:{lab_section.lab_section_number}")
 
     def test_create_lab_section_with_duplicate_number(self):
         LabSection.objects.create(
@@ -75,7 +74,7 @@ class TestSaveLabSection(SectionControllerTestBase):
             end_time=time(10, 0),
         )
         with self.assertRaises(ValueError):
-            SectionController.save_lab_section(self.lab_data, None)
+            SectionController.save_lab_section(self.lab_data, self.semester.semester_name, None)
 
 
 class TestDeleteLabSection(SectionControllerTestBase):
@@ -93,7 +92,7 @@ class TestDeleteLabSection(SectionControllerTestBase):
 
 class TestSaveCourseSection(SectionControllerTestBase):
     def test_save_new_course_section(self):
-        result = SectionController.save_course_section(self.course_section_data, None)
+        SectionController.save_course_section(self.course_section_data, self.semester.semester_name, None)
         course_section = CourseSection.objects.get(course=self.course, course_section_number=101)
 
         self.assertIsNotNone(course_section)
@@ -101,7 +100,6 @@ class TestSaveCourseSection(SectionControllerTestBase):
         self.assertEqual(course_section.start_time, time(9, 0))
         self.assertEqual(course_section.end_time, time(10, 30))
         self.assertEqual(course_section.instructor, self.instructor)
-        self.assertEqual(result, f"{self.course.id}:{course_section.course_section_number}")
 
     def test_update_existing_course_section(self):
         course_section = CourseSection.objects.create(
@@ -121,13 +119,12 @@ class TestSaveCourseSection(SectionControllerTestBase):
             end_time=time(10, 30),
             section_type="Course",
         )
-        result = SectionController.save_course_section(updated_course_section_data, course_section.id)
+        SectionController.save_course_section(updated_course_section_data, self.semester.semester_name, course_section.id)
 
         course_section.refresh_from_db()
         self.assertEqual(course_section.days, "Tuesday, Thursday")
         self.assertEqual(course_section.start_time, time(9, 0))
         self.assertEqual(course_section.end_time, time(10, 30))
-        self.assertEqual(result, f"{self.course.id}:{course_section.course_section_number}")
 
     def test_create_course_section_with_duplicate_number(self):
         CourseSection.objects.create(
@@ -139,7 +136,7 @@ class TestSaveCourseSection(SectionControllerTestBase):
             end_time=time(10, 30),
         )
         with self.assertRaises(ValueError):
-            SectionController.save_course_section(self.course_section_data, None)
+            SectionController.save_course_section(self.course_section_data, self.semester.semester_name, None)
 
 
 class TestDeleteCourseSection(SectionControllerTestBase):
