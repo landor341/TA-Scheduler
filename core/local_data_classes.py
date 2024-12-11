@@ -107,7 +107,7 @@ class SectionFormData:
     """
     A dataclass that exposes the data necessary to fill/submit section creation
     """
-    course: Course
+    course: CourseRef
     section_number: int
     days: str | None
     start_time: time | None
@@ -127,5 +127,5 @@ class CourseSectionFormData(SectionFormData):
     """
     A dataclass that exposes the data necessary to fill/submit the CourseSectionCreationForm
     """
-    instructor: User
+    instructor: UserRef
     section_type = "Course"
