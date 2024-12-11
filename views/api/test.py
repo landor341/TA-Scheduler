@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from ta_scheduler.models import User
-from core.user_controller.UserController import UserController
+import json
 
 class TestSearchUserAPI(TestCase):
     def setUp(self):
@@ -15,19 +15,28 @@ class TestSearchUserAPI(TestCase):
         self.user2 = User.objects.create_user(username='lanfar', first_name='Landon', last_name='Faris',
                                               password='password')
 
+    def test_api_search_users_with_empty(self):
+        responses = self.client.get('/api/search/user/?query=')
+        self.assertEqual(responses.status_code, 200)
+        response_data = json.loads(responses.content)
+        self.assertEqual(len(response_data), 3)
+        self.assertEqual(response_data[0]['username'], 'admin')
+        self.assertEqual(response_data[1]['username'], 'jboy')
+        self.assertEqual(response_data[2]['username'], 'lanfar')
 
-    def test_api_search_users(self):
-        queries = ['j', '', 'lanfar', 'faris', 'l', 'jb', 'admin']
-        for query in queries:
-            with self.subTest(query=query):
-                expected_results = [
-                    {"username": user.username, "name": user.name}
-                    for user in UserController.searchUser(query)
-                ]
-                response = self.client.get(f"/api/search/user/?query={query}")
-                self.assertEqual(response.status_code, 200, msg=f"Failed for query: {query}")
-                self.assertJSONEqual(
-                    response.content,
-                    expected_results,
-                    msg=f"Unexpected JSON response for query: {query}"
-                )
+    def test_api_search_users_with_single_user(self):
+        responses = self.client.get('/api/search/user/?query=jboy')
+        self.assertEqual(responses.status_code, 200)
+
+        response_data = json.loads(responses.content)
+        self.assertEqual(len(response_data), 1)
+        self.assertEqual(response_data[0]['username'], self.user1.username)
+
+    def test_api_search_users_with_multiple_users(self):
+        responses = self.client.get('/api/search/user/?query=and')
+        self.assertEqual(responses.status_code, 200)
+
+        response_data = json.loads(responses.content)
+        self.assertEqual(len(response_data), 2)
+        self.assertEqual(response_data[0]['username'], self.user1.username)
+        self.assertEqual(response_data[1]['username'], self.user2.username)
