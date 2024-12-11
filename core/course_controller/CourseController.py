@@ -105,7 +105,7 @@ class CourseController:
         return CourseOverview(
             code=course.course_code,
             name=course.course_name,
-            semester=course.semester,
+            semester=course.semester.semester_name,
             course_sections=course_sections,
             lab_sections=lab_sections,
         )
