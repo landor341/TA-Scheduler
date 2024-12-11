@@ -8,8 +8,14 @@
     <link rel="stylesheet" href="{% static 'selected_course/style.css' %}">
     <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
 </head>
-<p>
+    <p>
     {% include 'navigation_bar/navigation.html' %}
+        {% if isAdmin %}
+        <div class="edit-course-container">
+            <a class="edit-course-button" href="/edit-course/{{course.course_code}}/{{course.semester.semester_name}}">Edit Course</a>
+        </div>
+        {% endif %}
+    </p>
     <div class="container">
         <div class="infoAndButton">
             <h1 style="font-family: 'Times New Roman'">{{ course.course_name }} ({{ course.course_code }})</h1>
