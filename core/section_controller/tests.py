@@ -160,7 +160,78 @@ class TestDeleteCourseSection(SectionControllerTestBase):
             SectionController.delete_course_section(999)
 
 
+class TestGetCourseSection(SectionControllerTestBase):
+    def test_get_valid_course_section(self):
+        course_section = CourseSection.objects.create(
+            course=self.course,
+            instructor=self.instructor,
+            course_section_number=101,
+            days="Tuesday, Thursday",
+            start_time=time(9, 0),
+            end_time=time(10, 30),
+        )
+        result = SectionController.get_course_section(
+            course_code=self.course.course_code,
+            semester_name=self.semester.semester_name,
+            course_section_number=101,
+        )
+        self.assertEqual(result, course_section)
+
+    def test_get_nonexistent_course_section(self):
+        with self.assertRaises(ValueError):
+            SectionController.get_course_section(
+                course_code="INVALID_CODE",
+                semester_name=self.semester.semester_name,
+                course_section_number=999,
+            )
+
+    def test_get_course_section_with_invalid_semester(self):
+        new_semester = Semester.objects.create(
+            semester_name="Spring 2025",
+            start_date="2025-01-01",
+            end_date="2025-05-31",
+        )
+        with self.assertRaises(ValueError):
+            SectionController.get_course_section(
+                course_code=self.course.course_code,
+                semester_name=new_semester.semester_name,
+                course_section_number=101,
+            )
 
 
+class TestGetLabSection(SectionControllerTestBase):
+    def test_get_valid_lab_section(self):
+        lab_section = LabSection.objects.create(
+            course=self.course,
+            lab_section_number=1,
+            days="Monday, Wednesday",
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+        )
+        result = SectionController.get_lab_section(
+            course_code=self.course.course_code,
+            semester_name=self.semester.semester_name,
+            lab_section_number=1,
+        )
+        self.assertEqual(result, lab_section)
 
+    def test_get_nonexistent_lab_section(self):
+        with self.assertRaises(ValueError):
+            SectionController.get_lab_section(
+                course_code="INVALID_CODE",
+                semester_name=self.semester.semester_name,
+                lab_section_number=999,
+            )
 
+    def test_get_lab_section_with_invalid_semester(self):
+        new_semester = Semester.objects.create(
+            semester_name="Spring 2025",
+            start_date="2025-01-01",
+            end_date="2025-05-31",
+        )
+        with self.assertRaises(ValueError):
+            SectionController.get_lab_section(
+                course_code=self.course.course_code,
+                semester_name=new_semester.semester_name,
+                lab_section_number=1,
+            )

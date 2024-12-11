@@ -1,5 +1,5 @@
 from core.local_data_classes import LabSectionFormData, CourseSectionFormData
-from ta_scheduler.models import CourseSection, LabSection
+from ta_scheduler.models import CourseSection, LabSection, Course, Semester
 
 class SectionController:
     @staticmethod
@@ -110,3 +110,64 @@ class SectionController:
             course_section.delete()
         except CourseSection.DoesNotExist:
             raise ValueError(f"Course section with id {course_section_id} does not exist.")
+
+    @staticmethod
+    def get_course_section(course_code: str, semester_name: str, course_section_number: int) -> CourseSection:
+        """
+        Pre-conditions: course_code is not null and matches an existing course code in the Course record, semester is not null
+        and matches an existing record in the semester record, and course_section_number is a valid course section number that exists
+        in the CourseSection model.
+        Post-conditions: Returns a course section object with the info that matches the search parameters or a value error if no such
+        objects exist.
+        Side-effects: none.
+        """
+        try:
+            # Fetch the related semester
+            semester = Semester.objects.get(semester_name=semester_name)
+
+            # Fetch the related course
+            course = Course.objects.get(course_code=course_code, semester=semester)
+
+            # Fetch the course section
+            course_section = CourseSection.objects.get(
+                course=course,
+                course_section_number=course_section_number
+            )
+            return course_section
+        except Semester.DoesNotExist:
+            raise ValueError(f"Semester with name '{semester_name}' does not exist.")
+        except Course.DoesNotExist:
+            raise ValueError(f"Course with code '{course_code}' does not exist in semester '{semester_name}'.")
+        except CourseSection.DoesNotExist:
+            raise ValueError(
+                f"Course section with number {course_section_number} does not exist for course '{course_code}' in semester '{semester_name}'."
+            )
+
+    @staticmethod
+    def get_lab_section(course_code: str, semester_name: str, lab_section_number: int) -> LabSection:
+        """
+        Pre-conditions: course_code is not null and matches an existing course code in the Course record, semester is not null
+        and matches an existing record in the semester record, and lab_section_number is a valid lab section number that exists
+        in the LabSection model.
+        Post-conditions: Returns a lab section object with the info that matches the search parameters or a value error if no such
+        objects exist.
+        Side-effects: none.
+        """
+        try:
+            semester = Semester.objects.get(semester_name=semester_name)
+
+            course = Course.objects.get(course_code=course_code, semester=semester)
+
+            lab_section = LabSection.objects.get(
+                course=course,
+                lab_section_number=lab_section_number
+            )
+            return lab_section
+        except Semester.DoesNotExist:
+            raise ValueError(f"Semester with name '{semester_name}' does not exist.")
+        except Course.DoesNotExist:
+            raise ValueError(f"Course with code '{course_code}' does not exist in semester '{semester_name}'.")
+        except LabSection.DoesNotExist:
+            raise ValueError(
+                f"Lab section with number {lab_section_number} does not exist for course '{course_code}' in semester '{semester_name}'."
+            )

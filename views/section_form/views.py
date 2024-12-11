@@ -136,7 +136,7 @@ class SectionForm(View):
         Side-effects: Sections/assignments are deleted from DB
         '''
         if request.user.role != "Admin":
-            return HttpResponseRedirect(reverse('home'))
+            return redirect(reverse('home'))
 
         course = get_object_or_404(Course, course_code=code, semester__semester_name=semester)
 
@@ -150,8 +150,8 @@ class SectionForm(View):
                 section = LabSection.objects.get(course=course, lab_section_number=section_number)
                 section.delete()
             except LabSection.DoesNotExist:
-                return HttpResponseRedirect(reverse('home'))
+                return redirect(reverse('home'))
 
-        return HttpResponseRedirect(reverse('home'))
+        return redirect(reverse('home'))
 
 
