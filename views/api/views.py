@@ -28,6 +28,7 @@ def search_user_api(request):
     query = request.GET.get("query", "").strip() if request.GET.get("query", "").strip() else ""
     try:
         users = UserController.searchUser(query)
+        #convert to dictionary for JSON serialization"
         user_data = [{"username": user.username, "name": user.name} for user in users]
         return JsonResponse(user_data, safe=False)
     except ValueError as e:
