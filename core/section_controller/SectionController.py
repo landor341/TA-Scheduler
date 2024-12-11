@@ -122,13 +122,10 @@ class SectionController:
         Side-effects: none.
         """
         try:
-            # Fetch the related semester
             semester = Semester.objects.get(semester_name=semester_name)
 
-            # Fetch the related course
             course = Course.objects.get(course_code=course_code, semester=semester)
 
-            # Fetch the course section
             course_section = CourseSection.objects.get(
                 course=course,
                 course_section_number=course_section_number
