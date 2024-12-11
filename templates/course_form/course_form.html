@@ -9,12 +9,22 @@
     <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
 </head>
 <body>
-{% include 'navigation_bar/navigation.html' %}
-<div class="container">
+    {% include 'navigation_bar/navigation.html' %}
+    <div class="container">
     <h1>Course Form</h1>
     <!-- Main Form for Save -->
     <form method="post" action="">
         {% csrf_token %}
+    <!--General errors top Display-->
+         {% if errors_list %}
+        <div class="general-errors">
+            <ul style="color: red;">
+                {% for error in errors_list %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
         <div class="form-group">
             <label for="course_code">Course Code</label>
             <input
@@ -30,9 +40,11 @@
         </div>
         <div class="form-group">
             <label for="semester">Semester</label>
-            <select name="semester">
-                {% for semester in existSemester %}
-                    <option value="{{ semester.semester_name }}">{{ semester.semester_name }}</option>
+            <select name="semester" id="semester">
+                {% for semester in semester %}
+                    <option value="{{ semester.semester_name }}" {% if semester.semester_name == data.semester %}selected{% endif %}>
+                        {{ semester.semester_name }}
+                    </option>
                 {% endfor %}
             </select>
             {% if errors.semester %}
@@ -58,7 +70,8 @@
     <button type="submit" style="padding: 10px 20px; font-size: 16px;">Save</button>
 
     <!-- Cancel Button -->
-    <a href="{% url 'home' %}" class="cancel-link" style="text-decoration: none; color: black; background-color: lightgray; padding: 10px 20px; text-align: center; display: inline-block; border-radius: 5px; font-size: 16px;">
+    <a href="{% if isEditing %}{% url 'course_view' data.code data.semester %}{% else %}{% url 'home' %}{% endif %}"
+       class="cancel-link" style="text-decoration: none; color: black; background-color: lightgray; padding: 10px 20px; text-align: center; display: inline-block; border-radius: 5px; font-size: 16px;">
         Cancel
     </a>
 
@@ -73,9 +86,9 @@
             {% csrf_token %}
             <input type="hidden" name="action" value="delete">
             <button type="submit" style="background-color: red; color: white; border: none; padding: 5px 10px; cursor: pointer;" class="delete-button">Delete Course</button>
-        </form>
-    {% endif %}
-</div>
+            </form>
+        {% endif %}
+    </div>
 
 
 </body>
