@@ -10,85 +10,94 @@
 </head>
 <body>
     {% include 'navigation_bar/navigation.html' %}
-    <div class="container">
-    <h1>Course Form</h1>
-    <!-- Main Form for Save -->
-    <form method="post" action="">
-        {% csrf_token %}
-    <!--General errors top Display-->
-         {% if errors_list %}
-        <div class="general-errors">
-            <ul style="color: red;">
-                {% for error in errors_list %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
+        <div class="container">
+        <h1>Course Form</h1>
+        <!-- Main Form for Save -->
+        <form method="post" action="">
+            {% csrf_token %}
+        <!--General errors top Display-->
+            {% if errors_list %}
+                <div class="general-errors">
+                    <ul style="color: red;">
+                        {% for error in errors_list %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+        {% endif %}
         <div class="form-group">
             <label for="course_code">Course Code</label>
             <input
-                type="text"
-                id="course_code"
-                name="course_code"
-                value="{{ data.code }}"
-                {% if isEditing %}readonly{% endif %}
+                    type="text"
+                    id="course_code"
+                    name="course_code"
+                    value="{{ data.code }}"
+                    {% if isEditing %}readonly{% endif %}
             >
             {% if errors.course_code %}
                 <small style="color: red;">{{ errors.course_code }}</small>
             {% endif %}
         </div>
-        <div class="form-group">
-            <label for="semester">Semester</label>
-            <select name="semester" id="semester">
-                {% for semester in semester %}
-                    <option value="{{ semester.semester_name }}" {% if semester.semester_name == data.semester %}selected{% endif %}>
-                        {{ semester.semester_name }}
-                    </option>
-                {% endfor %}
-            </select>
-            {% if errors.semester %}
-                <small style="color: red;">{{ errors.semester }}</small>
-            {% endif %}
-        </div>
+            
+            <div class="form-group">
+                <label for="semester">Semester</label>
+                    <select name="semester" id="semester">
+                        {% for semester in semester %}
+                            <option value="{{ semester.semester_name }}"
+                                {% if semester.semester_name == data.semester %}selected{% endif %}>
+                            {{ semester.semester_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if errors.semester %}
+                    <small style="color: red;">{{ errors.semester }}</small>
+                {% endif %}
+            </div>
         <div class="form-group">
             <label for="course_name">Course Name</label>
-            <input
-                type="text"
-                id="course_name"
-                name="course_name"
-                value="{{ data.name }}"
-            >
+                <input
+                    type="text"
+                    id="course_name"
+                    name="course_name"
+                    value="{{ data.name }}"
+                >
             {% if errors.course_name %}
                 <small style="color: red;">{{ errors.course_name }}</small>
             {% endif %}
         </div>
 
         <!-- Form Actions -->
-       <div class="form-actions" style="display: flex; gap: 10px; align-items: center;">
-    <!-- Save Button -->
-    <button type="submit" style="padding: 10px 20px; font-size: 16px;">Save</button>
+        <div class="form-actions" style="display: flex; gap: 10px; align-items: center;">
+            <!-- Save Button -->
+            <button type="submit" style="padding: 10px 20px; font-size: 16px;">Save</button>
 
-    <!-- Cancel Button -->
-    <a href="{% if isEditing %}{% url 'course_view' data.code data.semester %}{% else %}{% url 'home' %}{% endif %}"
-       class="cancel-link" style="text-decoration: none; color: black; background-color: lightgray; padding: 10px 20px; text-align: center; display: inline-block; border-radius: 5px; font-size: 16px;">
-        Cancel
-    </a>
+            <!-- Cancel Button -->
+            <a href="
+                    
+                    {% if isEditing %}{% url 'course_view' data.code data.semester %}{% else %}{% url 'home' %}{% endif %}"
+               class="cancel-link"
+               style="text-decoration: none; color: black; background-color: lightgray; padding: 10px 20px; text-align: center; display: inline-block; border-radius: 5px; font-size: 16px;">
+                Cancel
+            </a>
 
-   
-</div>
+
+        </div>
 
     </form>
 
     <!-- Delete Course Form -->
     {% if isEditing and isAdmin %}
-        <form method="post" action="{% url 'course-form' code=data.code semester=data.semester %}" style="margin-top: 10px;">
+        <form method="post" action="{% url 'course-form' code=data.code semester=data.semester %}"
+              style="margin-top: 10px;">
             {% csrf_token %}
             <input type="hidden" name="action" value="delete">
-            <button type="submit" style="background-color: red; color: white; border: none; padding: 5px 10px; cursor: pointer;" class="delete-button">Delete Course</button>
-            </form>
-        {% endif %}
-    </div>
+            <button type="submit"
+                    style="background-color: red; color: white; border: none; padding: 5px 10px; cursor: pointer;"
+                    class="delete-button">Delete Course
+            </button>
+        </form>
+    {% endif %}
+</div>
 
 
 </body>

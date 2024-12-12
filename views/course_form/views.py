@@ -110,8 +110,7 @@ class CourseForm(View):
         #save func catching course duplication and redirect back to form
         try:
             CourseController.save_course(form, code, semester)
-        except ValueError as e:
-            if str(e) == "A course with the same code already exists in the selected semester.":
+        except ValueError:
                 errors_list.append("Course already exists in the selected semester.")
                 return render(request, 'course_form/course_form.html', { "semester": SemesterController.list_semester(),
                 "data": {
