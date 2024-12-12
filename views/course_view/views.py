@@ -1,6 +1,6 @@
 from django.views import View
 from django.shortcuts import render, get_object_or_404
-from ta_scheduler.models import Course, CourseSection, User, TALabAssignment, Semester
+from ta_scheduler.models import Course, CourseSection, User, TALabAssignment, Semester, LabSection
 
 
 class CourseView(View):
@@ -37,6 +37,7 @@ class CourseView(View):
         ta_assignments = TALabAssignment.objects.filter(lab_section__course=course)
         tas = User.objects.filter(id__in=ta_assignments.values_list('ta', flat=True), role='TA')
         instructors = User.objects.filter(id__in=sections.values_list('instructor', flat=True), role='Instructor')
+        lab_section=LabSection.objects.filter(course=course)
 
         context = {
             'full_name': f"{request.user.first_name} {request.user.last_name}",
@@ -45,6 +46,7 @@ class CourseView(View):
             'sections': sections,
             'tas': tas,
             'instructors': instructors,
+            'lab_section': lab_section
         }
 
         return render(request, 'selected_course/selected_course.html', context)

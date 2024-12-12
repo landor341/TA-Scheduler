@@ -37,3 +37,23 @@ h2 {
     color: #333;
     margin-bottom: 20px;
 }
+.section-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 10px;
+    margin: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.section-row:first-child {
+    border-top: 1px solid #ddd;
+}
+
+.section-info {
+    font-family: 'Times New Roman';
+    font-size: 16px;
+    flex-grow: 2;
+    max-width: 80%;
+    word-wrap: break-word;
+}
