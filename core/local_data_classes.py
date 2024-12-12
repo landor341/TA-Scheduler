@@ -63,7 +63,7 @@ class TACourseRef(CourseRef):
 class CourseOverview:
     code: str
     name: str
-    semester: Semester | None
+    semester: str | None
     course_sections: List[CourseSectionRef]
     lab_sections: List[LabSectionRef]
 
