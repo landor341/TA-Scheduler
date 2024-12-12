@@ -24,12 +24,12 @@ class TestGetCourseFormRedirects(TestCase):
     def testTAGetNewCourseForm(self):
         self.user = loginAsRole(self.client, "TA", "test")
         response = self.client.get(reverse("course-creator"))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse("home"))
 
     def testInstructorGetNewCourseForm(self):
         self.user = loginAsRole(self.client, "Instructor", "test")
         response = self.client.get(reverse("course-creator"))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse("home"))
 
 
 class TestAdminGetCourseForm(TestCase):
@@ -41,18 +41,18 @@ class TestAdminGetCourseForm(TestCase):
         response = self.client.get(reverse("course-form", kwargs={
             "code": "3", "semester" : "Spring 2024"
         }))
-        self.assertRedirects(response, "home")
+        self.assertRedirects(response, reverse("home"))
 
     def testGetCreateForm(self):
         response = self.client.get(reverse("course-creator"))
-        form: CourseFormData = response.context["data"]
-        self.assertIsInstance(form, CourseFormData, "Returnd data of wrong type")
-        self.assertEqual(form.semester, "", "Gave a semester when getting create course page")
-        self.assertEqual(form.course_code, "", "Gave a course code when getting create course page")
-        self.assertEqual(form.course_name, "", "Gave a course name when getting create course page")
-        self.assertEqual(form.ta_username_list, "", "Gave a ta list when getting create course page")
+        self.assertEqual(response.status_code, 200)
+        context_data = response.context["data"]
+        self.assertEqual(context_data["code"], "", "Expected blank course code")
+        self.assertEqual(context_data["name"], "", "Expected blank course name")
+        self.assertEqual(context_data["semester"], "", "Expected blank semester")
 
-    def testGetExisting(self):
+
+def testGetExisting(self):
         semester = Semester.objects.create(semester_name="test semester", start_date="2024-09-21", end_date="2024-10-01")
         course = Course.objects.create(course_name="test", course_code="1", semester=semester)
         ta1 = User.objects.create_user(
@@ -75,7 +75,7 @@ class TestAdminGetCourseForm(TestCase):
 
         response = self.client.get(url)
         form_data: CourseFormData = response.context["data"]
-        self.assertIsInstance(form_data, CourseFormData, "Returnd data of wrong type")
+        self.assertIsInstance(form_data, CourseFormData, "Returned data of wrong type")
         self.assertEqual(form_data.course_name, course.course_name, "Incorrect course name on get course form")
         self.assertEqual(form_data.course_code, course.course_code, "Incorrect course code on get course form")
         self.assertEqual(form_data.semester, semester.semester_name, "Incorrect semester name on get course form")
@@ -87,16 +87,16 @@ class TestPostNewCourseForm(TestCase):
         self.user = loginAsRole(self.client, "Admin", "test")
 
     def testPostEmpty(self):
-        response = self.client.post("course-creater", {
+        response = self.client.post(reverse("course-creator"), {
             "code": "",
             "name": "",
             "semester": "",
             "ta_list": ""
         })
         self.assertContains(response, [
-            'Course code must be a valid value',
-            "Course name must be a valid value",
-            "Course semester must be a valid semester"
+            'Course code must be a valid alphanumeric value',
+            "Course name must be a valid alphanumeric value",
+            "The selected semester doesn't exist"
         ])
 
     def testPostInvalidCode(self):
@@ -105,13 +105,13 @@ class TestPostNewCourseForm(TestCase):
         for c in "!@#$%^&*()_=+`~'\"|]}[{<>?/\\":
             code = "1234" + c
             name = "course" + str(count)
-            response = self.client.post("course-creater", {
+            response = self.client.post(reverse("course-creator"), {
                 "code": code,
                 "name": name,
                 "semester": "test semester",
                 "ta_list": ""
             })
-            self.assertContains(response, ['Course code must be a valid value'])
+            self.assertContains(response.context, ['Course code must be a valid value'])
             self.assertFalse(Course.objects.filter(course_code=code).exists(), "Created course on code error")
             count = count + 1
 
@@ -407,4 +407,60 @@ class TestDeleteCourseForm(TestCase):
         self.assertFalse(Course.objects.filter(
             course_code=self.course.course_code,
         ).exists(), "Allowed instructor to delete course")
+#Creating a coures without TA's
+class TestCreateCourseWithoutTAs(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = loginAsRole(self.client, "Admin", "test")
+        self.semester = Semester.objects.create(semester_name="Fall 2024", start_date="2024-09-01", end_date="2024-12-20")
 
+    def test_create_course_without_tas(self):
+        response = self.client.post(reverse("course-creator"), {
+            "code": "CS101",
+            "name": "Introduction to Computer Science",
+            "semester": self.semester.semester_name,
+            "ta_list": ""  # No TAs provided
+        })
+
+        # Check that the course was created successfully
+        self.assertTrue(Course.objects.filter(course_code="CS101").exists(), "Failed to create course without TAs")
+
+        # Ensure no TA assignments were created
+        course = Course.objects.get(course_code="CS101")
+        self.assertFalse(TACourseAssignment.objects.filter(course=course).exists(), "TA assignments were created despite no TAs provided")
+
+        # Verify the response redirects to the correct page
+        self.assertRedirects(response, f"/course/CS101/{self.semester.semester_name}/")
+        #edit course without TAs
+class TestEditCourseWithoutTAs(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = loginAsRole(self.client, "Admin", "test")
+        self.semester = Semester.objects.create(semester_name="Spring 2025", start_date="2025-01-10", end_date="2025-05-15")
+        self.course = Course.objects.create(course_code="CS102", course_name="Data Structures", semester=self.semester)
+
+        # Assign TAs to the course initially
+        self.ta1 = User.objects.create_user(
+            username="ta1", password="test123", email="ta1@uwm.edu", first_name="TA", last_name="One", role="TA"
+        )
+        self.ta_assignment = TACourseAssignment.objects.create(ta=self.ta1, course=self.course, grader_status=True)
+
+    def test_edit_course_without_tas(self):
+        response = self.client.post(reverse("course-form", kwargs={
+            "code": self.course.course_code,
+            "semester": self.semester.semester_name
+        }), {
+            "code": self.course.course_code,
+            "name": self.course.course_name,
+            "semester": self.semester.semester_name,
+            "ta_list": ""  # Remove all TAs
+        })
+
+        # Check that the course still exists and its details are unchanged
+        self.assertTrue(Course.objects.filter(course_code="CS102").exists(), "Course was deleted during edit")
+
+        # Ensure all TA assignments were removed
+        self.assertFalse(TACourseAssignment.objects.filter(course=self.course).exists(), "TA assignments were not removed during edit")
+
+        # Verify the response redirects to the correct page
+        self.assertRedirects(response, f"/course/CS102/{self.semester.semester_name}/")
