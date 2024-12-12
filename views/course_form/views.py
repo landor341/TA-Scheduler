@@ -32,6 +32,7 @@ class CourseForm(View):
     def post(self, request, code: str | None = None, semester: str | None = None):
         '''
         Preconditions: Admin user logged in.
+
         Postconditions: If the form contains valid data, then the course data is saved
             to the database. If request URL doesn't contain an ID then a new course
             is created. The user is redirected back to the edited courses page.
@@ -137,6 +138,7 @@ class CourseForm(View):
         '''
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
+
 
         CourseController.delete_course(code, semester)
 
