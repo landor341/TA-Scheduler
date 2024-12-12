@@ -1,39 +1,203 @@
+.operation li, .account li {
+    display: inline;
+    margin: 0 10px;
+}
+
+button {
+    background-color: lightgreen;
+    color: black;
+    border: 1px solid black;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 5px 0;
+    text-decoration: none;
+}
+
+button:hover {
+    background-color: green;
+    color: white;
+}
+
+button:active {
+    background-color: #004085;
+}
+
+button.delete {
+    background-color: #dc3545;
+}
+
+button.delete:hover {
+    background-color: #c82333;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f4f4f9;
+    color: black;
 }
 
 .container {
     max-width: 95%;
-    margin: 100px auto 50px;
-    padding: 20px;
+    margin: 30px auto;
+    padding: 15px; /* Consistent padding inside the box */
     background: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-.infoAndButton{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
 
+.container .section-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0; /* Reduce internal padding for rows */
+    margin: 0; /* Remove additional margin between rows */
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
 }
-.button {
-    background-color: lightgreen;
-    color: black;
+
+.container .section-row:last-child {
+    border-bottom: none; /* Remove border from the last row */
+}
+
+.container li a {
+    color: #007bff;
     text-decoration: none;
-    border: 1px solid gray;
-    margin: 10px;
-    padding: 5px;
-    border-radius: 5px;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    padding-left: 15px; /* Ensure links inside start aligned with the box */
 }
-.button:hover {
-    background-color: green;
+
+.container li a:hover {
+    color: #0056b3;
+    text-decoration: underline;
 }
-/* Header */
-h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
+
+.container li a:visited {
+    color: #6f42c1;
+}
+
+.container li a:active {
+    color: #0056b3;
+}
+
+.container .section-row:first-child {
+    border-top: 1px solid #ddd;
+}
+
+.section-row strong {
+    font-weight: bold;
+    padding-left: 15px; /* Align strong text with the rest */
+}
+
+.section-row .instructor {
+    font-size: 14px;
+    padding-left: 15px; /* Align instructor text with the box */
+}
+
+.edit-course-container {
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.infoAndButton {
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.instructors-and-tas {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.instructors, .teaching-assistants {
+    flex: 1;
+    background: #ffffff;
+    padding: 15px; /* Consistent padding for alignment */
+    border-radius: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.instructors h2, .teaching-assistants h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.instructors ul, .teaching-assistants ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.instructors ul li, .teaching-assistants ul li {
+    margin-bottom: 6px;
+    font-size: 14px;
+    text-align: left;
+    padding-left: 15px; /* Align text inside the box with the edge */
+}
+
+.instructors ul li a, .teaching-assistants ul li a {
+    text-decoration: none;
+    color: black;
+    font-size: 15px;
+    transition: color 0.3s;
+}
+
+.instructors ul li a:hover, .teaching-assistants ul li a:hover {
+    color: green;
+}
+
+@media (max-width: 768px) {
+    header {
+        height: auto;
+        text-align: center;
+        padding: 8px;
+    }
+
+    nav {
+        flex-direction: column;
+    }
+
+    nav ul {
+        flex-direction: column;
+    }
+
+    nav ul li {
+        margin: 5px 0;
+    }
+
+    .container {
+        margin: 60px auto 15px;
+        padding: 10px;
+    }
+
+    .container .section-row {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 0;
+    }
+
+    .edit-course-container {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .instructors-and-tas {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .instructors, .teaching-assistants {
+        width: 100%;
+    }
 }
