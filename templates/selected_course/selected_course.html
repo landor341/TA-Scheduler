@@ -5,92 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ course.course_name }}</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'selected_course/style.css' %}">
+    {% load custom_filters %}
     <link rel="stylesheet" href="{% static 'navigation_bar/style.css' %}">
+    <link rel="stylesheet" href="{% static 'selected_course/style.css' %}">
 </head>
 <body>
-    <p>
     {% include 'navigation_bar/navigation.html' %}
-        {% if isAdmin %}
+
+    {% if isAdmin %}
         <div class="edit-course-container">
-            <a class="edit-course-button" href="/edit-course/{{course.course_code}}/{{course.semester.semester_name}}">Edit Course</a>
+            <a class="edit-course-button" href="/edit-course/{{ course.course_code }}/{{ course.semester.semester_name }}">Edit Course</a>
         </div>
-        {% endif %}
-    </p>
+    {% endif %}
+
     <div class="container">
         <div class="infoAndButton">
             <h1 style="font-family: 'Times New Roman'">{{ course.course_name }} ({{ course.course_code }})</h1>
             <h2 style="font-family: 'Times New Roman'">{{ course.semester.semester_name }}</h2>
+
             {% if isAdmin %}
-            <div class="createAndEdit">
-                <a class="button" href="/edit-course/{{course.course_code}}/{{course.semester.semester_name}}">Edit Course</a>
-                <a class="button" href="/create-section/{{course.course_code}}/{{course.semester.semester_name}}">+ Create Section</a>
-            </div>
+                <div class="createAndEdit">
+                    <button onclick="location.href='/edit/course/{{ course.id }}'">Edit Course</button>
+                    <button onclick="location.href='/course/{{ course.id }}/add-section/'">Add New Section</button>
+                </div>
             {% endif %}
+        </div>
+
+    <div class="container">
+        <div class="instructors-and-tas">
+            <div class="instructors">
+                <h2>Instructors</h2>
+                <ul>
+                    {% if instructors %}
+                        {% for instructor in instructors|unique %}
+                            <li><a href="/profile/{{ instructor.username }}">{{ instructor.name }}</a></li>
+                        {% empty %}
+                            <li>No instructors available.</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>No instructors available.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="teaching-assistants">
+                <h2>Teaching Assistants</h2>
+                <ul>
+                    {% if tas %}
+                        {% for ta in tas|unique %}
+                            <li><a href="/profile/{{ ta.username }}">{{ ta.name }}</a></li>
+                        {% empty %}
+                            <li>No TAs available.</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>No TAs available.</li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
 
         <h2>Course Sections</h2>
         <ul>
             {% for section in sections %}
-                    <li class="section-row">
-                        <div class="section-info">
-                            <strong>Section {{ section.course_section_number }}</strong>: {{ section.start_time }} - {{ section.end_time }}
-                            {% if section.instructor %}
-                                - Instructor: 
-                                <a href="/profile/{{ section.instructor.username }}" style="color: blue;"><strong>{{ section.instructor.username }}</strong></a>
-                            {% endif %}
-                        </div>
-                        {% if isAdmin %}
-                            <a href="/edit-section/{{ section.id }}" class="button">Edit Section</a>
+                <li class="section-row">
+                    <div><strong>Section {{ section.section_number }}</strong></div>
+                    <div>
+                        Instructor: 
+                        {% if section.instructor %}
+                            <a href="/profile/{{ section.instructor.username }}">{{ section.instructor.name }}</a>
+                        {% else %}
+                            None assigned
                         {% endif %}
+                    </div>
+                    <button onclick="location.href='/edit/section/{{ section.id }}'">Edit Section</button>
                 </li>
             {% empty %}
                 <li>No sections available for this course.</li>
             {% endfor %}
         </ul>
-    
+
         <h2>Lab Sections</h2>
         <ul>
-            {% for section in lab_sections %}
-                    <li class="section-row">
-                        <div class="section-info">
-                            <strong>Section {{ section.lab_section_number }}</strong>: {{ section.start_time }} - {{ section.end_time }}
-                            {% if section.instructor %}
-                                - Instructor: 
-                                <a href="/profile/{{ section.instructor.username }}" style="color: blue;"><strong>{{ section.instructor.username }}</strong></a>
-                            {% endif %}
-                            {% if isAdmin %}
-                                <a href="/edit-section/{{ section.id }}" class="button">Edit Lab Section</a>
-                            {% endif %}
-                        </div>
-            {% empty %}
-                <li>No labs exist for this course.</li>
-            {% endfor %}
-
-        </ul>
-
-        <h2>Teaching Assistants</h2>
-        <ul>
-            {% for ta in tas %}
-                <li>
-                    <a href="/profile/{{ ta.username }}" style="color: blue">{{ ta.username }}</a>
+            {% for lab in lab_sections %}
+                <li class="section-row">
+                    <div><strong>Lab {{ lab.section_number }}</strong></div> 
+                    <div>
+                        TA: 
+                        {% if lab.instructor %}
+                            <a href="/profile/{{ lab.instructor.username }}">{{ lab.instructor.name }}</a>
+                        {% else %}
+                            None assigned
+                        {% endif %}
+                    </div>
+                    <button onclick="location.href='/edit/lab_section/{{ lab_section.id }}'">Edit Lab Section</button>
                 </li>
             {% empty %}
-                <li>No teaching assistants assigned to this course.</li>
-            {% endfor %}
-        </ul>
-
-        <h2>Instructors</h2>
-        <ul>
-            {% for instructor in instructors %}
-                <li>
-                    <a href="/profile/{{ instructor.username }}" style="color: blue">{{ instructor.username }}</a>
-                </li>
-            {% empty %}
-                <li>No instructors assigned to this course.</li>
+                <li>No lab sections available for this course.</li>
             {% endfor %}
         </ul>
     </div>
-
 </body>
 </html>
