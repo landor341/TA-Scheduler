@@ -46,7 +46,7 @@ class CourseRef:
     """
     A dataclass that exposes only enough information to expose a course code and name
     """
-    course_code: int
+    course_code: str
     course_name: str
 
 @dataclass

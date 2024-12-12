@@ -58,7 +58,7 @@ class TestSaveLabSection(SectionControllerTestBase):
             end_time=time(11, 0),
             section_type="Lab",
         )
-        SectionController.save_lab_section(updated_lab_data, self.semester.semester_name, lab_section.id)
+        SectionController.save_lab_section(updated_lab_data, self.semester.semester_name, lab_section.lab_section_number)
 
         lab_section.refresh_from_db()
         self.assertEqual(lab_section.days, "Monday, Wednesday")
@@ -119,7 +119,7 @@ class TestSaveCourseSection(SectionControllerTestBase):
             end_time=time(10, 30),
             section_type="Course",
         )
-        SectionController.save_course_section(updated_course_section_data, self.semester.semester_name, course_section.id)
+        SectionController.save_course_section(updated_course_section_data, self.semester.semester_name, course_section.course_section_number)
 
         course_section.refresh_from_db()
         self.assertEqual(course_section.days, "Tuesday, Thursday")
