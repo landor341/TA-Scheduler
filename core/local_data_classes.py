@@ -31,6 +31,7 @@ class CourseSectionRef:
     section_number: str
     instructor: UserRef
 
+
 @dataclass
 class CourseFormData:
     """

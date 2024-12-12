@@ -139,6 +139,7 @@ class CourseForm(View):
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
 
+
         CourseController.delete_course(code, semester)
 
         #  Included so that tests fail instead of throwing errors

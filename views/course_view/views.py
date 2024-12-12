@@ -33,6 +33,7 @@ class CourseView(View):
                 'course_name': course_overview.name,
                 'semester': {
                     'semester_name': course_overview.semester,
+
                 }
             },
             'sections': sections,
