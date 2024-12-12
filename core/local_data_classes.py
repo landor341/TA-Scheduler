@@ -77,6 +77,7 @@ class UserProfile:
     role: str
     office_hours: str | None
     courses_assigned: List[CourseOverview]
+    skills: List[str] | None
 
 @dataclass
 class PrivateUserProfile(UserProfile):

@@ -55,14 +55,16 @@ class UserController:
                 office_hours=user.office_hours,
                 courses_assigned=course_overviews,
                 address=user.address,
-                phone=user.phone
+                phone=user.phone,
+                skills=["Knows Java", "Knows Python", "Knows Django"]
             )
         return UserProfile(
             name=f"{user.first_name} {user.last_name}".strip(),
             email=user.email,
             role=user.role,
             office_hours=user.office_hours,
-            courses_assigned=course_overviews
+            courses_assigned=course_overviews,
+            skills = ["Knows Java", "Knows Python", "Knows Django"]
         )
 
     @staticmethod

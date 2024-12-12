@@ -39,6 +39,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=15, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     office_hours = models.TextField(blank=True, null=True)
+    skills = models.TextField(blank=True, null=True)
 
     #  Explicitly define related names to avoid clashes
     groups = models.ManyToManyField(

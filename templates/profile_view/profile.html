@@ -43,6 +43,14 @@
         <div class="Course">
             <p><strong>Courses:</strong> {{ user_profile.courses_assigned }}</p>
         </div>
+        <h3>Skills:</h3>
+            <ul>
+                {% for skill in user_skills %}
+                    <li>{{ skill }}</li>
+                    {% empty %}
+                    <li>No skills listed</li>
+                {% endfor %}
+            </ul>
     </div>
 </body>
 </html>
