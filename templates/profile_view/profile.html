@@ -68,8 +68,7 @@
 
                             {% if user_profile.role == "TA" %}
                             {% for section in course.lab_sections %}
-                                <p>{{ section.section_number }}</p>
-                                <p>{{ section.instructor.name }}</p>
+                                <p>{{ section.section_number }} {{ section.instructor.name }}</p>
                             {% endfor %}
                             {% endif %}
                         </ul>
