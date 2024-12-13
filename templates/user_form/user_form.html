@@ -68,7 +68,8 @@
                 {% if not data.username or isAdmin %}
                 <p>
                     <label for="role" >Role: </label>
-                        <select name="role" tabindex="1">
+                        <select name="role" tabindex="1" required>
+                            <option value="" disabled selected> </option>
                             <option value="TA"{% if data.role == "TA" %} selected {% endif %}>TA</option>
                             <option value="Instructor"{% if data.role == "Instructor" %} selected {% endif %}>Instructor</option>
                             <option value="Admin"{% if data.role == "Admin" %} selected {% endif %}>Admin</option>
