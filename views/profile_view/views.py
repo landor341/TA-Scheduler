@@ -1,3 +1,4 @@
+import json
 from django.http import Http404
 from django.shortcuts import render, redirect
 from django.views import View
@@ -40,13 +41,15 @@ class ProfileView(View):
         except Http404:
             return redirect('home')
 
+        user_skills = user_profile.skills or []
+
         context = {
             'full_name': f"{request.user.first_name} {request.user.last_name}",
             'user_profile': user_profile,
             'isAdmin': request.user.role == 'Admin',
-            'self': username == None or username == request.user.username,
+            'self': username is None or username == request.user.username,
             'username': request.user.username if username is None else username,
-            'user_skills': ["Knows Java", "Knows Python", "Knows Django"],  # Adding the user's skills here
+            'user_skills': user_skills,
         }
 
         return render(request, 'profile_view/profile.html', context)

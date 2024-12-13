@@ -47,6 +47,9 @@ class UserController:
 
     @staticmethod
     def _create_user_profile(user, requesting_user, course_overviews):
+
+        skills = user.skills if isinstance(user.skills, list) else []
+
         if requesting_user.role == 'Admin' or user == requesting_user:
             return PrivateUserProfile(
                 name=f"{user.first_name} {user.last_name}".strip(),
@@ -56,7 +59,7 @@ class UserController:
                 courses_assigned=course_overviews,
                 address=user.address,
                 phone=user.phone,
-                skills=["Knows Java", "Knows Python", "Knows Django"]
+                skills=skills
             )
         return UserProfile(
             name=f"{user.first_name} {user.last_name}".strip(),
@@ -64,7 +67,7 @@ class UserController:
             role=user.role,
             office_hours=user.office_hours,
             courses_assigned=course_overviews,
-            skills = ["Knows Java", "Knows Python", "Knows Django"]
+            skills = skills
         )
 
     @staticmethod

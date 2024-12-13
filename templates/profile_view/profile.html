@@ -44,13 +44,15 @@
             <p><strong>Courses:</strong> {{ user_profile.courses_assigned }}</p>
         </div>
         <h3>Skills:</h3>
-            <ul>
-                {% for skill in user_skills %}
-                    <li>{{ skill }}</li>
-                    {% empty %}
-                    <li>No skills listed</li>
-                {% endfor %}
-            </ul>
+            {% if user_skills %}
+                <ul>
+                    {% for skill in user_skills %}
+                        <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No skills available.</p>
+            {% endif %}
     </div>
 </body>
 </html>
