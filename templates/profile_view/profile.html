@@ -40,9 +40,44 @@
             </li>
             {% endif %}
         </ul>
+        {% if user_profile.courses_assigned %}
         <div class="Course">
-            <p><strong>Courses:</strong> {{ user_profile.courses_assigned }}</p>
+            {% if user_profile.role == "Instructor" %}
+                <h2>Course Section</h2>
+            {% elif user_profile.role == "TA" %}
+                <h2>Lab Section</h2>
+            {% endif %}
+            <dic class="label">
+                <p>Course Code</p>
+                <p>Semester</p>
+                <p>Course Name</p>
+                <p>Section Code</p>
+            </dic>
+            <ul class="course-container">
+                {% for course in user_profile.courses_assigned %}
+                    <li>
+                        <a id="course-link" href="/course/{{ course.code }}/{{ course.semester }}">{{ course.code }}</a>
+                        <p>{{ course.semester }}</p>
+                        <p>{{ course.name }}</p>
+                        <ul class="section-container">
+                            {% if user_profile.role == "Instructor" %}
+                            {% for section in course.course_sections %}
+                                <p>{{ section.section_number }} {{ section.instructor.name }}</p>
+                            {% endfor %}
+                            {% endif %}
+
+                            {% if user_profile.role == "TA" %}
+                            {% for section in course.lab_sections %}
+                                <p>{{ section.section_number }} {{ section.instructor.name }}</p>
+                            {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+
         </div>
+        {% endif %}
     </div>
 </body>
 </html>
