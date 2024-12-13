@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/html">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -104,6 +104,21 @@
 
                     />
                 </p>
+                <p id="skills-container">
+                <label for="skills">Skills:</label>
+                <ul id="skills-list">
+                    {% for skill in data.skills %}
+                        <li>
+                            <input
+                                type="text" name="skills" value="{{ skill }}" tabindex="1"
+                                class="skill-input"
+                            />
+                            <button type="button" class="remove-skill" onclick="removeSkill(this)">Remove</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <button type="button" id="add-skill">Add New Skill</button>
+                </p>
                 <p>
                     <input type="submit" id="submit" value="Enter" />
                 </p>
@@ -116,5 +131,24 @@
                 </form>
             {% endif %}
         </div>
+    
+            <script type="text/javascript">
+        // Add new skill functionality
+        document.getElementById('add-skill').addEventListener('click', function() {
+            const skillsList = document.getElementById('skills-list');
+            const newSkillItem = document.createElement('li');
+            newSkillItem.innerHTML = `
+                <input type="text" name="skills" value="" tabindex="1" class="skill-input" />
+                <button type="button" class="remove-skill" onclick="removeSkill(this)">Remove</button>`;
+            skillsList.appendChild(newSkillItem);
+        });
+
+        // Remove skill functionality
+        function removeSkill(button) {
+            const skillItem = button.parentElement;
+            skillItem.remove();
+        }
+    </script>
+    
     </body>
 </html>

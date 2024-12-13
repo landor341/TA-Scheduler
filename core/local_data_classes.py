@@ -101,6 +101,7 @@ class UserFormData:
     email: str | None
     address: str | None
     phone: str | None
+    skills: str or []
 
 
 @dataclass

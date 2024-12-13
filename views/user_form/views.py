@@ -2,8 +2,9 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 
-from core.local_data_classes import UserFormData, UserProfile, PrivateUserProfile
+from core.local_data_classes import UserFormData, PrivateUserProfile
 from core.user_controller.UserController import UserController
+
 
 class UserForm(View):
     def get(self, request, username: str | None = None):
@@ -29,10 +30,11 @@ class UserForm(View):
         - An HttpResponse object rendering the 'user_form/user_form.html' template with appropriate user data.
         - Redirects to home if the user does not have the necessary permissions.
         """
+
         if request.user.role == "Admin" and username is None:
             return render(request, 'user_form/user_form.html', {
                 'full_name': f"{request.user.first_name} {request.user.last_name}",
-                "data": UserFormData("", "", "", "", "", "", "", ""),
+                "data": UserFormData("", "", "", "", "", "", "", "", []),  # Initialize empty skills list
                 "isAdmin": True
             })
         elif request.user.role == "Admin" or username == request.user.username:
@@ -43,7 +45,8 @@ class UserForm(View):
             return render(request, 'user_form/user_form.html', {
                 'full_name': f"{request.user.first_name} {request.user.last_name}",
                 "data": UserFormData(username, first_name, last_name,
-                                     user.role, user.office_hours, user.email, user.address, user.phone),
+                                     user.role, user.office_hours, user.email, user.address, user.phone, user.skills),
+                # Pass existing skills
                 "password": True,
                 "isAdmin": request.user.role == "Admin"
             })
@@ -70,8 +73,10 @@ class UserForm(View):
         Returns:
         - Redirects to the user's profile page after saving the form data.
         """
+
         if request.user.role == "Admin" and request.POST.get("_method") == "DELETE":
             return self.delete(request, username)
+
         user_data = {
             "username": request.POST.get("username"),
             "first_name": request.POST.get("first_name"),
@@ -80,7 +85,8 @@ class UserForm(View):
             "office_hours": request.POST.get("office_hours"),
             "phone": request.POST.get("phone"),
             "address": request.POST.get("address"),
-            "role": request.POST.get("role")
+            "role": request.POST.get("role"),
+            "skills": request.POST.getlist("skills")
         }
         password = request.POST.get("password")
         if password:
@@ -112,10 +118,7 @@ class UserForm(View):
         Returns:
         - Redirects to home after deleting the user if performed by an Admin.
         """
+
         if request.user.role == "Admin":
             UserController.deleteUser(username, request.user)
         return redirect(reverse("home"))
-
-
-
-

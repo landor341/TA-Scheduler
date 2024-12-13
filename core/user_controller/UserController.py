@@ -146,6 +146,13 @@ class UserController:
         try:
             user_to_edit.full_clean(exclude=['password'])
             user_to_edit.save()
+            if "skills" in user_data:
+                skills = user_data.get("skills")
+                if isinstance(skills, list):
+                    user_to_edit.skills = skills
+                else:
+                    raise ValidationError("Invalid data for skills. It must be a list.")
+                user_to_edit.save()
             return user_to_edit
         except ValidationError as e:
             raise ValidationError(f"Invalid user data: {e}")
