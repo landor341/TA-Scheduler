@@ -43,6 +43,12 @@
         {% if user_profile.courses_assigned %}
         <div class="Course">
             <h2>Course</h2>
+            <dic class="label">
+                <p>Course Code</p>
+                <p>Semester</p>
+                <p>Course Name</p>
+                <p>Section Code</p>
+            </dic>
             <ul class="course-container">
                 {% for course in user_profile.courses_assigned %}
                     <li>

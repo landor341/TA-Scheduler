@@ -32,6 +32,16 @@ body {
     justify-content: space-between;
     align-items: center;
 }
+.label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 10px;
+}
+.label p {
+    font-weight: bold;
+}
 #course-link {
     font-size: 20px;
     color: black;
@@ -39,9 +49,13 @@ body {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
+    font-family: "Times New Roman";
 }
 #course-link:hover {background-color: grey;}
-p {font-size: 20px;}
+p {
+    font-size: 20px;
+    font-family: "Times New Roman";
+}
 
 /* Header */
 h2 {
