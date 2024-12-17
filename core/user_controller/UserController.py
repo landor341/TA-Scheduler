@@ -149,7 +149,8 @@ class UserController:
             if "skills" in user_data:
                 skills = user_data.get("skills")
                 if isinstance(skills, list):
-                    user_to_edit.skills = skills
+                    filtered_skills = [skill for skill in skills if skill.strip()]
+                    user_to_edit.skills = filtered_skills
                 else:
                     raise ValidationError("Invalid data for skills. It must be a list.")
                 user_to_edit.save()

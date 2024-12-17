@@ -234,7 +234,7 @@ class TestGetProfileWithAssignments(ProfileAssertions):
         self.other_user = User.objects.create(
             username='assigneduser', password="notImportant", email='assignuser@example.com',
             first_name='assign', last_name='person', role='Instructor', phone='1334577890',
-            address='135 assign Street'
+            address='135 assign Street', skills=['Team Management', 'Database Administration']
         )
 
         self.courses = [
