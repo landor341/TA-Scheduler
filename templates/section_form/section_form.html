@@ -79,8 +79,9 @@
 
     <!-- Delete Section Form -->
     {% if data.is_deletable %}
-    <form method="post" action="{% url 'section-form' code=course.course_code semester=semester section_number=data.section_number %}">
+    <form method="post" action="{% url 'section-form' code=code semester=semester section_number=data.section_number section_type=section_type %}">
         {% csrf_token %}
+        <input type="hidden" name="delete" value="true">
         <button type="submit" class="delete-button">Delete Section</button>
     </form>
     {% endif %}
