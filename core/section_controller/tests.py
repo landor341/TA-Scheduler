@@ -82,12 +82,15 @@ class TestDeleteLabSection(SectionControllerTestBase):
         lab_section = LabSection.objects.create(
             course=self.course, lab_section_number=1, days="Monday", start_time=time(9, 0), end_time=time(10, 0)
         )
-        SectionController.delete_lab_section(lab_section.id)
-        self.assertFalse(LabSection.objects.filter(id=lab_section.id).exists())
+
+        SectionController.delete_lab_section(self.course.course_code, self.semester.semester_name,
+                                             lab_section.lab_section_number)
+
+        self.assertFalse(LabSection.objects.filter(lab_section_number=lab_section.lab_section_number).exists())
 
     def test_delete_nonexistent_lab_section_raises_error(self):
         with self.assertRaises(ValueError):
-            SectionController.delete_lab_section(999)
+            SectionController.delete_lab_section(self.course.course_code, self.semester.semester_name, 999)
 
 
 class TestSaveCourseSection(SectionControllerTestBase):
@@ -149,12 +152,14 @@ class TestDeleteCourseSection(SectionControllerTestBase):
             start_time=time(8, 0),
             end_time=time(9, 0),
         )
-        SectionController.delete_course_section(course_section.id)
-        self.assertFalse(CourseSection.objects.filter(id=course_section.id).exists())
+
+        SectionController.delete_course_section(self.course.course_code, self.semester.semester_name, course_section.course_section_number)
+
+        self.assertFalse(CourseSection.objects.filter(course_section_number=course_section.course_section_number).exists())
 
     def test_delete_nonexistent_course_section_raises_error(self):
         with self.assertRaises(ValueError):
-            SectionController.delete_course_section(999)
+            SectionController.delete_course_section(self.course.course_code, self.semester.semester_name, 999)
 
 
 class TestGetCourseSection(SectionControllerTestBase):
@@ -172,7 +177,15 @@ class TestGetCourseSection(SectionControllerTestBase):
             semester_name=self.semester.semester_name,
             course_section_number=101,
         )
-        self.assertEqual(result, course_section)
+
+        # Verify result is of type CourseSectionFormData
+        self.assertIsInstance(result, CourseSectionFormData)
+        self.assertEqual(result.course.course_code, self.course.course_code)
+        self.assertEqual(result.section_number, course_section.course_section_number)
+        self.assertEqual(result.days, course_section.days)
+        self.assertEqual(result.start_time, course_section.start_time)
+        self.assertEqual(result.end_time, course_section.end_time)
+        self.assertEqual(result.instructor.username, self.instructor.username)
 
     def test_get_nonexistent_course_section(self):
         with self.assertRaises(ValueError):
@@ -210,7 +223,14 @@ class TestGetLabSection(SectionControllerTestBase):
             semester_name=self.semester.semester_name,
             lab_section_number=1,
         )
-        self.assertEqual(result, lab_section)
+
+        # Verify result is of type LabSectionFormData
+        self.assertIsInstance(result, LabSectionFormData)
+        self.assertEqual(result.course.course_code, self.course.course_code)
+        self.assertEqual(result.section_number, lab_section.lab_section_number)
+        self.assertEqual(result.days, lab_section.days)
+        self.assertEqual(result.start_time, lab_section.start_time)
+        self.assertEqual(result.end_time, lab_section.end_time)
 
     def test_get_nonexistent_lab_section(self):
         with self.assertRaises(ValueError):
