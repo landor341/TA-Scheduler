@@ -31,7 +31,7 @@
         <!-- Section Type -->
         <div class="form-group">
             <label for="section_type">Section Type</label>
-            <select id="section_type" name="section_type">
+            <select id="section_type" name="section_type" onchange="fetchInstructors()">
                 <option value="Course" {% if data.section_type == "Course" %}selected{% endif %}>Course</option>
                 <option value="Lab" {% if data.section_type == "Lab" %}selected{% endif %}>Lab</option>
             </select>
@@ -70,11 +70,26 @@
             >
         </div>
 
+        <!-- Instructor -->
+        <div class="form-group">
+            <label for="instructor">Instructor/TA:</label>
+                <select id="instructor" name="instructor" required>
+                    <option value="">-- Select --</option>
+                    {% for instructor in instructors %}
+                        <option value="{{ instructor.username }}"
+                            {% if data.instructor == instructor.username %} selected {% endif %}>
+                            {{ instructor.name }} ({{ instructor.username }})
+                        </option>
+                    {% endfor %}
+                </select>
+        </div>
+
         <!-- Form Actions -->
         <div class="form-actions">
             <button type="submit">Save</button>
             <a href="{% url 'course_view' course_code=code semester_name=semester %}" class="cancel-link">Cancel</a>
         </div>
+
     </form>
 
     <!-- Delete Section Form -->
@@ -86,6 +101,36 @@
     </form>
     {% endif %}
     </div>
+
+    <!-- JavaScript for Dynamic Updates -->
+<script>
+    function fetchInstructors() {
+        const sectionType = document.getElementById('section_type').value;
+        const instructorDropdown = document.getElementById('instructor');
+
+        // Clear current options
+        instructorDropdown.innerHTML = '<option value="">-- Select --</option>';
+
+        // Fetch data dynamically
+        fetch(`/get-instructors/?section_type=${sectionType}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error fetching instructors');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Populate the dropdown
+                data.instructors.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.username;
+                    option.textContent = `${user.name} (${user.username})`;
+                    instructorDropdown.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
 </body>
 </html>
 
