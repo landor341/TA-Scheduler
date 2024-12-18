@@ -619,7 +619,7 @@ class TestPostExistingUserForm(UserFormAssertions):
 
     def testPostInvalidSkillsEdgeCases(self):
         """Test invalid edge cases for skills."""
-        invalid_skill_cases = [
+        invalid_skill_cases =[
             "",
             " ",
             "python*",
