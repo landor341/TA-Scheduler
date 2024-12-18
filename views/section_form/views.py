@@ -53,8 +53,9 @@ class SectionForm(View):
             "is_deletable": False,
         }
 
-        # Fetch user list based on section type
-        instructor_list = []
+        # Fetch user list based on section type/instructors by default on new section creation
+        instructor_list = UserController.searchUser(user_role="Instructor")
+
         if section_type == "Course":
             instructor_list = UserController.searchUser(user_role="Instructor")
         elif section_type == "Lab":
