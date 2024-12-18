@@ -21,6 +21,13 @@
             {% else %}
                 <h1>User Creator</h1>
             {% endif %}
+            {% if errors %}
+                <ul class="error-list">
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
             {% if data.username %}
             <form id="myForm" action="/create-user/{{ data.username }}/" method="post">
             {% else %}
