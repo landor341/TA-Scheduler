@@ -78,6 +78,7 @@ class UserProfile:
     role: str
     office_hours: str | None
     courses_assigned: List[CourseOverview]
+    skills: List[str] | None
 
 @dataclass
 class PrivateUserProfile(UserProfile):
@@ -101,6 +102,7 @@ class UserFormData:
     email: str | None
     address: str | None
     phone: str | None
+    skills: str or []
 
 
 @dataclass
