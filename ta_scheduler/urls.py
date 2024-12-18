@@ -25,6 +25,7 @@ from views.user_form import UserForm
 from views.semester_form import SemesterFormView
 from views.search_view import SearchView
 from views.api.views import search_user_api
+from views.section_form.views import get_instructors
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,10 +38,11 @@ urlpatterns = [
     path('logout/', Logout.as_view(), name='logout'),  # LogOut
     path('edit-course/<str:code>/<str:semester>/', CourseForm.as_view(), name='course-form'),  # Course-form
     path('create-course/', CourseForm.as_view(), name='course-creator'),  # Course-form
-    path('edit-course/<str:code>/<str:semester>/<str:section_number>', SectionForm.as_view(), name='section-form'),  # Section-form
+    path('edit-section/<str:code>/<str:semester>/<str:section_number>/<str:section_type>', SectionForm.as_view(), name='section-form'),  # Section-form
     path('create-section/<str:code>/<str:semester>', SectionForm.as_view(), name='section-creator'),  # Section-form
     path('create-semester/', SemesterFormView.as_view(), name='semester-creator'),
     path('create-semester/<str:semester_name>', SemesterFormView.as_view(), name='semester-editor'),
     path('search/<str:type>/', SearchView.as_view(), name='search'),
     path("api/search/user/", search_user_api, name="search_user_api"),
+    path('get-instructors/', get_instructors, name='get-instructors'),
 ]

@@ -32,7 +32,8 @@ class CourseView(View):
                 'course_code': course_overview.code,
                 'course_name': course_overview.name,
                 'semester': {
-                    'semester_name': course_overview.semester.semester_name,
+                    'semester_name': course_overview.semester,
+
                 }
             },
             'sections': sections,

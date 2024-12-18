@@ -24,7 +24,7 @@
                 </div>
             {% endif %}
         </div>
-
+    </div>
     <div class="container">
         <div class="instructors-and-tas">
             <div class="instructors">
@@ -70,7 +70,7 @@
                             None assigned
                         {% endif %}
                     </div>
-                    <button onclick="location.href='/edit-course/{{ course.course_code }}/{{ course.semester.semester_name }}/{{ section.section_number }}'">Edit Section</button>
+                    <button onclick="location.href='/edit-section/{{ course.course_code }}/{{ course.semester.semester_name }}/{{ section.section_number }}/Course'">Edit Section</button>
                 </li>
             {% empty %}
                 <li>No sections available for this course.</li>
@@ -90,7 +90,7 @@
                             None assigned
                         {% endif %}
                     </div>
-                    <button onclick="location.href='/edit-course/{{ course.course_code }}/{{ course.semester.semester_name }}/{{ lab.section_number }}'">Edit Lab Section</button>
+                    <button onclick="location.href='/edit-section/{{ course.course_code }}/{{ course.semester.semester_name }}/{{ lab.section_number }}/Lab'">Edit Lab Section</button>
                 </li>
             {% empty %}
                 <li>No lab sections available for this course.</li>

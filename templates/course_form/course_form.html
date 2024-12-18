@@ -10,53 +10,95 @@
 </head>
 <body>
     {% include 'navigation_bar/navigation.html' %}
-    <div class="container">
+        <div class="container">
         <h1>Course Form</h1>
+        <!-- Main Form for Save -->
         <form method="post" action="">
             {% csrf_token %}
-            <div class="form-group">
-                <label for="course_code">Course Code</label>
-                <input
+        <!--General errors top Display-->
+            {% if errors_list %}
+                <div class="general-errors">
+                    <ul style="color: red;">
+                        {% for error in errors_list %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+        {% endif %}
+        <div class="form-group">
+            <label for="course_code">Course Code</label>
+            <input
                     type="text"
                     id="course_code"
                     name="course_code"
                     value="{{ data.code }}"
                     {% if isEditing %}readonly{% endif %}
-                >
-            </div>
+            >
+            {% if errors.course_code %}
+                <small style="color: red;">{{ errors.course_code }}</small>
+            {% endif %}
+        </div>
+            
             <div class="form-group">
                 <label for="semester">Semester</label>
-                <select name="semester">
-                    {% for semester in existSemester %}
-                        <option value={{ semester.semester_name }}>{{ semester.semester_name }}</option>
+                    <select name="semester" id="semester">
+                        {% for semester in semester %}
+                            <option value="{{ semester.semester_name }}"
+                                {% if semester.semester_name == data.semester %}selected{% endif %}>
+                            {{ semester.semester_name }}
+                        </option>
                     {% endfor %}
                 </select>
+                {% if errors.semester %}
+                    <small style="color: red;">{{ errors.semester }}</small>
+                {% endif %}
             </div>
-            <div class="form-group">
-                <label for="course_name">Course Name</label>
+        <div class="form-group">
+            <label for="course_name">Course Name</label>
                 <input
                     type="text"
                     id="course_name"
                     name="course_name"
                     value="{{ data.name }}"
                 >
-            </div>
+            {% if errors.course_name %}
+                <small style="color: red;">{{ errors.course_name }}</small>
+            {% endif %}
+        </div>
 
-            <!-- Form Actions -->
-            <div class="form-actions">
-                <button type="submit">Save</button>
-                <a href="{% url 'home' %}" class="cancel-link">Cancel</a>
-            </div>
-        </form>
+        <!-- Form Actions -->
+        <div class="form-actions" style="display: flex; gap: 10px; align-items: center;">
+            <!-- Save Button -->
+            <button type="submit" style="padding: 10px 20px; font-size: 16px;">Save</button>
 
-        <!-- Delete Section Form -->
-        {% if data.is_deletable %}
-        <form method="post" action="{% url 'section-form' code=course.course_code semester=semester section_number=data.section_number %}">
+            <!-- Cancel Button -->
+            <a href="
+                    
+                    {% if isEditing %}{% url 'course_view' data.code data.semester %}{% else %}{% url 'home' %}{% endif %}"
+               class="cancel-link"
+               style="text-decoration: none; color: black; background-color: lightgray; padding: 10px 20px; text-align: center; display: inline-block; border-radius: 5px; font-size: 16px;">
+                Cancel
+            </a>
+
+
+        </div>
+
+    </form>
+
+    <!-- Delete Course Form -->
+    {% if isEditing and isAdmin %}
+        <form method="post" action="{% url 'course-form' code=data.code semester=data.semester %}"
+              style="margin-top: 10px;">
             {% csrf_token %}
-            <button type="submit" class="delete-button">Delete Section</button>
+            <input type="hidden" name="action" value="delete">
+            <button type="submit"
+                    style="background-color: red; color: white; border: none; padding: 5px 10px; cursor: pointer;"
+                    class="delete-button">Delete Course
+            </button>
         </form>
-        {% endif %}
-    </div>
+    {% endif %}
+</div>
+
 
 </body>
 </html>

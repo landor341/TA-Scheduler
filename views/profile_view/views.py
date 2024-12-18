@@ -1,3 +1,4 @@
+import json
 from django.http import Http404
 from django.shortcuts import render, redirect
 from django.views import View
@@ -27,7 +28,7 @@ class ProfileView(View):
         - Redirects to 'login' if the user is not authenticated.
         - Redirects to 'home' if user profile is not found due to `ValueError` or `Http404`.
         """
-        #intentionally delay import to avoid apps not loaded error
+        # intentionally delay import to avoid apps not loaded error
         from core.user_controller.UserController import UserController
 
         if not request.user.is_authenticated:
@@ -39,12 +40,16 @@ class ProfileView(View):
             return redirect('home')
         except Http404:
             return redirect('home')
+
+        user_skills = user_profile.skills or []
+
         context = {
             'full_name': f"{request.user.first_name} {request.user.last_name}",
             'user_profile': user_profile,
             'isAdmin': request.user.role == 'Admin',
-            'self': username == None or username == request.user.username,
+            'self': username is None or username == request.user.username,
             'username': request.user.username if username is None else username,
+            'user_skills': user_skills,
         }
 
         return render(request, 'profile_view/profile.html', context)

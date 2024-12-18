@@ -47,6 +47,9 @@ class UserController:
 
     @staticmethod
     def _create_user_profile(user, requesting_user, course_overviews):
+
+        skills = user.skills if isinstance(user.skills, list) else []
+
         if requesting_user.role == 'Admin' or user == requesting_user:
             return PrivateUserProfile(
                 name=f"{user.first_name} {user.last_name}".strip(),
@@ -55,14 +58,16 @@ class UserController:
                 office_hours=user.office_hours,
                 courses_assigned=course_overviews,
                 address=user.address,
-                phone=user.phone
+                phone=user.phone,
+                skills=skills
             )
         return UserProfile(
             name=f"{user.first_name} {user.last_name}".strip(),
             email=user.email,
             role=user.role,
             office_hours=user.office_hours,
-            courses_assigned=course_overviews
+            courses_assigned=course_overviews,
+            skills = skills
         )
 
     @staticmethod
@@ -141,6 +146,14 @@ class UserController:
         try:
             user_to_edit.full_clean(exclude=['password'])
             user_to_edit.save()
+            if "skills" in user_data:
+                skills = user_data.get("skills")
+                if isinstance(skills, list):
+                    filtered_skills = [skill for skill in skills if skill.strip()]
+                    user_to_edit.skills = filtered_skills
+                else:
+                    raise ValidationError("Invalid data for skills. It must be a list.")
+                user_to_edit.save()
             return user_to_edit
         except ValidationError as e:
             raise ValidationError(f"Invalid user data: {e}")
@@ -195,24 +208,31 @@ class UserController:
             raise ValueError(f"User {username} does not exist.")
 
     @staticmethod
-    def searchUser(user_search_string = ""):
+    def searchUser(user_search_string="", user_role=None):
         """
         Preconditions: 'user_search_string' can be empty.
-        Postconditions: Returns a list of users that match the search criteria or raises an error if the input is invalid/empty.
+        Postconditions: Returns a list of users that match the search criteria and role (if provided)
+                        or raises an error if the input is invalid/empty.
         Side-effects: None.
         Parameters:
         - user_search_string: A string containing search parameters for finding users.
+        - user_role: Optional role parameter to filter users by a specific role.
         Returns: A list of matching user objects, containing minimal info for displaying in an explore page.
         """
 
-        matching_users = User.objects.filter(
-            models.Q(username__icontains=user_search_string) |
-            models.Q(first_name__icontains=user_search_string) |
-            models.Q(last_name__icontains=user_search_string)
-        )
+        query = models.Q(username__icontains=user_search_string) | \
+                models.Q(first_name__icontains=user_search_string) | \
+                models.Q(last_name__icontains=user_search_string)
 
-        return [UserRef(name=f"{user.first_name} {user.last_name}", username=user.username)
-                for user in matching_users]
+        if user_role:
+            matching_users = User.objects.filter(query, role=user_role)
+        else:
+            matching_users = User.objects.filter(query)
+
+        return [
+            UserRef(name=f"{user.first_name} {user.last_name}", username=user.username)
+            for user in matching_users
+        ]
 
     @staticmethod
     def _request_permission_check(requesting_user, user_data, user_to_edit):
