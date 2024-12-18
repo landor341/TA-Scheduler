@@ -31,6 +31,7 @@ class CourseSectionRef:
     section_number: str
     instructor: UserRef
 
+
 @dataclass
 class CourseFormData:
     """
@@ -46,7 +47,7 @@ class CourseRef:
     """
     A dataclass that exposes only enough information to expose a course code and name
     """
-    course_code: int
+    course_code: str
     course_name: str
 
 @dataclass
@@ -63,7 +64,7 @@ class TACourseRef(CourseRef):
 class CourseOverview:
     code: str
     name: str
-    semester: Semester | None
+    semester: str | None
     course_sections: List[CourseSectionRef]
     lab_sections: List[LabSectionRef]
 
@@ -109,7 +110,7 @@ class SectionFormData:
     """
     A dataclass that exposes the data necessary to fill/submit section creation
     """
-    course: Course
+    course: CourseRef
     section_number: int
     days: str | None
     start_time: time | None
@@ -129,5 +130,5 @@ class CourseSectionFormData(SectionFormData):
     """
     A dataclass that exposes the data necessary to fill/submit the CourseSectionCreationForm
     """
-    instructor: User
+    instructor: UserRef
     section_type = "Course"
