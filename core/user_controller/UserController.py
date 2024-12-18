@@ -47,6 +47,9 @@ class UserController:
 
     @staticmethod
     def _create_user_profile(user, requesting_user, course_overviews):
+
+        skills = user.skills if isinstance(user.skills, list) else []
+
         if requesting_user.role == 'Admin' or user == requesting_user:
             return PrivateUserProfile(
                 name=f"{user.first_name} {user.last_name}".strip(),
@@ -55,14 +58,16 @@ class UserController:
                 office_hours=user.office_hours,
                 courses_assigned=course_overviews,
                 address=user.address,
-                phone=user.phone
+                phone=user.phone,
+                skills=skills
             )
         return UserProfile(
             name=f"{user.first_name} {user.last_name}".strip(),
             email=user.email,
             role=user.role,
             office_hours=user.office_hours,
-            courses_assigned=course_overviews
+            courses_assigned=course_overviews,
+            skills = skills
         )
 
     @staticmethod
@@ -141,6 +146,14 @@ class UserController:
         try:
             user_to_edit.full_clean(exclude=['password'])
             user_to_edit.save()
+            if "skills" in user_data:
+                skills = user_data.get("skills")
+                if isinstance(skills, list):
+                    filtered_skills = [skill for skill in skills if skill.strip()]
+                    user_to_edit.skills = filtered_skills
+                else:
+                    raise ValidationError("Invalid data for skills. It must be a list.")
+                user_to_edit.save()
             return user_to_edit
         except ValidationError as e:
             raise ValidationError(f"Invalid user data: {e}")

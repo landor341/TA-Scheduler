@@ -40,6 +40,17 @@
             </li>
             {% endif %}
         </ul>
+        
+        <h3>Skills:</h3>
+        {% if user_skills %}
+            <ul>
+                {% for skill in user_skills %}
+                    <li>{{ skill }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No skills available.</p>
+        {% endif %}
         {% if user_profile.courses_assigned %}
         <div class="Course">
             {% if user_profile.role == "Instructor" %}

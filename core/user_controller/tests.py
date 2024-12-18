@@ -295,6 +295,7 @@ class TestSaveUser(TestCase):
             'password': 'password123',
             'phone': '',
             'address': '',
+            'skills': ['Python', 'Django']
         }
 
         self.user_data = {
@@ -305,7 +306,8 @@ class TestSaveUser(TestCase):
             'email': 'updateduser@test.com',
             'password': 'password123',
             'phone': '',
-            'address': ''
+            'address': '',
+            'skills': ['Java', 'Spring', '']
         }
 
     # Helper methods
@@ -431,3 +433,91 @@ class TestSaveUser(TestCase):
         self.user_data['role'] = self.unassigned_user.role
         with self.assertRaises(ValidationError):
             UserController.saveUser(self.user_data, self.unassigned_user)
+    def _verify_user_skills(self, user, expected_skills):
+        self.assertEqual(user.skills, expected_skills)
+
+    def test_add_non_empty_skills(self):
+        """Tests if non-empty skills are saved correctly."""
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, ['Python', 'Django'])
+
+    def test_remove_empty_and_blank_skills(self):
+        """Tests if empty and blank skills are removed before saving."""
+        user = UserController.saveUser(self.user_data, self.admin_user)
+        self._verify_user_skills(user, ['Java', 'Spring'])
+
+    def test_add_single_skill(self):
+        """Tests if a single skill is saved correctly."""
+        self.valid_user_data_new['skills'] = ['Python']
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, ['Python'])
+
+    def test_no_skills_field(self):
+        """Tests if no 'skills' field provided in user_data does not cause an error."""
+        self.valid_user_data_new.pop('skills', None)
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, [])
+
+    def test_empty_skills_list(self):
+        """Tests if an empty skills list is saved correctly."""
+        self.valid_user_data_new['skills'] = []
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, [])
+
+    def test_skills_with_whitespace_only(self):
+        """Tests if a list with whitespace-only entries is saved as an empty list."""
+        self.valid_user_data_new['skills'] = [' ', '   ', '']
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, [])
+
+    def test_invalid_skills_type(self):
+        """Tests if a ValidationError is raised when 'skills' is not a list."""
+        self.valid_user_data_new['skills'] = 'Python, Django, JavaScript'
+        with self.assertRaises(ValidationError):
+            UserController.saveUser(self.valid_user_data_new, self.admin_user)
+
+    def test_skills_with_duplicates(self):
+        """Tests if duplicate skills are allowed and saved as-is."""
+        self.valid_user_data_new['skills'] = ['Python', 'Django', 'Python', 'JavaScript']
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, ['Python', 'Django', 'Python', 'JavaScript'])
+
+    def test_update_skills_to_empty_list(self):
+        """Tests if updating skills to an empty list correctly removes all previous skills."""
+        self.valid_user_data_new['skills'] = ['Python', 'Django']
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, ['Python', 'Django'])
+
+        updated_data = {
+            'username': user.username,
+            'role': user.role,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'password': user.password,
+            'phone': user.phone,
+            'address': user.address,
+            'skills': []  # Update to empty list
+        }
+        updated_user = UserController.saveUser(updated_data, self.admin_user)
+        self._verify_user_skills(updated_user, [])
+
+    def test_update_user_skills(self):
+        """Tests if updating an existing user's skills works correctly."""
+        self.valid_user_data_new['skills'] = ['Django']
+        user = UserController.saveUser(self.valid_user_data_new, self.admin_user)
+        self._verify_user_skills(user, ['Django'])
+
+        updated_data = {
+            'username': user.username,
+            'role': user.role,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'password': user.password,
+            'phone': user.phone,
+            'address': user.address,
+            'skills': ['Flask', 'SQL']  # Updated skills
+        }
+        updated_user = UserController.saveUser(updated_data, self.admin_user)
+        self._verify_user_skills(updated_user, ['Flask', 'SQL'])
