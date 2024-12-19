@@ -334,3 +334,9 @@ class UserController:
             query &= ~models.Q(id=exclude_id)
         if model.objects.filter(query).exists():
             raise ValidationError(f"Error: A user with that {field} already exists.")
+
+    @staticmethod
+    def existUser(username):
+        if User.objects.filter(username=username).exists():
+            return True
+        return False

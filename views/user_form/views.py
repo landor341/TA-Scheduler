@@ -102,12 +102,19 @@ class UserForm(View):
 
         # If there are validation errors, render the form with the errors and 400 status
         if errors:
-            return render(request, "user_form/user_form.html", {
-                "errors": errors,
-                "data": user_data,
-                "full_name": f"{request.user.first_name} {request.user.last_name}",
-                "isAdmin": request.user.role == "Admin",
-            }, status=400)
+            if UserController.existUser(user_data["username"]):
+                return render(request, "user_form/user_form.html", {
+                    "errors": errors,
+                    "data": user_data,
+                    "full_name": f"{request.user.first_name} {request.user.last_name}",
+                    "isAdmin": request.user.role == "Admin",
+                }, status=400)
+            else:
+                return render(request, "user_form/user_form.html", {
+                    "errors": errors,
+                    "full_name": f"{request.user.first_name} {request.user.last_name}",
+                    "isAdmin": request.user.role == "Admin",
+                }, status=400)
 
         # Try saving the user, handling potential ValidationError exceptions from the controller
         try:
@@ -147,7 +154,7 @@ class UserForm(View):
             # If creating a new user, validate username format
             if not user_data.get("username") or not user_data["username"].strip():
                 errors.append("Username must be a valid value")
-            elif not re.match(r"^[a-zA-Z0-9_]+$", user_data["username"].strip()):
+            elif not re.match(r"^[a-zA-Z0-9]+$", user_data["username"].strip()):
                 errors.append("Username must only contain letters, numbers, and underscores")
             elif User.objects.filter(username=User.username).exists():
                 errors.append("Username already exists")
@@ -175,10 +182,13 @@ class UserForm(View):
         elif not isinstance(skills, list):
             errors.append("Skills must be a valid value")
             skills = []
+        print("skills", skills)
+        for skill in skills:
+            if not skill:
+                errors.append("Skill must be a valid value")
         if not skills or any(
-                not re.match(r"^[a-zA-Z0-9 _,-]+$", skill.strip()) for skill in skills if skill.strip()):
+                not re.match(r"^[a-zA-Z0-9,-]+$", skill.strip()) for skill in skills if skill.strip()):
             errors.append("Skills must be a valid value")
-
         # Phone validation
         phone_regex = r"^\d{10}$"  # Check for a valid 10-digit phone number
         if not user_data["phone"] or not re.match(phone_regex, user_data["phone"]):
