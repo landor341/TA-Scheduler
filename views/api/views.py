@@ -12,6 +12,7 @@ def search_user_api(request, role=None):
 
     Postconditions:
     - If a valid query is provided or left empty, a JSON response containing a list of user data (username and name) is returned.
+        If role is specified then all returned users have the specified role
     - If an error occurs (e.g., invalid query), a JSON response with an error message is returned with status 400.
 
     Side-effects:
@@ -19,6 +20,7 @@ def search_user_api(request, role=None):
 
     Parameters:
     - request: HttpRequest object, containing the GET data with an optional "query" parameter.
+    - role: an optional parameter that specifies the types of roles results should have
 
     Returns:
     - JsonResponse:
