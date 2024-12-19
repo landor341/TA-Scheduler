@@ -44,5 +44,6 @@ urlpatterns = [
     path('create-semester/<str:semester_name>', SemesterFormView.as_view(), name='semester-editor'),
     path('search/<str:type>/', SearchView.as_view(), name='search'),
     path("api/search/user/", search_user_api, name="search_user_api"),
+    path("api/search/user/<str:role>/", search_user_api, name="search_user_api"),
     path('get-instructors/', get_instructors, name='get-instructors'),
 ]

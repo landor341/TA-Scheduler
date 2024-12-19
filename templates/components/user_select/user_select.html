@@ -30,12 +30,18 @@
     </div>
 </ul>
 
-<script>var max_users =
-    {% autoescape off %}
+<script>var max_users = {% autoescape off %}
         {% if max_users %}
             {{ max_users }}
         {% else %}
             5
+        {% endif %}
+    {% endautoescape %};
+    var search_role = {% autoescape off %}
+        {% if user_search_role %}
+            "{{ user_search_role }}"
+        {% else %}
+            0
         {% endif %}
     {% endautoescape %}
 </script>

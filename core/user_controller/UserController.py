@@ -86,7 +86,8 @@ class UserController:
                 name=course.course_name,
                 semester=course.semester,
                 course_sections=UserController._get_course_section_refs(course_sections),
-                lab_sections=UserController._get_lab_section_refs(lab_sections)
+                lab_sections=UserController._get_lab_section_refs(lab_sections),
+                ta_list=[]
             ))
 
         return course_overviews

@@ -65,6 +65,7 @@ class CourseOverview:
     code: str
     name: str
     semester: str | None
+    ta_list: List[UserRef]
     course_sections: List[CourseSectionRef]
     lab_sections: List[LabSectionRef]
 

@@ -2,7 +2,7 @@ from typing import List
 
 from core.local_data_classes import CourseFormData, CourseOverview, CourseRef, UserRef, CourseSectionRef, LabSectionRef
 from django.db import models
-from ta_scheduler.models import Course, CourseSection, LabSection, Semester
+from ta_scheduler.models import Course, CourseSection, LabSection, Semester, TACourseAssignment, User
 
 
 class CourseController:
@@ -58,6 +58,28 @@ class CourseController:
         except Semester.DoesNotExist:
             raise ValueError("Given semester does not exist")
 
+        try:
+            for user in course_data.ta_username_list.split(","):
+                if user:
+                    ta = User.objects.get(username=user)
+                    if not TACourseAssignment.objects.filter(course=course, ta=ta).exists():
+                        TACourseAssignment.objects.create(
+                            course=course,
+                            ta=User.objects.get(username=user),
+                            grader_status=False
+                        )
+            for a in TACourseAssignment.objects.filter(course=course):
+                found = False
+                for user in course_data.ta_username_list.split(","):
+                    if user:
+                        if a.ta.username == user:
+                            found = True
+                if not found:
+                    a.delete()
+
+        except User.DoesNotExist:
+            raise ValueError("One of the users in the TA list does not exist")
+
         course.course_name = course_data.course_name
         course.semester = semester
         course.save()
@@ -78,6 +100,14 @@ class CourseController:
 
         course_sections = []
         lab_sections = []
+        ta_list = []
+
+        for ta_assignment in TACourseAssignment.objects.filter(course=course):
+            ta = UserRef(
+                name=f"{ta_assignment.ta.first_name} {ta_assignment.ta.last_name}",
+                username=ta_assignment.ta.username
+            )
+            ta_list.append(ta)
 
         # Retrieve course sections
         for section in CourseSection.objects.filter(course=course):
@@ -107,6 +137,7 @@ class CourseController:
             name=course.course_name,
             semester=course.semester.semester_name,
             course_sections=course_sections,
+            ta_list=ta_list,
             lab_sections=lab_sections,
         )
 

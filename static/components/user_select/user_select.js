@@ -1,17 +1,7 @@
 const selectedUsers = [ ];
 
-for (let u of document.getElementById("selected-users-form-control").value.split(",")) {
-    if (u !== "") {
-        fetch(`/api/search/user/?query=${encodeURIComponent(u)}`)
-        .then((response) => response.json())
-        .then((data) => {
-            selectUser(data[0], true)
-        })
-    }
-}
-
 function fetchUsers(query = "") {
-    fetch(`/api/search/user/?query=${encodeURIComponent(query)}`)
+    fetch(`/api/search/user` + (search_role ? ("/" + search_role) : "") + `/?query=${encodeURIComponent(query)}`)
         .then((response) => response.json())
         .then((data) => {
             const resultsContainer = document.getElementById("dynamic-results");
@@ -58,6 +48,10 @@ function deselectUser(user) {
     const index = selectedUsers.indexOf(user)
     if (index === -1) return // Couldn't find user
     selectedUsers.splice(index, 1)
+    if (!selectedUsers.length) {
+        document.getElementById("select-user-search-header").remove()
+    }
+
     document.getElementById("selected-users-form-control").value = selectedUsers.map(u => u.username).join(',')
     document.getElementById("user-select-" + user.username).remove()
     updateSelectVisibility()
@@ -74,6 +68,7 @@ function selectUser(user, isFresh=false) {
 
     if (selectedUsers[0] === user) {
         const header = document.createElement("div");
+        header.id="select-user-search-header"
         header.style = "text-decoration: underline"
         header.innerHTML = `
             <p style="width: 130px; display: inline-block; text-decoration: underline;">Username</p>Full Name
@@ -98,16 +93,32 @@ function selectUser(user, isFresh=false) {
 }
 
 function updateSelectVisibility() {
-    console.log(max_users)
-    console.log(selectedUsers.length)
     document.getElementById("user-selection-container").style = selectedUsers.length >= max_users ? "display: none" : "display: block"
 }
 
+prefilled_user_list = document.getElementById("selected-users-form-control").value.split(",")
+prefilled_user_list = prefilled_user_list.filter(n => n)
 
-document.getElementById("search-input").addEventListener("input", function () {
-    fetchUsers(this.value);
-});
+var prefilled_user_loaded_count = 0
+for (let u of prefilled_user_list) {
+    if (u !== "") {
+        fetch(`/api/search/user/?query=${encodeURIComponent(u)}`)
+        .then((response) => response.json())
+        .then((data) => {
+            selectUser(data[0], true)
+            prefilled_user_loaded_count++;
+            if (prefilled_user_loaded_count === prefilled_user_list.length) {
+                document.getElementById("search-input").addEventListener("input", function () {
+                    fetchUsers(this.value);
+                });
 
-window.addEventListener("DOMContentLoaded", function () {
-    fetchUsers();
-});
+                window.addEventListener("DOMContentLoaded", function () {
+                    fetchUsers();
+                });
+                fetchUsers();
+            }
+        })
+    }
+}
+
+if (!prefilled_user_list.length) fetchUsers();
