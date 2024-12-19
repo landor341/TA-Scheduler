@@ -22,11 +22,18 @@ def get_instructors(request):
              with an error message if an invalid 'section_type' is provided.
     """
     section_type = request.GET.get('section_type')
+    course_code = request.GET.get('course_code')
+    semester_name = request.GET.get('semester')
 
     if section_type == "Course":
         users = UserController.searchUser(user_role="Instructor")
     elif section_type == "Lab":
-        users = UserController.searchUser(user_role="TA")
+        if not course_code or not semester_name:
+            return JsonResponse({"error": "Course code and semester are required for Lab sections."}, status=400)
+        try:
+            users = CourseController.get_assigned_tas(course_code=course_code, semester_name=semester_name)
+        except ValueError as e:
+            return JsonResponse({"error": str(e)}, status=400)
     else:
         return JsonResponse({"error": "Invalid section type"}, status=400)
 
@@ -75,7 +82,7 @@ class SectionForm(View):
         if section_type == "Course":
             instructor_list = UserController.searchUser(user_role="Instructor")
         elif section_type == "Lab":
-            instructor_list = UserController.searchUser(user_role="TA")
+            instructor_list = CourseController.get_assigned_tas(course_code=code, semester_name=semester)
 
         # Pre-fill form data if URL contains valid section information
         if code and semester and section_number and section_type:

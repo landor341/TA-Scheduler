@@ -186,3 +186,40 @@ class CourseController:
         except Course.DoesNotExist:
             raise ValueError("Course with the given code does not exist.")
 
+    @staticmethod
+    def get_assigned_tas(course_code: str, semester_name: str) -> List[UserRef]:
+        """
+        Pre-conditions:
+        - course_code: A valid course code string.
+        - semester_name: A valid semester name string.
+        Post-conditions:
+        - Returns a list of UserRef objects for all TAs assigned to the specified course.
+        - Raises ValueError if the course does not exist.
+        Side-effects:
+        - None.
+        Parameters:
+        - course_code: The course code to identify the course.
+        - semester_name: The semester name to further filter the course.
+        Returns:
+        - A list of UserRef objects representing the TAs assigned to the specified course.
+        """
+        try:
+            # Get the course object based on course code and semester
+            course = Course.objects.get(course_code=course_code, semester__semester_name=semester_name)
+        except Course.DoesNotExist:
+            raise ValueError("Course with the given code and semester name does not exist.")
+
+        # Retrieve all TA assignments for this course
+        ta_assignments = TACourseAssignment.objects.filter(course=course)
+
+        # Convert TA User instances to UserRef objects
+        assigned_tas = [
+            UserRef(
+                name=f"{assignment.ta.first_name} {assignment.ta.last_name}",
+                username=assignment.ta.username
+            )
+            for assignment in ta_assignments
+        ]
+
+        return assigned_tas
+
