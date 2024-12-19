@@ -1,5 +1,5 @@
-from core.local_data_classes import LabSectionFormData, CourseSectionFormData
-from ta_scheduler.models import Course, CourseSection, LabSection, User, Semester
+from core.local_data_classes import LabSectionFormData, CourseSectionFormData, UserRef
+from ta_scheduler.models import Course, CourseSection, LabSection, User, Semester, TALabAssignment
 from core.section_controller.SectionController import SectionController
 from datetime import time
 from django.test import TestCase
@@ -10,6 +10,7 @@ class SectionControllerTestBase(TestCase):
         self.semester = Semester.objects.create(semester_name="Fall 2024", start_date="2024-09-01", end_date="2024-12-31")
         self.course = Course.objects.create(course_code="CS101", course_name="Intro to Programming", semester=self.semester)
         self.instructor = User.objects.create(username="instructor1", role="Instructor", email="instructor1@test.com")
+        self.placeholder_instructor = User.objects.create(username="instructor2", role="Instructor", email="instructor2@test.com")
         self.ta = User.objects.create(username="ta1", role="TA", email="ta1@test.com")
 
         # Lab section setup
@@ -252,3 +253,158 @@ class TestGetLabSection(SectionControllerTestBase):
                 semester_name=new_semester.semester_name,
                 lab_section_number=1,
             )
+
+
+class TestAssignInstructorOrTA(SectionControllerTestBase):
+    def test_assign_instructor_to_course_section(self):
+        """Test assigning an instructor to a course section."""
+
+        # Create a course section dynamically
+        course_section = CourseSection.objects.create(
+            course=self.course,
+            instructor=self.placeholder_instructor,  # Start with no instructor
+            course_section_number=101,
+            days="Tuesday, Thursday",
+            start_time=time(9, 0),
+            end_time=time(10, 30),
+        )
+
+        user_ref = UserRef(username=self.instructor.username, name=self.instructor.get_full_name())
+
+        SectionController.assign_instructor_or_ta(
+            section_type="Course",
+            section_number=course_section.course_section_number,
+            course_code=self.course.course_code,
+            semester_name=self.semester.semester_name,
+            instructor_ref=user_ref
+        )
+
+        course_section.refresh_from_db()
+        self.assertEqual(course_section.instructor, self.instructor)
+        print("Instructor assigned successfully to course section.")
+
+    def test_assign_ta_to_lab_section(self):
+        """Test assigning a TA to a lab section."""
+        # Create a lab section dynamically
+        lab_section = LabSection.objects.create(
+            course=self.course,
+            lab_section_number=1,
+            days="Monday, Wednesday",
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+        )
+
+        user_ref = UserRef(username=self.ta.username, name=self.ta.get_full_name())
+
+        SectionController.assign_instructor_or_ta(
+            section_type="Lab",
+            section_number=lab_section.lab_section_number,
+            course_code=self.course.course_code,
+            semester_name=self.semester.semester_name,
+            instructor_ref=user_ref
+        )
+
+        talab_assignment = TALabAssignment.objects.get(lab_section=lab_section)
+        self.assertEqual(talab_assignment.ta, self.ta)
+        print("TA assigned successfully to lab section.")
+
+    def test_invalid_role_for_course_section(self):
+        """Test assigning a TA to a course section raises an error."""
+
+        # Create a course section dynamically
+        course_section = CourseSection.objects.create(
+            course=self.course,
+            instructor=self.placeholder_instructor,
+            course_section_number=101,
+            days="Tuesday, Thursday",
+            start_time=time(9, 0),
+            end_time=time(10, 30),
+        )
+
+        user_ref = UserRef(username=self.ta.username, name=self.ta.get_full_name())
+
+        with self.assertRaises(ValueError, msg="User must have the 'Instructor' role for Course sections."):
+            SectionController.assign_instructor_or_ta(
+                section_type="Course",
+                section_number=course_section.course_section_number,
+                course_code=self.course.course_code,
+                semester_name=self.semester.semester_name,
+                instructor_ref=user_ref
+            )
+        print("Correctly raised error for invalid role assignment to course section.")
+
+    def test_invalid_role_for_lab_section(self):
+        """Test assigning an Instructor to a lab section raises an error."""
+        # Create a lab section dynamically
+        lab_section = LabSection.objects.create(
+            course=self.course,
+            lab_section_number=1,
+            days="Monday, Wednesday",
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+        )
+
+        user_ref = UserRef(username=self.instructor.username, name=self.instructor.get_full_name())
+
+        with self.assertRaises(ValueError, msg="User must have the 'TA' role for Lab sections."):
+            SectionController.assign_instructor_or_ta(
+                section_type="Lab",
+                section_number=lab_section.lab_section_number,
+                course_code=self.course.course_code,
+                semester_name=self.semester.semester_name,
+                instructor_ref=user_ref
+            )
+        print("Correctly raised error for invalid role assignment to lab section.")
+
+    def test_assign_to_nonexistent_user(self):
+        """Test assigning a non-existent user raises an error."""
+
+        # Create a course section dynamically
+        course_section = CourseSection.objects.create(
+            course=self.course,
+            instructor=self.placeholder_instructor,
+            course_section_number=101,
+            days="Tuesday, Thursday",
+            start_time=time(9, 0),
+            end_time=time(10, 30),
+        )
+
+        user_ref = UserRef(username="nonexistent_user", name="Nonexistent User")
+
+        with self.assertRaises(ValueError, msg="User 'nonexistent_user' does not exist."):
+            SectionController.assign_instructor_or_ta(
+                section_type="Course",
+                section_number=course_section.course_section_number,
+                course_code=self.course.course_code,
+                semester_name=self.semester.semester_name,
+                instructor_ref=user_ref
+            )
+        print("Correctly raised error for non-existent user.")
+
+    def test_assign_to_nonexistent_section(self):
+        """Test assigning a user to a non-existent section raises an error."""
+        user_ref = UserRef(username=self.instructor.username, name=self.instructor.get_full_name())
+
+        with self.assertRaises(ValueError, msg="Course section 999 does not exist."):
+            SectionController.assign_instructor_or_ta(
+                section_type="Course",
+                section_number=999,  # Non-existent section number
+                course_code=self.course.course_code,
+                semester_name=self.semester.semester_name,
+                instructor_ref=user_ref
+            )
+        print("Correctly raised error for non-existent course section.")
+
+    def test_assign_to_invalid_section_type(self):
+        """Test assigning to an invalid section type raises an error."""
+        user_ref = UserRef(username=self.instructor.username, name=self.instructor.get_full_name())
+
+        with self.assertRaises(ValueError, msg="Invalid section type. Must be 'Course' or 'Lab'."):
+            SectionController.assign_instructor_or_ta(
+                section_type="InvalidType",
+                section_number=101,
+                course_code=self.course.course_code,
+                semester_name=self.semester.semester_name,
+                instructor_ref=user_ref
+            )
+        print("Correctly raised error for invalid section type.")

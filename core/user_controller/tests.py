@@ -215,6 +215,43 @@ class TestSearchUserCaseInsensitive(TestCase):
             f"Usernames or names in the result do not all contain 'tausername': {[(user.username, user.name) for user in result]}"
         )
 
+    def test_search_users_by_role_admin(self):
+        """Tests searching users with role 'Admin'."""
+        result = UserController.searchUser("", user_role="Admin")
+        self.assertTrue(
+            all(user.username == self.admin_user.username for user in result),
+            f"Results do not match the expected admin user: {[(user.username, user.name) for user in result]}"
+        )
+
+    def test_search_users_by_role_ta(self):
+        """Tests searching users with role 'TA'."""
+        result = UserController.searchUser("", user_role="TA")
+        expected_usernames = [self.unassigned_user.username, self.one_char_user_ta.username]
+        actual_usernames = [user.username for user in result]
+        self.assertEqual(set(actual_usernames), set(expected_usernames),
+                         f"Results do not match expected TA users: {actual_usernames}")
+
+    def test_search_users_by_role_instructor(self):
+        """Tests searching users with role 'Instructor'."""
+        result = UserController.searchUser("", user_role="Instructor")
+        expected_usernames = [self.assigned_user.username, self.one_char_user_in.username]
+        actual_usernames = [user.username for user in result]
+        self.assertEqual(set(actual_usernames), set(expected_usernames),
+                         f"Results do not match expected Instructor users: {actual_usernames}")
+
+    def test_search_users_by_partial_name_and_role(self):
+        """Tests searching users with a partial name and filtering by role."""
+        result = UserController.searchUser("AdminF", user_role="Admin")
+        self.assertTrue(
+            all("adminf" in (user.username + user.name).lower() for user in result),
+            f"Results do not match search 'AdminF' for Admin role: {[(user.username, user.name) for user in result]}"
+        )
+
+    def test_search_users_with_invalid_role(self):
+        """Tests searching users with a role that does not exist."""
+        result = UserController.searchUser("", user_role="NonExistentRole")
+        self.assertEqual(len(result), 0, "Expected no users for an invalid role.")
+
 
 class TestDeleteUser(TestCase):
     def setUp(self):
