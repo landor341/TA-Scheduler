@@ -10,13 +10,29 @@ import re
 
 class CourseForm(View):
     def get(self, request, code: str | None = None, semester: str | None = None):
-        '''
-        Preconditions: Admin user logged in.
-        Postconditions: Renders a form for creating a course with sections.
-            If the request URL contains a valid course ID then the form is
-            preloaded with that courses current data
-        Side-effects: N/A
-        '''
+        """
+        Preconditions:
+        - `request` is a valid HttpRequest object representing a GET request.
+        - `code` is an optional course code string; can be `None`.
+        - `semester` is an optional semester string; can be `None`.
+
+        Postconditions:
+        - Renders the course creation or editing form.
+        - Pre-fills the form with existing course data if `code` and `semester` are valid.
+        - Redirects unauthorized users to the home page.
+
+        Side-effects:
+        - None.
+
+        Parameters:
+        - request: An HttpRequest object containing metadata about the request.
+        - code: An optional string representing the course code.
+        - semester: An optional string representing the semester.
+
+        Returns:
+        - An HttpResponse rendering the 'course_form/course_form.html' template with the form data and additional context.
+        - Redirects to home if the user does not have the necessary permissions.
+        """
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
 
@@ -38,14 +54,30 @@ class CourseForm(View):
         })
 
     def post(self, request, code: str | None = None, semester: str | None = None):
-        '''
-        Preconditions: Admin user logged in.
+        """
+        Preconditions:
+        - `request` is a valid HttpRequest object representing a POST request.
+        - `code` is an optional course code string; can be `None`.
+        - `semester` is an optional semester string; can be `None`.
 
-        Postconditions: If the form contains valid data, then the course data is saved
-            to the database. If request URL doesn't contain an ID then a new course
-            is created. The user is redirected back to the edited courses page.
-        Side-effects: New Course, CourseSection, and LabSection models are added to the DB
-        '''
+        Postconditions:
+        - Validates form inputs and saves new or updated course data to the database.
+        - Deletes a course if the 'delete' action is specified.
+        - Renders the course form with error messages if the form contains invalid data.
+        - Redirects unauthorized users or after successful operations.
+
+        Side-effects:
+        - Modifies course data in the database (saving or deleting course records).
+
+        Parameters:
+        - request: An HttpRequest object containing metadata about the request.
+        - code: An optional string representing the course code.
+        - semester: An optional string representing the semester.
+
+        Returns:
+        - An HttpResponse rendering the 'course_form/course_form.html' template with form errors and context if validation errors are present.
+        - Redirects to the course page or home page after successful operations or unauthorized access.
+        """
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
 
@@ -152,12 +184,26 @@ class CourseForm(View):
 
 
     def delete(self, request, code: str, semester: str):
-        '''
-        Preconditions: Admin user logged in.
-        Postconditions: If the given course code and semester is a valid user and the logged in user is an
-            administrator then the course with the given info is deleted from the database
-        Side-effects: Course and all linked sections/assignments are deleted
-        '''
+        """
+        Preconditions:
+        - `request` is a valid HttpRequest object representing a DELETE request.
+        - `code` and `semester` represent a valid course and semester.
+
+        Postconditions:
+        - Deletes the specified course and all its associated sections and assignments.
+        - Redirects unauthorized users or after successful deletion.
+
+        Side-effects:
+        - Deletes course data from the database.
+
+        Parameters:
+        - request: An HttpRequest object containing metadata about the request.
+        - code: A string representing the course code.
+        - semester: A string representing the semester.
+
+        Returns:
+        - Redirects to the home page after deletion or unauthorized access.
+        """
         if not self.__can_use_form(request.user, code, semester):
             return redirect(reverse("home"))
 
