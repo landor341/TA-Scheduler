@@ -25,13 +25,14 @@
                 name="section_number"
                 value="{{ data.section_number }}"
                 {% if data.is_read_only %}readonly{% endif %}
+                {% if isInstructor %}readonly{% endif %}
             >
         </div>
 
         <!-- Section Type -->
         <div class="form-group">
             <label for="section_type">Section Type</label>
-            <select id="section_type" name="section_type" onchange="fetchInstructors()">
+            <select id="section_type" name="section_type" onchange="fetchInstructors()" {% if isInstructor %}disabled{% endif %}>
                 <option value="Course" {% if data.section_type == "Course" %}selected{% endif %}>Course</option>
                 <option value="Lab" {% if data.section_type == "Lab" %}selected{% endif %}>Lab</option>
             </select>
@@ -45,6 +46,7 @@
                 id="days"
                 name="days"
                 value="{{ data.days }}"
+                {% if isInstructor %}readonly{% endif %}
             >
         </div>
 
@@ -56,6 +58,7 @@
                 id="start_time"
                 name="start_time"
                 value="{{ data.start_time }}"
+                {% if isInstructor %}readonly{% endif %}
             >
         </div>
 
@@ -67,6 +70,7 @@
                 id="end_time"
                 name="end_time"
                 value="{{ data.end_time }}"
+                {% if isInstructor %}readonly{% endif %}
             >
         </div>
 
@@ -93,7 +97,7 @@
     </form>
 
     <!-- Delete Section Form -->
-    {% if data.is_deletable %}
+    {% if data.is_deletable and data.section_number and section_type %}
     <form method="post" action="{% url 'section-form' code=code semester=semester section_number=data.section_number section_type=section_type %}">
         {% csrf_token %}
         <input type="hidden" name="delete" value="true">

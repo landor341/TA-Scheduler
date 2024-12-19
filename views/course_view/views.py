@@ -62,6 +62,7 @@ class CourseView(View):
         context = {
             'full_name': f"{request.user.first_name} {request.user.last_name}",
             'isAdmin': request.user.role == 'Admin',
+            'isInstructor': request.user.role == 'Instructor',
             'course': {
                 'course_code': course_overview.code,
                 'course_name': course_overview.name,

@@ -47,9 +47,15 @@ class SectionForm(View):
         if not request.user.is_authenticated:
             return redirect(reverse("login"))
 
-        # Restrict access to Admins only
-        if request.user.role != "Admin":
-            return redirect(request.META.get('HTTP_REFERER', reverse('home')))
+        # Restrict access to Admins and Instructors only
+        if request.user.role not in ["Admin", "Instructor"]:
+            return redirect(reverse('course_view', args=[code, semester]))
+
+        is_admin = request.user.role == "Admin"
+        is_instructor = request.user.role == "Instructor"
+
+        if is_instructor:
+            section_type="Lab"
 
         # Initialize empty form_data
         form_data = {
@@ -59,7 +65,8 @@ class SectionForm(View):
             "start_time": "",
             "end_time": "",
             "instructor": "",
-            "is_deletable": False,
+            "is_deletable": is_admin,
+            "read_only": is_instructor,
         }
 
         # Fetch user list based on section type/instructors by default on new section creation
@@ -83,7 +90,6 @@ class SectionForm(View):
                         "start_time": section.start_time,
                         "end_time": section.end_time,
                         "instructor": section.instructor.username if section.instructor else "",
-                        "is_deletable": True,
                     })
                 elif section_type == "Lab":
                     section = SectionController.get_lab_section(code, semester, section_number)
@@ -93,7 +99,6 @@ class SectionForm(View):
                         "days": section.days,
                         "start_time": section.start_time,
                         "end_time": section.end_time,
-                        "is_deletable": True,
                     })
 
             except ValueError as e:
@@ -108,7 +113,8 @@ class SectionForm(View):
             "section_type": section_type,
             "instructors": instructor_list,
             'full_name': f"{request.user.first_name} {request.user.last_name}",
-            'isAdmin': request.user.role == 'Admin',
+            'isAdmin': is_admin,
+            'isInstructor': is_instructor,
         })
 
 
@@ -120,33 +126,37 @@ class SectionForm(View):
             is created. The user is redirected back to the edited courses page.
         Side-effects: New CourseSection or LabSection object is added to DB. Potentially a TALabAssignment.
         '''
-        if not request.user.is_authenticated or request.user.role != "Admin":
+        if not request.user.is_authenticated:
+            return redirect(reverse('login'))
+
+            # Restrict access to Admins and Instructors only
+        if request.user.role not in ["Admin", "Instructor"]:
             return redirect(reverse('course_view', args=[code, semester]))
+
+            # Role check
+        is_admin = request.user.role == "Admin"
+        is_instructor = request.user.role == "Instructor"
+
+        # Instructors are only allowed to work with Lab sections
+        if is_instructor:
+            section_type = "Lab"
 
         # Check if the request is for deleting a section
         if request.POST.get("delete") == "true":
             try:
-                section_number = int(section_number)  # Ensure section_number is an integer
-
-                if section_type == "Course":
-                    SectionController.delete_course_section(code, semester, section_number)
+                if section_type == "Course" and not is_admin:
+                    raise ValueError("Instructors cannot delete Course sections.")
+                if section_type == "Course" and is_admin:
+                    SectionController.delete_course_section(code, semester, int(section_number))
                 elif section_type == "Lab":
-                    SectionController.delete_lab_section(code, semester, section_number)
-                else:
-                    raise ValueError("Invalid section type provided.")
-
+                    SectionController.delete_lab_section(code, semester, int(section_number))
                 return redirect(reverse('course_view', args=[code, semester]))
-
             except ValueError as e:
                 print(f"Error deleting section: {e}")
                 return redirect(reverse('course_view', args=[code, semester]))
 
         # Extract form data
-        section_type = request.POST.get('section_type')
         form_section_number = request.POST.get('section_number')
-        days = request.POST.get('days')
-        start_time = request.POST.get('start_time')
-        end_time = request.POST.get('end_time')
         instructor_username = request.POST.get('instructor')
 
         try:
@@ -155,46 +165,70 @@ class SectionForm(View):
             return redirect(reverse('course_view', args=[code, semester]))
 
         try:
-            # Construct UserRef manually
-            instructor_ref = UserRef(name="", username=instructor_username)
-
-            if section_type == "Course":
-                section_data = CourseSectionFormData(
-                    course=CourseRef(course_code=code, course_name=CourseController.get_course(code, semester).name),
-                    section_number=form_section_number,
-                    days=days,
-                    start_time=start_time,
-                    end_time=end_time,
-                    instructor=instructor_ref,
-                    section_type="Course",
-                )
-
-                # Determine if it's an update or create
-                SectionController.save_course_section(section_data, semester, course_section_number=int(section_number) if section_number else None)
-
-            elif section_type == "Lab":
-                section_data = LabSectionFormData(
-                    course=CourseRef(course_code=code, course_name=CourseController.get_course(code, semester).name),
-                    section_number=form_section_number,
-                    days=days,
-                    start_time=start_time,
-                    end_time=end_time,
+            # Instructors: Only assign TA for Lab sections
+            if is_instructor:
+                instructor_ref = UserRef(name="", username=instructor_username)
+                SectionController.assign_instructor_or_ta(
                     section_type="Lab",
+                    section_number=form_section_number,
+                    course_code=code,
+                    semester_name=semester,
+                    instructor_ref=instructor_ref
                 )
+                return redirect(reverse('course_view', args=[code, semester]))
 
-                # Determine if it's an update or create
-                SectionController.save_lab_section(section_data, semester, lab_section_number=int(section_number) if section_number else None)
+            # Admin logic: Full CRUD operations
+            if is_admin:
+                section_type = request.POST.get('section_type')
+                instructor_ref = UserRef(name="", username=instructor_username)
 
-            # Assign instructor/TA
-            SectionController.assign_instructor_or_ta(
-                section_type=section_type,
-                section_number=form_section_number,
-                course_code=code,
-                semester_name=semester,
-                instructor_ref=instructor_ref
-            )
+                if section_type == "Course":
+                    existing_section = None
+                    if section_number:
+                        existing_section = SectionController.get_course_section(code, semester, int(section_number))
 
-            return redirect(reverse('course_view', args=[code, semester]))
+                    section_data = CourseSectionFormData(
+                        course=CourseRef(course_code=code,
+                                         course_name=CourseController.get_course(code, semester).name),
+                        section_number=form_section_number,
+                        days=request.POST.get('days'),
+                        start_time=request.POST.get('start_time') or (existing_section.start_time if existing_section else None),
+                        end_time=request.POST.get('end_time') or (existing_section.end_time if existing_section else None),
+                        instructor=instructor_ref,
+                        section_type="Course",
+                    )
+                    SectionController.save_course_section(section_data, semester, course_section_number=int(
+                        section_number) if section_number else None)
+
+                elif section_type == "Lab":
+                    existing_section = None
+                    if section_number:
+                        existing_section = SectionController.get_lab_section(code, semester, int(section_number))
+
+                    section_data = LabSectionFormData(
+                        course=CourseRef(course_code=code,
+                                         course_name=CourseController.get_course(code, semester).name),
+                        section_number=form_section_number,
+                        days=request.POST.get('days'),
+                        start_time=request.POST.get('start_time') or (existing_section.start_time if existing_section else None),
+                        end_time=request.POST.get('end_time') or (existing_section.end_time if existing_section else None),
+                        section_type="Lab",
+                    )
+                    SectionController.save_lab_section(section_data, semester, lab_section_number=int(
+                        section_number) if section_number else None)
+
+                    # Assign TA for Lab section
+                    SectionController.assign_instructor_or_ta(
+                        section_type="Lab",
+                        section_number=form_section_number,
+                        course_code=code,
+                        semester_name=semester,
+                        instructor_ref=instructor_ref
+                    )
+                else:
+                    raise ValueError("Invalid section type provided.")
+
+                return redirect(reverse('course_view', args=[code, semester]))
 
         except ValueError as e:
             print(f"Error saving section: {e}")
