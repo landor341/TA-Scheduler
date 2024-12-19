@@ -1,19 +1,43 @@
 {% load static %}
-<h1>User select</h1>
-<input
-    type="text"
-    id="search-input"
-    placeholder="Search Users"
-    autocomplete="off"
-/>
+<div id="user-selection-container">
+    <h1>User select</h1>
+    <input
+        type="text"
+        id="search-input"
+        placeholder="Search Users"
+        autocomplete="off"
+    />
+    <ul class="result">
+        <div id="dynamic-results">
+            <!-- JavaScript result -->
+        </div>
+    </ul>
+    <input
+            type="hidden"
+            id="selected-users-form-control"
+            name="selected-users"
+            {% if preselected_users %}
+                value="{{ preselected_users }}"
+            {% else %}
+                value=""
+            {% endif %}
+    />
+</div>
+<h1>Selected users</h1>
 <ul class="result">
-    <div id="dynamic-results">
-        <!-- JavaScript result -->
+    <div id="dynamic-selected-users">
+
     </div>
 </ul>
-<input type="hidden" id="selected-users-form-control" name="selected-users" value="" />
-<h1>Selected users</h1>
-<div id="dynamic-selected-users">
 
-</div>
-<script src="{% static 'components/user_select/user_select.js' %}" defer></script>
+<script>var max_users =
+    {% autoescape off %}
+        {% if max_users %}
+            {{ max_users }}
+        {% else %}
+            5
+        {% endif %}
+    {% endautoescape %}
+</script>
+<script src="{% static 'components/user_select/user_select.js' %}" defer
+></script>
