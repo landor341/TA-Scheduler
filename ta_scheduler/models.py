@@ -54,6 +54,20 @@ class User(AbstractUser):
     )
 
     def save(self, *args, **kwargs):
+        """
+        Preconditions:
+        - 'self.password' must be a string and is either unset or does not already start with 'pbkdf2_'.
+        Postconditions:
+        - If a valid password is provided that does not start with 'pbkdf2_', it is hashed using Django's `make_password`
+          method before saving the instance.
+        - The instance is saved to the database using the parent class's save method.
+        Side-effects:
+        - Modifies 'self.password' by hashing it (if applicable) before saving the instance.
+        Parameters:
+        - *args: Additional positional arguments to be passed to the parent class's save method.
+        - **kwargs: Additional keyword arguments to be passed to the parent class's save method.
+        Returns: None.
+        """
         if self.password and not self.password.startswith('pbkdf2_'):
             self.password = make_password(self.password)
         super().save(*args, **kwargs)

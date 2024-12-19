@@ -10,7 +10,16 @@ from core.user_controller.UserController import UserController
 
 def get_instructors(request):
     """
-    Returns a list of instructors or TAs based on the 'section_type' query parameter.
+    Preconditions:
+    - The request must include a valid 'section_type' query parameter, which should either be 'Course' or 'Lab'.
+    Postconditions:
+    - Returns a JSON response containing a list of users classified as "Instructors" for 'Course' sections or "TAs"
+      for 'Lab' sections.
+    Side-effects: None.
+    Parameters:
+    - request: A Django HttpRequest object that includes a "section_type" query parameter.
+    Returns: A JsonResponse containing a list of user dictionaries with 'username' and 'name'. Returns a 400 status
+             with an error message if an invalid 'section_type' is provided.
     """
     section_type = request.GET.get('section_type')
 
