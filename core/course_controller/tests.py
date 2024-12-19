@@ -54,9 +54,14 @@ class CourseControllerTestBase(TestCase):
 # Testing save courses
 class TestSaveCourse(CourseControllerTestBase):
     def test_save_new_course(self):
-        course_data = CourseFormData(course_code="NewCourse", course_name="AI and ML", semester=self.semester.semester_name, ta_username_list="")
+        ta_list = User.objects.filter(role="TA")
+        course_ta_list = ta_list[0].username + "," + ta_list[0].username
+        course_data = CourseFormData(course_code="NewCourse", course_name="AI and ML", semester=self.semester.semester_name, ta_username_list=course_ta_list)
         CourseController.save_course(course_data)
         self.assertTrue(Course.objects.filter(course_code="NewCourse").exists())
+        course = Course.objects.get(course_code="NewCourse")
+        self.assertTrue(TACourseAssignment.objects.filter(course=course).exists())
+        self.assertEqual(len(TACourseAssignment.objects.filter(course=course)), 2)
 
     def test_duplicate_course_code_same_semester_fails(self):
         course_data = CourseFormData(course_code="Test1", course_name="Duplicate Course", semester=self.semester, ta_username_list="")
@@ -129,6 +134,8 @@ class TestGetCourse(CourseControllerTestBase):
         self.assertIsInstance(result, CourseOverview)
         self.assertEqual(result.code, course.course_code)
         self.assertEqual(result.name, course.course_name)
+        ta_list = TACourseAssignment.objects.filter(course=course)
+        self.assertEqual(len(result.ta_list), len(ta_list))
 
     def test_get_course_lab_sections(self):
         course = Course.objects.first()
@@ -202,6 +209,7 @@ class TestDeleteCourse(CourseControllerTestBase):
         CourseController.delete_course(course.course_code, course.semester.semester_name)
         self.assertFalse(CourseSection.objects.filter(course=course).exists())
         self.assertFalse(LabSection.objects.filter(course=course).exists())
+        self.assertFalse(TACourseAssignment.objects.filter(course=course).exists())
 
 
 

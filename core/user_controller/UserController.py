@@ -1,6 +1,5 @@
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.db import models
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from core.local_data_classes import UserRef, LabSectionRef, UserProfile, PrivateUserProfile, CourseSectionRef, CourseOverview
 from ta_scheduler.models import User, Course, CourseSection, LabSection
@@ -86,7 +85,8 @@ class UserController:
                 name=course.course_name,
                 semester=course.semester,
                 course_sections=UserController._get_course_section_refs(course_sections),
-                lab_sections=UserController._get_lab_section_refs(lab_sections)
+                lab_sections=UserController._get_lab_section_refs(lab_sections),
+                ta_list=[]
             ))
 
         return course_overviews

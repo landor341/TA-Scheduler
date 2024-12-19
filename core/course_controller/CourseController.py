@@ -2,7 +2,7 @@ from typing import List
 
 from core.local_data_classes import CourseFormData, CourseOverview, CourseRef, UserRef, CourseSectionRef, LabSectionRef
 from django.db import models
-from ta_scheduler.models import Course, CourseSection, LabSection, Semester
+from ta_scheduler.models import Course, CourseSection, LabSection, Semester, TACourseAssignment, User
 
 
 class CourseController:
@@ -58,9 +58,39 @@ class CourseController:
         except Semester.DoesNotExist:
             raise ValueError("Given semester does not exist")
 
+        ta_assignment_list = []
+        ta_assignment_remove_list = []
+        try:
+            for user in course_data.ta_username_list.split(","):
+                if user:
+                    ta = User.objects.get(username=user)
+                    if not TACourseAssignment.objects.filter(course=course, ta=ta).exists():
+                        ta_assignment = TACourseAssignment()
+                        ta_assignment.course = course
+                        ta_assignment.ta = User.objects.get(username=user)
+                        ta_assignment.grader_status = False
+                        ta_assignment_list.append(ta_assignment)
+            for a in TACourseAssignment.objects.filter(course=course):
+                found = False
+                for user in course_data.ta_username_list.split(","):
+                    if user:
+                        if a.ta.username == user:
+                            found = True
+                if not found:
+                    ta_assignment_remove_list.append(a)
+
+        except User.DoesNotExist:
+            raise ValueError("One of the users in the TA list does not exist")
+
         course.course_name = course_data.course_name
         course.semester = semester
         course.save()
+
+        for a in ta_assignment_list:
+            a.save()
+
+        for a in ta_assignment_remove_list:
+            a.delete()
 
     @staticmethod
     def get_course(course_code: str, semester_name: str) -> CourseOverview:
@@ -78,6 +108,14 @@ class CourseController:
 
         course_sections = []
         lab_sections = []
+        ta_list = []
+
+        for ta_assignment in TACourseAssignment.objects.filter(course=course):
+            ta = UserRef(
+                name=f"{ta_assignment.ta.first_name} {ta_assignment.ta.last_name}",
+                username=ta_assignment.ta.username
+            )
+            ta_list.append(ta)
 
         # Retrieve course sections
         for section in CourseSection.objects.filter(course=course):
@@ -107,6 +145,7 @@ class CourseController:
             name=course.course_name,
             semester=course.semester.semester_name,
             course_sections=course_sections,
+            ta_list=ta_list,
             lab_sections=lab_sections,
         )
 

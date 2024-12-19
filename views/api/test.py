@@ -11,9 +11,9 @@ class TestSearchUserAPI(TestCase):
         self.client.login(username='admin', password='adminpass')
 
         self.user1 = User.objects.create_user(username='jboy', first_name='John', last_name='Boyland',
-                                              password='password')
+                                              password='password', role="Instructor")
         self.user2 = User.objects.create_user(username='lanfar', first_name='Landon', last_name='Faris',
-                                              password='password')
+                                              password='password', role="TA")
 
     def test_api_search_users_with_empty(self):
         responses = self.client.get('/api/search/user/?query=')
@@ -40,3 +40,11 @@ class TestSearchUserAPI(TestCase):
         self.assertEqual(len(response_data), 2)
         self.assertEqual(response_data[0]['username'], self.user1.username)
         self.assertEqual(response_data[1]['username'], self.user2.username)
+
+    def test_api_search_with_role(self):
+        response = self.client.get('/api/search/user/TA/?query=and')
+        self.assertEqual(response.status_code, 200)
+
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 1)
+        self.assertEqual(response_data[0]['username'], self.user2.username)

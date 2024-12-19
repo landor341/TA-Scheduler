@@ -55,7 +55,6 @@ class CourseView(View):
             # Handle case where course or semester does not exist
             return render(request, '404.html', {'error_message': str(e)})
 
-        tas = [lab.instructor for lab in course_overview.lab_sections if lab.instructor]
         instructors = [section.instructor for section in course_overview.course_sections if section.instructor]
         sections = course_overview.course_sections
         lab_sections = course_overview.lab_sections
@@ -73,7 +72,7 @@ class CourseView(View):
             },
             'sections': sections,
             'lab_sections': lab_sections,
-            'tas': tas,
+            'tas': course_overview.ta_list,
             'instructors': instructors
         }
 

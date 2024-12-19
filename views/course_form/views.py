@@ -21,12 +21,19 @@ class CourseForm(View):
             return redirect(reverse("home"))
 
         course_form = CourseController.get_course(code, semester) if code else {}
+
+        ta_list = ""
+        for ta in course_form.ta_list:
+            ta_list += ta.username + ","
+
         return render(request, 'course_form/course_form.html', {
             "semester": SemesterController.list_semester(),
             "data": course_form,
             "isAdmin": request.user.role == "Admin",
             "isEditing": code is not None,
             'full_name': f"{request.user.first_name} {request.user.last_name}",
+            "preselected_users": ta_list,
+            "user_search_role": "TA"
         })
 
     def post(self, request, code: str | None = None, semester: str | None = None):
@@ -87,6 +94,10 @@ class CourseForm(View):
 
         # Check if there are any errors
         if any(errors.values()) or errors_list:
+            ta_list = request.POST.get("selected-users")
+            if not ta_list:
+                ta_list = ""
+
             # Re-render the form with errors and previous inputs
             return render(request, 'course_form/course_form.html', {
                 "semester": SemesterController.list_semester(),
@@ -100,18 +111,26 @@ class CourseForm(View):
                 "isAdmin": request.user.role == "Admin",
                 "isEditing": code is not None,
                 'full_name': f"{request.user.first_name} {request.user.last_name}",
+                "preselected_users": ta_list,
+                "user_search_role": "TA"
             })
+
+        ta_list = request.POST.get("selected-users")
+        if not ta_list:
+            ta_list = ""
+
         #Save course function in dataclass
         form = CourseFormData(
             course_code=course_code,
             semester=selected_semester,
             course_name=course_name,
-            ta_username_list=""
+            ta_username_list=ta_list
         )
         #save func catching course duplication and redirect back to form
         try:
             CourseController.save_course(form, code, semester)
-        except ValueError:
+        except ValueError as e:
+                errors_list.append(e)
                 errors_list.append("Course already exists in the selected semester.")
                 return render(request, 'course_form/course_form.html', { "semester": SemesterController.list_semester(),
                 "data": {
@@ -124,6 +143,8 @@ class CourseForm(View):
                 "isAdmin": request.user.role == "Admin",
                 "isEditing": code is not None,
                 'full_name': f"{request.user.first_name} {request.user.last_name}",
+                "preselected_users": ta_list,
+                "user_search_role": "TA"
             })
 
         return redirect(f"/course/{form.course_code}/{form.semester}")
