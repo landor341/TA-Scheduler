@@ -5,9 +5,9 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 
-from core.local_data_classes import UserFormData, PrivateUserProfile
+from core.local_data_classes import UserFormData, PrivateUserProfile, UserRef
 from core.user_controller.UserController import UserController
-
+from ta_scheduler.models import User
 
 class UserForm(View):
     def get(self, request, username: str | None = None):
@@ -135,7 +135,6 @@ class UserForm(View):
         if user_id:
             # Try to fetch existing user
             try:
-                from django.contrib.auth.models import User
                 existing_user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 errors.append("User does not exist")
@@ -150,6 +149,8 @@ class UserForm(View):
                 errors.append("Username must be a valid value")
             elif not re.match(r"^[a-zA-Z0-9_]+$", user_data["username"].strip()):
                 errors.append("Username must only contain letters, numbers, and underscores")
+            elif User.objects.filter(username=User.username).exists():
+                errors.append("Username already exists")
 
         # Email validation
         email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"

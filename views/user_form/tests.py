@@ -342,8 +342,8 @@ class TestPostNewUserForm(UserFormAssertions):
             errors = response.context.get('errors', [])
             print("Validation Errors:", errors)  # Debugging
             self.assertTrue(
-                any("Username must be a valid value" in e for e in errors),
-                f"Expected 'Username must be a valid value', got {errors}"
+                any("sername must only contain letters, numbers, and underscores" in e for e in errors),
+                f"Expected 'sername must only contain letters, numbers, and underscores', got {errors}"
             )
             self.assertFalse(User.objects.filter(username=value).exists(), "Created user with invalid username")
 
@@ -434,7 +434,7 @@ class TestPostNewUserForm(UserFormAssertions):
         print("Validation Errors:", errors)
         self.assertTrue(
             any("username already exists" in e.lower() for e in errors),
-            f"Expected 'username already exists' error, got {errors}"
+            f"Expected 'Username already exists' error, got {errors}"
         )
 
     def testValid(self):
@@ -462,6 +462,8 @@ class TestPostNewUserForm(UserFormAssertions):
                 "email": value,
                 "phone": "1234567890",
                 "role": "Instructor",
+                "skills": ["Python", "SQL"],
+                "address": "123 Main St",
             })
 
             # Gracefully handle missing context
@@ -475,8 +477,8 @@ class TestPostNewUserForm(UserFormAssertions):
             errors = response.context.get('errors', [])
             print("Validation Errors:", errors)
             self.assertTrue(
-                any("Email must be a valid value" in e.lower() for e in errors),
-                f"Expected 'email must be a valid value', got {errors}"
+                any("Expected 'Email must be a valid value'" in e.lower() for e in errors),
+                f"Expected 'Email must be a valid value', got {errors}"
             )
             count += 1
 
@@ -497,7 +499,7 @@ class TestPostNewUserForm(UserFormAssertions):
             if response.status_code == 400:
                 print("Validation Errors:", response.context['errors'])
 
-            self.assertIn("Phone must be a valid value", response.context['errors'])
+            self.assertIn("Phone must be a 10-digit value", response.context['errors'])
             self.assertFalse(User.objects.filter(username=self.user.username, phone=value).exists(),
                              "Created user with invalid phone #")
             count += 1
