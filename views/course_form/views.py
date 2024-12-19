@@ -22,9 +22,10 @@ class CourseForm(View):
 
         course_form = CourseController.get_course(code, semester) if code else {}
 
-        ta_list = ""
-        for ta in course_form.ta_list:
-            ta_list += ta.username + ","
+        if code:
+            ta_list = ""
+            for ta in course_form.ta_list:
+                ta_list += ta.username + ","
 
         return render(request, 'course_form/course_form.html', {
             "semester": SemesterController.list_semester(),
@@ -32,7 +33,7 @@ class CourseForm(View):
             "isAdmin": request.user.role == "Admin",
             "isEditing": code is not None,
             'full_name': f"{request.user.first_name} {request.user.last_name}",
-            "preselected_users": ta_list,
+            "preselected_users": ta_list if code else "",
             "user_search_role": "TA"
         })
 
