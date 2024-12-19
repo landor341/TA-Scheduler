@@ -115,8 +115,14 @@
         // Clear current options
         instructorDropdown.innerHTML = '<option value="">-- Select --</option>';
 
+        const urlParams = new URLSearchParams({
+            section_type: sectionType,
+            course_code: "{{ code }}",  // Pass course code
+            semester: "{{ semester }}"  // Pass semester
+        });
+
         // Fetch data dynamically
-        fetch(`/get-instructors/?section_type=${sectionType}`)
+        fetch(`/get-instructors/?${urlParams}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Error fetching instructors');

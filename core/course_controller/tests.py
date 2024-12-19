@@ -212,5 +212,36 @@ class TestDeleteCourse(CourseControllerTestBase):
         self.assertFalse(TACourseAssignment.objects.filter(course=course).exists())
 
 
+class TestGetAssignedTAs(CourseControllerTestBase):
+    def test_get_assigned_tas_for_valid_course(self):
+        """Test that the correct TAs assigned to a specific course are returned."""
+        course = Course.objects.first()
+        assigned_tas = CourseController.get_assigned_tas(course.course_code, course.semester.semester_name)
 
+        # Verify the returned UserRef objects
+        ta_assignments = TACourseAssignment.objects.filter(course=course)
+        self.assertEqual(len(assigned_tas), ta_assignments.count())
 
+        for user_ref, assignment in zip(assigned_tas, ta_assignments):
+            self.assertEqual(user_ref.username, assignment.ta.username)
+            self.assertEqual(user_ref.name, f"{assignment.ta.first_name} {assignment.ta.last_name}")
+
+    def test_get_assigned_tas_for_course_with_no_tas(self):
+        """Test that an empty list is returned if no TAs are assigned to the course."""
+        # Create a course with no TA assignments
+        new_course = Course.objects.create(
+            course_code="NoTAs", course_name="No Assigned TAs", semester=self.semester
+        )
+        result = CourseController.get_assigned_tas(new_course.course_code, new_course.semester.semester_name)
+        self.assertEqual(len(result), 0)
+
+    def test_get_assigned_tas_for_invalid_course(self):
+        """Test that a ValueError is raised for an invalid course code."""
+        with self.assertRaises(ValueError):
+            CourseController.get_assigned_tas("INVALID_CODE", "Fall 2024")
+
+    def test_get_assigned_tas_for_invalid_semester(self):
+        """Test that a ValueError is raised for an invalid semester name."""
+        course = Course.objects.first()
+        with self.assertRaises(ValueError):
+            CourseController.get_assigned_tas(course.course_code, "InvalidSemester")
