@@ -245,12 +245,35 @@ class SectionController:
     def assign_instructor_or_ta(section_type: str, section_number: int, course_code: str, semester_name: str,
                                 instructor_ref: UserRef) -> None:
         """
-        Assigns an instructor or TA to a section.
         Preconditions:
-        - instructor_ref is a valid UserRef object with a username.
-        - section_type is either 'Course' or 'Lab'.
+        - 'instructor_ref' must be a valid `UserRef` object containing an existing user's username.
+        - 'section_type' must be either "Course" or "Lab".
+        - 'section_number' must correspond to an existing CourseSection or LabSection in the context of the provided
+            course code and semester name.
+        - The user in 'instructor_ref' must have a role appropriate for the section type:
+            - "Instructor" role for "Course" section.
+            - "TA" role for "Lab" section.
+
         Postconditions:
-        - Updates the instructor for CourseSection or creates/updates TALabAssignment for LabSection.
+        - If 'section_type' is "Course", the specified user is assigned as the instructor for the course section.
+        - If 'section_type' is "Lab", the specified user is assigned as the TA for the lab section via a TALabAssignment entry.
+        - Raises a ValueError if the user, course, or section does not exist, or if invalid data is provided.
+
+        Side-effects:
+        - For "Course" sections:
+            - Updates the `instructor` field of the relevant CourseSection and saves the changes.
+        - For "Lab" sections:
+            - Creates or updates a TALabAssignment entry with the TA assigned to the lab section.
+
+        Parameters:
+        - section_type: A string indicating the type of section ("Course" or "Lab").
+        - section_number: An integer representing the section number.
+        - course_code: A string representing the course code.
+        - semester_name: A string representing the semester name.
+        - instructor_ref: A `UserRef` object containing the `username` of the user to be assigned.
+
+        Returns:
+        - None.
         """
         try:
             # Extract username and fetch the user

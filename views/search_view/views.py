@@ -21,6 +21,10 @@ class SearchView(View):
         - Retrieves all courses and semesters for course type.
         - Initializes search results for user type.
 
+        Parameters:
+        - request: The HttpRequest object containing details about the HTTP GET request.
+        - type (str): Indicates the type of search, either "course" or "user".
+
         Returns:
         - Renders the 'search_view/search_view.html' template with appropriate context:
           * `search_results`: List of courses or users.
@@ -59,6 +63,10 @@ class SearchView(View):
         Side-effects:
         - Calls `UserController.searchUser` for user search.
         - Calls `CourseController.search_courses` for course search.
+
+        Parameters:
+        - request: The HttpRequest object containing details about the HTTP POST request.
+        - type (str): Indicates the type of search, either "course" or "user".
 
         Returns:
         - Renders the 'search_view/search_view.html' template with appropriate context:

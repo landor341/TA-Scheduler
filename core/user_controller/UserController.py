@@ -183,15 +183,20 @@ class UserController:
     def deleteUser(username, requesting_user):
         """
         Preconditions:
-        - 'username' must be a non-empty string representing an existing user.
-        - 'requesting_user' must be an admin user to perform this operation.
+        - 'username' must be a non-empty string and must correspond to an existing user in the Users table.
+        - 'requesting_user' must be an authenticated User instance with an admin role to perform this operation.
 
-        Postconditions: Deletes the user with the specified 'username'. Raises an error if no matching user is found or if the requesting user is not an admin.
-        Side-effects: Removes the record from the Users table.
+        Postconditions:
+        - Deletes the user with the given 'username' from the Users table.
+        - Raises a ValueError if the user with the specified username does not exist.
+        - Raises a PermissionDenied error if the requesting user does not have an admin role.
+
+        Side-effects:
+        - The specified user's record is permanently removed from the database.
 
         Parameters:
-        - username: A string representing the user's username in the Users table.
-        - requesting_user: An instance of the User making the request, which must have an admin role.
+        - username: A string representing the username of the user to be deleted.
+        - requesting_user: An instance of the User class representing the admin user executing the deletion request.
 
         Returns: None.
         """
@@ -210,14 +215,27 @@ class UserController:
     @staticmethod
     def searchUser(user_search_string="", user_role=None):
         """
-        Preconditions: 'user_search_string' can be empty.
-        Postconditions: Returns a list of users that match the search criteria and role (if provided)
-                        or raises an error if the input is invalid/empty.
+        Preconditions:
+        - 'user_search_string' must be a string and can be empty, representing partial or full user details
+          (e.g., username, first name, or last name).
+        - 'user_role', if provided, must be a valid role to filter users (e.g., 'Instructor', 'Admin', etc.).
+
+        Postconditions:
+        - Returns a list of users that match the search criteria:
+          - Filters users based on the 'user_search_string' across 'username', 'first name', or 'last name'.
+          - If 'user_role' is specified, the search results are further filtered by the role.
+        - If no users match the given criteria, an empty list is returned.
+
         Side-effects: None.
+
         Parameters:
-        - user_search_string: A string containing search parameters for finding users.
-        - user_role: Optional role parameter to filter users by a specific role.
-        Returns: A list of matching user objects, containing minimal info for displaying in an explore page.
+        - user_search_string: A string used as the search query for matching user attributes.
+        - user_role: (Optional) A string representing the role to filter users (e.g., 'Instructor').
+
+        Returns:
+        - A list of `UserRef` objects:
+          - Each `UserRef` object contains minimal user data (name and username) for display purposes.
+        - Returns an empty list if no matching users are found.
         """
 
         query = models.Q(username__icontains=user_search_string) | \
